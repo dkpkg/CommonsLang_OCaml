@@ -17,3 +17,11 @@ The planned package targets in this repository are:
 
 This repository is being ported from the legacy package definitions copied
 into `etc\dk\v`.
+
+The initial `CommonsLang_OCaml.DkML@4.14.3` wiring consumes the
+`dkml-compiler` prerelease source archive and keeps the DkML package line
+independent from the Base compiler line.
+
+Local validation of the toolchain packages also expects sibling checkouts of
+`CommonsBase_GNU` and `CommonsBase_Std` so the test comments can import their
+definitions directly.

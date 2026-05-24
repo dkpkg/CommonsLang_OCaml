@@ -18,7 +18,7 @@
 //
 // === EXAMPLES ===
 //
-// dk0 -v -I etc/dk/v --trust-local-package CommonsBase_Win32 --trust-local-package NotMatveevKondratyev_Libinotify --trust-local-package CommonsBase_LLVM --trust-local-package CommonsBase_GNU --trust-local-package CommonsLang_OCaml --trust-local-package NotMitEdu_Kerberos get-object CommonsLang_OCaml.Toolchain.W64devkit@5.4.1 -s Release.Darwin_arm64.Windows_x86_64 -d target/ocaml-winx64
+// dk0 -v -I etc/dk/v -x commonsbase-gnu:subpath: -x commonsbase-std:subpath: --trust-local-package CommonsBase_Win32 --trust-local-package NotMatveevKondratyev_Libinotify --trust-local-package CommonsBase_LLVM --trust-local-package CommonsBase_GNU --trust-local-package CommonsBase_Std --trust-local-package CommonsLang_OCaml --trust-local-package NotMitEdu_Kerberos get-object CommonsLang_OCaml.Toolchain.W64devkit@5.4.1 -s Release.Darwin_arm64.Windows_x86_64 -d target/ocaml-winx64
 //
 // === FOLDERS ===
 //

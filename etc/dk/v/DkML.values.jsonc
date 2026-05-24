@@ -1,0 +1,42 @@
+// Initial source-bundle wiring for the dkml-compiler prerelease stream that
+// feeds CommonsLang_OCaml.DkML@4.14.3.
+//
+// DkML stays separate from CommonsLang_OCaml.Base. This bundle only anchors
+// the upstream source archive so later build/relocatable steps can stay on the
+// DkML line without sharing Base-specific package wiring.
+//
+// ABI slice for the first pass:
+// - native Linux_x86_64, Darwin_arm64, Windows_x86_64
+// - no 32-bit or cross-compilation matrix yet
+{
+    "$schema": "https://github.com/diskuv/dk/raw/refs/heads/V2_5/etc/jsonschema/dk-values.json",
+    "schema_version": {
+        "major": 1,
+        "minor": 0
+    },
+    "bundles": [
+        {
+            "id": "CommonsLang_OCaml.DkML@4.14.3",
+            "listing": {
+                "origins": [
+                    {
+                        "name": "gh-dkml-compiler-2.4.2-1",
+                        "mirrors": [
+                            "https://github.com/diskuv/dkml-compiler/releases/download/2.4.2-1"
+                        ]
+                    }
+                ]
+            },
+            "assets": [
+                {
+                    "origin": "gh-dkml-compiler-2.4.2-1",
+                    "path": "src.tar.gz",
+                    "checksum": {
+                        "sha256": "7786305b13b2cfa13f86e857be1f7e35457d2cdbc32103f8be182fdbf302d860"
+                    },
+                    "size": 257692
+                }
+            ]
+        }
+    ]
+}
