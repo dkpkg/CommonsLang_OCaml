@@ -1,0 +1,37 @@
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Dune@3.23.1 -d target/dune-src
+//
+// Initial source-bundle wiring for the upstream dune release tarball.
+// The build recipe will be added in a later CI/dist pass and should use
+// CommonsLang_OCaml.Base@5.5.0-beta1 as the compiler foundation.
+{
+    "$schema": "https://github.com/diskuv/dk/raw/refs/heads/V2_5/etc/jsonschema/dk-values.json",
+    "schema_version": {
+        "major": 1,
+        "minor": 0
+    },
+    "bundles": [
+        {
+            "id": "CommonsLang_OCaml.Dune@3.23.1",
+            "listing": {
+                "origins": [
+                    {
+                        "name": "gh-ocaml-dune",
+                        "mirrors": [
+                            "https://github.com/ocaml/dune/archive/refs/tags"
+                        ]
+                    }
+                ]
+            },
+            "assets": [
+                {
+                    "origin": "gh-ocaml-dune",
+                    "path": "3.23.1.tar.gz",
+                    "checksum": {
+                        "sha256": "63fbef75d09dd4a05ee2624d41e574d658e33faff5c5b7d6bc67eab2af03dc71"
+                    },
+                    "size": 3710713
+                }
+            ]
+        }
+    ]
+}

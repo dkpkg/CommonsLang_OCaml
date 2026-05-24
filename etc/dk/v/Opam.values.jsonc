@@ -1,0 +1,37 @@
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Opam@2.5.1 -d target/opam-src
+//
+// Initial source-bundle wiring for the upstream opam release tarball.
+// The build recipe will be added in a later CI/dist pass and should use
+// CommonsLang_OCaml.Base@5.5.0-beta1 as the compiler foundation.
+{
+    "$schema": "https://github.com/diskuv/dk/raw/refs/heads/V2_5/etc/jsonschema/dk-values.json",
+    "schema_version": {
+        "major": 1,
+        "minor": 0
+    },
+    "bundles": [
+        {
+            "id": "CommonsLang_OCaml.Opam@2.5.1",
+            "listing": {
+                "origins": [
+                    {
+                        "name": "gh-ocaml-opam",
+                        "mirrors": [
+                            "https://github.com/ocaml/opam/archive/refs/tags"
+                        ]
+                    }
+                ]
+            },
+            "assets": [
+                {
+                    "origin": "gh-ocaml-opam",
+                    "path": "2.5.1.tar.gz",
+                    "checksum": {
+                        "sha256": "459a57cb84c3ea16ecc6d599bd95680856365f5cd995d9fba76bb9eccb304fd2"
+                    },
+                    "size": 1277085
+                }
+            ]
+        }
+    ]
+}

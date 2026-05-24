@@ -1,0 +1,94 @@
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Base@4.14.3 -d target/base-4.14.3
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Base@5.5.0-beta1 -d target/base-5.5.0-beta1
+//
+// Source-bundle wiring for the autoconf-based Base compiler tracks.
+// The build recipes will be added later; this file only establishes the
+// upstream tarballs and the ABI policy for the new Base line:
+//
+// - Base@4.14.3: native Linux_x86_64, Darwin_arm64, and Windows_x86_64.
+//   Skip Windows_arm64 and any 32-bit CI ABIs; cross-compiling is deferred.
+// - Base@5.5.0-beta1: same native-only policy. OCaml 5.x does not provide
+//   the 32-bit ABIs, so they are intentionally omitted.
+{
+    "$schema": "https://github.com/diskuv/dk/raw/refs/heads/V2_5/etc/jsonschema/dk-values.json",
+    "schema_version": {
+        "major": 1,
+        "minor": 0
+    },
+    "bundles": [
+        {
+            "id": "CommonsLang_OCaml.Base@4.14.3",
+            "listing": {
+                "origins": [
+                    {
+                        "name": "gh-ocaml-ocaml-4.14.3",
+                        "mirrors": [
+                            "https://github.com/ocaml/ocaml/archive/refs/tags"
+                        ]
+                    },
+                    {
+                        "name": "caml-ocaml-4.14.3",
+                        "mirrors": [
+                            "https://caml.inria.fr/pub/distrib/ocaml-4.14/"
+                        ]
+                    }
+                ]
+            },
+            "assets": [
+                {
+                    "origin": "gh-ocaml-ocaml-4.14.3",
+                    "path": "4.14.3.tar.gz",
+                    "checksum": {
+                        "sha256": "e510689183b2d62b0a7513ea7e47be80ddb9173377a2df436dbc1ca927a64689"
+                    },
+                    "size": 5513909
+                },
+                {
+                    "origin": "caml-ocaml-4.14.3",
+                    "path": "ocaml-4.14.3.tar.gz",
+                    "checksum": {
+                        "sha256": "b9b5b3bef697cfd35c7ea3f3563c4cf6755531f922fef7ba112a1525cd32781b"
+                    },
+                    "size": 5394919
+                }
+            ]
+        },
+        {
+            "id": "CommonsLang_OCaml.Base@5.5.0-beta1",
+            "listing": {
+                "origins": [
+                    {
+                        "name": "gh-ocaml-ocaml-5.5.0-beta1",
+                        "mirrors": [
+                            "https://github.com/ocaml/ocaml/archive"
+                        ]
+                    },
+                    {
+                        "name": "caml-ocaml-5.5.0-beta1",
+                        "mirrors": [
+                            "https://caml.inria.fr/pub/distrib/ocaml-5.5/"
+                        ]
+                    }
+                ]
+            },
+            "assets": [
+                {
+                    "origin": "gh-ocaml-ocaml-5.5.0-beta1",
+                    "path": "5.5.0-beta1.tar.gz",
+                    "checksum": {
+                        "sha256": "4828cb132d9df1e308127a8c257567deea3d83c4ce3bf0fbe54083ba4a938bcc"
+                    },
+                    "size": 5008453
+                },
+                {
+                    "origin": "caml-ocaml-5.5.0-beta1",
+                    "path": "ocaml-5.5.0~beta1.tar.gz",
+                    "checksum": {
+                        "sha256": "f41fc19fc05c27d6696b0054051e8504bbb39d8af9ebe9881109b9590121744f"
+                    },
+                    "size": 6602890
+                }
+            ]
+        }
+    ]
+}
