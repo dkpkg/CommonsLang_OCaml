@@ -16,7 +16,9 @@ Distribution for CommonsLang_OCaml
 --- Objects and Assets ---
 
   $ get-bundle CommonsLang_OCaml.DkML.Bundle@4.14.3 -d ${RUNTIME}/DkML-Bundle-4.14.3
+  \test(pass)\;bundle:bgesu5ugi6qfpfrbpi4ie4kxwvxnpvqxj4b2ofxykhb7vujsh6oha:CommonsLang_OCaml.DkML.Bundle@4.14.3+bn-20250101000000
 
   $ get-bundle CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.1.6 -d ${RUNTIME}/DkML-RuntimeCommon-Bundle-2.1.6
+  \test(pass)\;bundle:b2sacq66ff343rmp4facxsbmuuspxpdpvs4jwatb5qp2ofcnjp4yq:CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.1.6+bn-20250101000000
 
 ```
