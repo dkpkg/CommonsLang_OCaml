@@ -4,10 +4,16 @@
   'import'
   'github-l2'
   { {
-      'CommonsBase_GNU', '2.5.202605191528', {
-        'blake2b-256:097e770155cf228eae0caa86b339c0fc2b06c0e09ef479dd1b6f1f5469fd105f',
-        'sha256:10bceab4f48986ac40fb1efd4b953911ef6cb4705618fbd35329a0aef5e00824',
-        'sha1:0b3db06b027c73437ecebc33e361aed759e0a4f7'
+      'CommonsBase_GNU', '2.5.202605232350', {
+        'blake2b-256:964a6c849d50821e1db13b6f4e37939385e02e617272d2fada3490c30b75c78c',
+        'sha256:d908f801e1b1ad8fd6a40259e2e1fec3bb7fc4dc52d57a40c9815adff42eb217',
+        'sha1:5a09d05d99e2602df5e5ec24b93eece870065c0f'
+      } },
+    {
+      'CommonsBase_Build', '2.5.202605220745', {
+        'blake2b-256:69d5c4a938bd0b04724aa21500e9e7452a6aa3e974d475a8e63d78c903aeb084',
+        'sha256:b719335f5b201032f9bb45ece985ae5b1513b767c42dae221dbb870a3f472fed',
+        'sha1:63a8c0fb833639d03bfd9eeaa03d3cd687dd4c60'
       } },
     {
       'CommonsBase_FileMagic', '2.5.202605231534', {
@@ -50,7 +56,7 @@
   % unified.asset { name="DkMLRoot", file="assets/dkml/dkmlroot.2.4.2-13.txt" }
   'asset'
   '27'
-  'sha256:2aac9468aca69b0c55e579263ce7c4a5674d272bef7dfa2fe19dea4196c6d268'
+  'sha256:3ff749d56303dd62a74987522488fe3e8d0e207e5d10168842dd8fc7a36d2ec0'
 
   % unified.asset { name="DkMLPatchRuntimeCommonVs18", file="assets/dkml/patch-runtime-common-vs18.sh" }
   'asset'

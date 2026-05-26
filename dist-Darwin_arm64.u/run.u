@@ -1,4 +1,3 @@
-```cram
 Distribution for CommonsLang_OCaml
 
 --- Guidelines 2026.03.05 ---
@@ -20,5 +19,3 @@ Distribution for CommonsLang_OCaml
 
   $ get-bundle CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.1.6 -d ${RUNTIME}/DkML-RuntimeCommon-Bundle-2.1.6
   \test(pass)\;bundle:b2sacq66ff343rmp4facxsbmuuspxpdpvs4jwatb5qp2ofcnjp4yq:CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.1.6+bn-20250101000000
-
-```
