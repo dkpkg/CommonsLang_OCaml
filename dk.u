@@ -49,8 +49,8 @@
 
   % unified.asset { name="DkMLRoot", file="assets/dkml/dkmlroot.2.4.2-13.txt" }
   'asset'
-  '28'
-  'sha256:ae4a9bb2857d97017d2bab8f8661d8fbfadf5697e7f62c252accae5a50eb18be'
+  '27'
+  'sha256:2aac9468aca69b0c55e579263ce7c4a5674d272bef7dfa2fe19dea4196c6d268'
 
   % unified.asset { name="DkMLPatchRuntimeCommonVs18", file="assets/dkml/patch-runtime-common-vs18.sh" }
   'asset'
