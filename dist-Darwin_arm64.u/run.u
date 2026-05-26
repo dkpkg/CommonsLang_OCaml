@@ -15,6 +15,8 @@ Distribution for CommonsLang_OCaml
 
 --- Objects and Assets ---
 
-  $ get-object CommonsLang_OCaml.Toolchain.W64devkit@5.4.1 -s Release.Darwin_x86_64.Windows_x86_64 -f ${RUNTIME}/Darwin_x86_64.Windows_x86_64-Toolchain.W64devkit-5.4.1.zip
+  $ get-bundle CommonsLang_OCaml.DkML.Bundle@4.14.3 -d ${RUNTIME}/DkML-Bundle-4.14.3
+
+  $ get-bundle CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.1.6 -d ${RUNTIME}/DkML-RuntimeCommon-Bundle-2.1.6
 
 ```
