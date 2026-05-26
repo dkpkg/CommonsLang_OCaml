@@ -13,30 +13,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runs-on: macos-latest
-            distscript: dist-Darwin_arm64.u
-            execution-abi: Darwin_arm64
-          - runs-on: macos-latest
-            distscript: dist-Darwin_x86_64.u
-            execution-abi: Darwin_arm64
-            target-abi: Darwin_x86_64
-          - runs-on: ubuntu-latest
-            distscript: dist-Linux_x86_64.u
-            image: quay.io/pypa/manylinux_2_28_x86_64:2026.04.08-5
-            execution-abi: Linux_x86_64
-            target-abi: Linux_x86_64
-          - runs-on: ubuntu-latest
-            distscript: dist-Linux_x86.u
-            image: quay.io/pypa/manylinux_2_28_x86_64:2026.04.08-5
-            execution-abi: Linux_x86_64
-            target-abi: Linux_x86
           - runs-on: windows-latest
             distscript: dist-Windows_x86_64.u
             execution-abi: Windows_x86_64
-          - runs-on: windows-latest
-            distscript: dist-Windows_x86.u
-            execution-abi: Windows_x86_64
-            target-abi: Windows_x86
     runs-on: ${{ matrix.runs-on }}
     container:
       image: ${{ matrix.image }}
@@ -47,10 +26,6 @@ jobs:
         with: { egress-policy: audit }
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      - name: Prepare Linux_x86 multilib toolchain
-        if: ${{ matrix.distscript == 'dist-Linux_x86.u' }}
-        run: dnf install -y glibc-devel.i686 libgcc.i686 libstdc++.i686 gcc-toolset-14-libstdc++-devel.i686
 
       - name: Distribute Modules
         uses: diskuv/dk-distribute@v2

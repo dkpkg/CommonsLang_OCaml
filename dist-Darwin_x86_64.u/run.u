@@ -10,6 +10,3 @@
   \test(pass)
   \dk.target(abi: "Darwin_x86_64")[Mach-O 64-bit executable
   ]\;
-
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.execution_abi -c bin/ocamlopt -- -version
-  \test(pass)

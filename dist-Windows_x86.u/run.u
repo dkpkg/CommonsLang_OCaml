@@ -13,5 +13,5 @@ Release.Windows_x86_64 will be used as Release.execution_abi on normal (64-bit) 
   \dk.target(abi: "Windows_x86")[PE32 executable
   ]\;
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.execution_abi -c bin/ocamlopt -- -version
+  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Windows_x86 -c bin/ocamlopt -- -version
   \test(pass)

@@ -11,5 +11,5 @@
   \dk.target(abi: "Windows_x86_64")[PE32+ executable
   ]\;
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.execution_abi -c bin/ocamlopt -- -version
+  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Windows_x86_64 -c bin/ocamlopt -- -version
   \test(pass)

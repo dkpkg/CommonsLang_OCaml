@@ -11,5 +11,5 @@
   \dk.target(abi: "Linux_x86_64")[ELF 64-bit LSB executable, x86-64
   ]\;
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.execution_abi -c bin/ocamlopt -- -version
+  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -c bin/ocamlopt -- -version
   \test(pass)
