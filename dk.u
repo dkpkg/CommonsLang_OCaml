@@ -40,18 +40,18 @@
 
   % unified.asset { name="Patches", dir="assets/p" }
   'asset'
-  '1817'
-  { 'sha256:c17207547802dd573d014d9120711ccd8aabcb8ca57b7a119b09271d4b6def06' }
+  '1801'
+  { 'sha256:2cc8d94ac971f4c713c300a3ecc6e0acd07ff05b5b53375c256ee633c8489363' }
 
   % unified.asset { name="Scripts", dir="assets/s" }
   'asset'
-  '9304'
-  { 'sha256:c5902577af9792b5f049f86bdd5c0f5c3203d54ef66a9acbcebc1b94ae8ee3fe' }
+  '9236'
+  { 'sha256:ebf6b3f14a5191ae8027d0d0c39ea768ca2c617fe99b3afc497907568bbe9050' }
 
   % unified.asset { name="WineHostShim", dir="assets/wine-hostshim" }
   'asset'
-  '723'
-  { 'sha256:be1f92ebdfdd20e7ee8d2b123915a94a826c30661056bab35d73ee9b6d74b793' }
+  '710'
+  { 'sha256:32e4de10e6ffdbba35c59daeeb7c77313a695e72201fbba92d522f9fe646838c' }
 
   % unified.asset { name="DkMLRoot", file="assets/dkml/dkmlroot.2.4.2-13.txt" }
   'asset'
@@ -80,5 +80,5 @@
 
   % unified.asset { name="DkMLPatchStandardCompilerEnvWv18", file="assets/dkml/patch-standard-compiler-env-wv18.sh" }
   'asset'
-  '515'
-  'sha256:81558ae75f23fac091ac82422f896f6b5cdd5b0eaa6098548c7dfd1410c7d62a'
+  '497'
+  'sha256:a6fa7f65e1b75b4e266d49bc51961ce597a86482d536e57f7551fb146f98c72a'
