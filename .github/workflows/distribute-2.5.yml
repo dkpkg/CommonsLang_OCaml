@@ -25,7 +25,7 @@ jobs:
           seckey: ${{ secrets.distribute_2_5_seckey }}
           options: -nosysinc
           use-cache: true
-          distscript: dist-Darwin_arm64.u/run.u
+          distscript: dist-Darwin_arm64-bundles.u
           execution-abi: Darwin_arm64
           experimental-dk-owner: ${{ github.repository_owner == 'dkpkg' && 'diskuv' || github.repository_owner }}
           experimental-mlfront-ref: ${{ github.ref_type != 'tag' && 'HEAD' }}
