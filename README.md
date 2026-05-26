@@ -5,7 +5,6 @@ tools for dk workspaces.
 
 The planned package targets in this repository are:
 
-- `CommonsLang_OCaml.Lookup@1.0.0`
 - `CommonsLang_OCaml.OCaml.Bundle@5.4.1`
 - `CommonsLang_OCaml.Toolchain.W64devkit@5.4.1`
 - `CommonsLang_OCaml.Toolchain.LLVM_MinGW@5.4.1`
@@ -18,10 +17,21 @@ The planned package targets in this repository are:
 This repository is being ported from the legacy package definitions copied
 into `etc\dk\v`.
 
-The initial `CommonsLang_OCaml.DkML@4.14.3` wiring consumes the
-`dkml-compiler` prerelease source archive and keeps the DkML package line
-independent from the Base compiler line.
+The current `CommonsLang_OCaml.DkML` work is split into
+`CommonsLang_OCaml.DkML.Bundle@4.14.3`,
+`CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.1.6`, and
+`CommonsLang_OCaml.DkML@4.14.3`. The split keeps the compiler and runtime
+archives separate while the compiler package stages `dkml-compiler@2.4.2-2`,
+`dkml-runtime-common@2.1.6`, the `dra27/ocaml` 4.14.3 base commit plus the
+relocatable backport patch series, and flexdll 0.43 and runs the upstream
+setup/build scripts directly without invoking opam.
+
+The first implemented `CommonsLang_OCaml.DkML@4.14.3` surface is a
+Windows_x86_64 host build.
 
 Local validation of the toolchain packages also expects sibling checkouts of
 `CommonsBase_GNU` and `CommonsBase_Std` so the test comments can import their
 definitions directly.
+
+Reusable local helper files now come from `dk.u` workspace assets rather than a
+checked-in `Lookup.values.jsonc` bundle.

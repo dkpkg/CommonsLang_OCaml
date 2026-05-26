@@ -1,0 +1,145 @@
+#!/bin/sh
+set -eu
+
+mode=unix
+abs=0
+pathlist=0
+input_file=
+
+to_unix() {
+  value=$1
+  case "$value" in
+    [A-Za-z]:/* | [A-Za-z]:\\*)
+      drive=$(printf '%s' "$value" | cut -c1 | tr 'A-Z' 'a-z')
+      rest=$(printf '%s' "$value" | cut -c3- | tr '\\' '/')
+      printf '/%s/%s\n' "$drive" "${rest#/}"
+      ;;
+    /*)
+      printf '%s\n' "$value"
+      ;;
+    *)
+      printf '%s\n' "$(printf '%s' "$value" | tr '\\' '/')"
+      ;;
+  esac
+}
+
+to_mixed() {
+  value=$1
+  case "$value" in
+    /[A-Za-z]/*)
+      drive=$(printf '%s' "$value" | cut -c2 | tr 'a-z' 'A-Z')
+      rest=$(printf '%s' "$value" | cut -c4-)
+      printf '%s:/%s\n' "$drive" "$rest"
+      ;;
+    [A-Za-z]:/* | [A-Za-z]:\\*)
+      printf '%s\n' "$(printf '%s' "$value" | tr '\\' '/')"
+      ;;
+    *)
+      printf '%s\n' "$(printf '%s' "$value" | tr '\\' '/')"
+      ;;
+  esac
+}
+
+convert_one() {
+  value=$1
+  if [ "$abs" -eq 1 ] && [ -n "$value" ] && [ "${value#./}" != "$value" ]; then
+    value=$(cd "${value%/*}" 2>/dev/null && pwd)/${value##*/}
+  fi
+  case "$mode" in
+    unix) to_unix "$value" ;;
+    mixed|windows|dos) to_mixed "$value" ;;
+  esac
+}
+
+convert_many() {
+  value=$1
+  if [ "$pathlist" -eq 0 ]; then
+    convert_one "$value"
+    return
+  fi
+
+  case "$value" in
+    *';'*)
+      old_ifs=$IFS
+      IFS=';'
+      set -- $value
+      IFS=$old_ifs
+      out=
+      for item in "$@"; do
+        converted=$(convert_one "$item")
+        if [ -n "$out" ]; then
+          out="$out:$converted"
+        else
+          out=$converted
+        fi
+      done
+      printf '%s\n' "$out"
+      ;;
+    *)
+      old_ifs=$IFS
+      IFS=':'
+      set -- $value
+      IFS=$old_ifs
+      out=
+      while [ "$#" -gt 0 ]; do
+        item=$1
+        shift
+        if [ -n "${1-}" ] && [ "${item#/}" = "$item" ] && [ "${#item}" -eq 1 ]; then
+          item=$item:$1
+          shift
+        fi
+        converted=$(convert_one "$item")
+        if [ -n "$out" ]; then
+          out="$out;${converted}"
+        else
+          out=$converted
+        fi
+      done
+      printf '%s\n' "$out"
+      ;;
+  esac
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -u) mode=unix ;;
+    -w|-m|-d) mode=mixed ;;
+    -a|-ad) abs=1 ;;
+    -p) pathlist=1 ;;
+    -f|--file)
+      shift
+      input_file=$1
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      ;;
+    *)
+      break
+      ;;
+  esac
+  shift
+done
+
+if [ -n "$input_file" ]; then
+  if [ "$input_file" = "-" ]; then
+    while IFS= read -r line; do
+      convert_many "$line"
+    done
+  else
+    while IFS= read -r line; do
+      convert_many "$line"
+    done <"$input_file"
+  fi
+  exit 0
+fi
+
+if [ "$#" -eq 0 ]; then
+  exit 0
+fi
+
+for arg in "$@"; do
+  convert_many "$arg"
+done

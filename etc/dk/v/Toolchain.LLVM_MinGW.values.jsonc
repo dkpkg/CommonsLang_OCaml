@@ -87,7 +87,7 @@
                     // add LLVM-MinGW toolchain for cross-compilation
                     "<PATH=$(--path=absnative get-object CommonsBase_LLVM.Toolchain.MinGW@21.1.8+rev-20251216 -s Release.execution_abi -d : -e 'bin/*')${/}bin",
                     // add cygpath shim for ./configure
-                    "<PATH=$(--path=absnative get-asset CommonsLang_OCaml.Lookup@1.0.0 -p wine-hostshim -d : -e '*')",
+                    "<PATH=$(--path=absnative get-asset CommonsLang_OCaml.Workspace.Apparatus.WineHostShim@1.0.0 -p assets/wine-hostshim -n 2 -d : -e '*')",
                     // set gawk for ./configure
                     "+AWK=$(--path=absnative get-object CommonsBase_GNU.Awk@5.3.1 -s Release.execution_abi -m ./bin/gawk -f gawk -e '*')"
                     // we could squelch Wine logs using docs at https://gitlab.winehq.org/wine/wine/-/wikis/Debug-Channels
@@ -117,7 +117,7 @@
                         "--batch",
                         "--directory=s",
                         "-p1",
-                        "-i", "$(--path=absnative get-asset CommonsLang_OCaml.Lookup@1.0.0 -p p -m ./ocaml-5.4.1-configure.patch -f ocaml-5.4.1-configure.patch)"
+                        "-i", "$(--path=absnative get-asset CommonsLang_OCaml.Workspace.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.4.1-configure.patch -f ocaml-5.4.1-configure.patch)"
                     ],
 
                     // --- patch: use Compflags-win32.cmd not shell script Compflags
@@ -128,7 +128,7 @@
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.2.2 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
-                        "$(get-asset CommonsLang_OCaml.Lookup@1.0.0 -p s -m ./Compflags-win32.cmd -f Compflags.cmd)",
+                        "$(get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -m ./Compflags-win32.cmd -f Compflags.cmd)",
                         "s/stdlib/Compflags.cmd"
                     ],
 
@@ -163,7 +163,7 @@
                     [
                         // Wait until the wineserver process has exited to avoid race conditions modifying the wine prefix in
                         // the background (wineserver) and in the foreground (the next steps of this LLVM_MinGW function).
-                        "/bin/sh", "$(get-asset CommonsLang_OCaml.Lookup@1.0.0 -p s -m ./wait-wineserver.sh -f wait-wineserver.sh)"
+                        "/bin/sh", "$(get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -m ./wait-wineserver.sh -f wait-wineserver.sh)"
                     ],
 
                     // --- C:\**: make parent directories
@@ -187,8 +187,8 @@
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.2.2 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
-                        "$(get-asset CommonsLang_OCaml.Lookup@1.0.0 -p s -m ./$(get-asset CommonsBase_GNU.Lookup@1.0.0 -p mingw-host-triplet -m ./${SLOTNAME.request})-mklib.cmd -f any-w64-mingw32-mklib.cmd)",
-                        "$(get-asset CommonsLang_OCaml.Lookup@1.0.0 -p s -m ./cygpath-winepath.cmd -f cygpath.cmd)",
+                        "$(get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -m ./$(get-asset CommonsBase_GNU.Lookup@1.0.0 -p mingw-host-triplet -m ./${SLOTNAME.request})-mklib.cmd -f any-w64-mingw32-mklib.cmd)",
+                        "$(get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -m ./cygpath-winepath.cmd -f cygpath.cmd)",
                         "${STATE}/wineprefixes/CommonsLang_OCaml.Toolchain.LLVM_MinGW.${SLOTNAME.request}@5.4.1/drive_c/src/CommonsLang_OCaml/llvm-mingw/5.4.1/bin"
                     ],
 
