@@ -1,1 +1,78 @@
 ## workspace
+
+  %% import { type="github-l2", repo="dkpkg/CommonsBase_GNU" }
+  'import'
+  'github-l2'
+  { {
+      'CommonsBase_GNU', '2.5.202605191528', {
+        'blake2b-256:097e770155cf228eae0caa86b339c0fc2b06c0e09ef479dd1b6f1f5469fd105f',
+        'sha256:10bceab4f48986ac40fb1efd4b953911ef6cb4705618fbd35329a0aef5e00824',
+        'sha1:0b3db06b027c73437ecebc33e361aed759e0a4f7'
+      } },
+    {
+      'CommonsBase_FileMagic', '2.5.202605231534', {
+        'blake2b-256:44cbc5f606c8592bbf425aa8690432009d001983e8adfc6ae8775702b5112dce',
+        'sha256:06127fe38bffb9d0f900bb97064b61659edb3fd88ffd9b21f3943cbaf825991a',
+        'sha1:01b319abb7d4a136b9f744fe58d303bb2d370ac5'
+      } },
+    {
+      'CommonsBase_LLVM', '2.5.202605230522', {
+        'blake2b-256:a0e00bd54b3c86b2e05c71bf3f5104a6167b52fe3cf8e9c0d7c3744536b4101d',
+        'sha256:33f83811b75615660131e128a8e42c23bfd6259d19bb5b7ba679215cb8832c66',
+        'sha1:d8718954bca973cb3e8fa18f75f358c73be2a474'
+      } },
+    {
+      'CommonsBase_Std', '2.5.202605230053', {
+        'blake2b-256:45d0f9a049ef179b55e4a4b1adc426d8bcbdaaf8901d9d78b0315b9388f89d3c',
+        'sha256:7f0e42ea1894c4f7108d0c028df48fdd63d528ded76b9b3e195e08f7306d2a67',
+        'sha1:a3d27aedec716fedfd8837f7d4fac419ccd5771e'
+      } } }
+
+## Assets
+
+### CommonsLang_OCaml.Workspace.Apparatus@1.0.0
+
+  % unified.asset { name="Patches", dir="assets/p" }
+  'asset'
+  '1817'
+  { 'sha256:c17207547802dd573d014d9120711ccd8aabcb8ca57b7a119b09271d4b6def06' }
+
+  % unified.asset { name="Scripts", dir="assets/s" }
+  'asset'
+  '9304'
+  { 'sha256:c5902577af9792b5f049f86bdd5c0f5c3203d54ef66a9acbcebc1b94ae8ee3fe' }
+
+  % unified.asset { name="WineHostShim", dir="assets/wine-hostshim" }
+  'asset'
+  '723'
+  { 'sha256:be1f92ebdfdd20e7ee8d2b123915a94a826c30661056bab35d73ee9b6d74b793' }
+
+  % unified.asset { name="DkMLRoot", file="assets/dkml/dkmlroot.2.4.2-13.txt" }
+  'asset'
+  '28'
+  'sha256:ae4a9bb2857d97017d2bab8f8661d8fbfadf5697e7f62c252accae5a50eb18be'
+
+  % unified.asset { name="DkMLPatchRuntimeCommonVs18", file="assets/dkml/patch-runtime-common-vs18.sh" }
+  'asset'
+  '549'
+  'sha256:420252b45d1fbb0979d743efe13e48634517fb4b5f9924f01a0c77b7541b3d3c'
+
+  % unified.asset { name="DkMLPatchRelocatableVersion", file="assets/dkml/patch-r-c-ocaml-1-setup-relocatable-version.sh" }
+  'asset'
+  '1987'
+  'sha256:741306e16101152f5aca9a1ec073166d5e92126953c3a27413c9176a4c4d56b7'
+
+  % unified.asset { name="DkMLRunBuildHostWithMakeWin", file="assets/dkml/run-build-host-with-make-win.sh" }
+  'asset'
+  '240'
+  'sha256:885e4d8066c947e047d14e0b3adf1ac5df7dcfb4996635dbb4c7de22b94bd037'
+
+  % unified.asset { name="DkMLCleanupSlot", file="assets/dkml/cleanup-dkml-slot.sh" }
+  'asset'
+  '155'
+  'sha256:9eb0542780228b1c164ade672d894c117a88937c421c2c41a98c83c2991550f4'
+
+  % unified.asset { name="DkMLPatchStandardCompilerEnvWv18", file="assets/dkml/patch-standard-compiler-env-wv18.sh" }
+  'asset'
+  '515'
+  'sha256:81558ae75f23fac091ac82422f896f6b5cdd5b0eaa6098548c7dfd1410c7d62a'
