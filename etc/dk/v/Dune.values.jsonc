@@ -1,8 +1,8 @@
-// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Dune@3.23.1 -d target/dune-src
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Dune.Bundle@3.23.1 -d target/dune-src
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -d target/dune-win64
 //
-// Initial source-bundle wiring for the upstream dune release tarball.
-// The build recipe will be added in a later CI/dist pass and should use
-// CommonsLang_OCaml.Base@5.5.0-beta1 as the compiler foundation.
+// Dune 3.23.1 bootstraps itself with the OCaml compiler alone. For now this
+// package publishes the slots already available from CommonsLang_OCaml.Base@5.5.0-beta1.
 {
     "$schema": "https://github.com/diskuv/dk/raw/refs/heads/V2_5/etc/jsonschema/dk-values.json",
     "schema_version": {
@@ -11,7 +11,7 @@
     },
     "bundles": [
         {
-            "id": "CommonsLang_OCaml.Dune@3.23.1",
+            "id": "CommonsLang_OCaml.Dune.Bundle@3.23.1",
             "listing": {
                 "origins": [
                     {
@@ -32,6 +32,162 @@
                     "size": 3710713
                 }
             ]
+        }
+    ],
+    "forms": [
+        {
+            "id": "CommonsLang_OCaml.Dune@3.23.1",
+            "precommands": {
+                "private": [
+                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.1 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
+                    "get-object CommonsLang_OCaml.Dune.Win32@3.23.1 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}"
+                ]
+            },
+            "outputs": {
+                "assets": [
+                    {
+                        "slots": [
+                            "Release.Linux_x86_64"
+                        ],
+                        "paths": [
+                            "bin/dune.exe"
+                        ]
+                    },
+                    {
+                        "slots": [
+                            "Release.Windows_x86_64"
+                        ],
+                        "paths": [
+                            "bin/dune.exe"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "CommonsLang_OCaml.Dune.Win32@3.23.1",
+            "function": {
+                "execution": [
+                    {
+                        "name": "OSFamily",
+                        "value": "windows"
+                    }
+                ],
+                "envmods": [
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Windows_x86_64 -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin"
+                ],
+                "commands": [
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "mkdir",
+                        "-p",
+                        "s"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "mkdir",
+                        "-p",
+                        "${SLOTABS.Release.Windows_x86_64}/bin"
+                    ],
+                    [
+                        "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/tar.exe -d :)${/}bin${/}tar.exe",
+                        "xzf",
+                        "$(get-asset CommonsLang_OCaml.Dune.Bundle@3.23.1 -p 3.23.1.tar.gz -f 3.23.1.tar.gz)",
+                        "-C",
+                        "s",
+                        "--strip-components=1"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "ocaml",
+                        "boot/bootstrap.ml"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "cp",
+                        "s/_boot/dune.exe",
+                        "${SLOTABS.Release.Windows_x86_64}/bin/dune.exe"
+                    ]
+                ]
+            },
+            "outputs": {
+                "assets": [
+                    {
+                        "slots": [
+                            "Release.Windows_x86_64"
+                        ],
+                        "paths": [
+                            "bin/dune.exe"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "CommonsLang_OCaml.Dune.Unix@3.23.1",
+            "function": {
+                "execution": [
+                    {
+                        "name": "OSFamily",
+                        "value": "linux"
+                    }
+                ],
+                "envmods": [
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Linux_x86_64 -d : -e 'bin/*')${/}bin"
+                ],
+                "commands": [
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "mkdir",
+                        "-p",
+                        "s"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "mkdir",
+                        "-p",
+                        "${SLOTABS.Release.Linux_x86_64}/bin"
+                    ],
+                    [
+                        "/usr/bin/tar",
+                        "-xzf",
+                        "$(get-asset CommonsLang_OCaml.Dune.Bundle@3.23.1 -p 3.23.1.tar.gz -f 3.23.1.tar.gz)",
+                        "-C",
+                        "s",
+                        "--strip-components=1"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "ocaml",
+                        "boot/bootstrap.ml"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "cp",
+                        "s/_boot/dune.exe",
+                        "${SLOTABS.Release.Linux_x86_64}/bin/dune.exe"
+                    ]
+                ]
+            },
+            "outputs": {
+                "assets": [
+                    {
+                        "slots": [
+                            "Release.Linux_x86_64"
+                        ],
+                        "paths": [
+                            "bin/dune.exe"
+                        ]
+                    }
+                ]
+            }
         }
     ]
 }
