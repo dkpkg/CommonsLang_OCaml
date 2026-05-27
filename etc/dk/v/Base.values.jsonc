@@ -8285,8 +8285,7 @@
             "precommands": {
                 "private": [
                     "get-asset CommonsLang_OCaml.Base.Bundle@4.14.3 -p 0.44.zip -n 1 -d s/flexdll",
-                    "get-asset CommonsLang_OCaml.Workspace.Apparatus.Patches@1.0.0 -p assets/p -n 2 -d p",
-                    "get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -n 2 -d lookup-s"
+                    "get-asset CommonsLang_OCaml.Workspace.Apparatus.Patches@1.0.0 -p assets/p -n 2 -d p"
                 ]
             },
             "function": {
@@ -8317,9 +8316,27 @@
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
-                        "mv",
-                        "lookup-s",
+                        "mkdir",
+                        "-p",
                         "${CACHEABS}/lookup-s"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "cp",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -m ./cygpath -f cygpath)",
+                        "${CACHEABS}/lookup-s/cygpath"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "cp",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -m ./fix-install-sh.sh -f fix-install-sh.sh)",
+                        "${CACHEABS}/lookup-s/fix-install-sh.sh"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "cp",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -m ./fix-stdlib-ocamlopt.sh -f fix-stdlib-ocamlopt.sh)",
+                        "${CACHEABS}/lookup-s/fix-stdlib-ocamlopt.sh"
                     ],
                     [
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/tar.exe -d :)${/}bin${/}tar.exe",
@@ -10369,8 +10386,7 @@
             "precommands": {
                 "private": [
                     "get-asset CommonsLang_OCaml.Base.Bundle@5.5.0-beta1 -p 0.44.zip -n 1 -d s/flexdll",
-                    "get-asset CommonsLang_OCaml.Workspace.Apparatus.Patches@1.0.0 -p assets/p -n 2 -d p",
-                    "get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -n 2 -d lookup-s"
+                    "get-asset CommonsLang_OCaml.Workspace.Apparatus.Patches@1.0.0 -p assets/p -n 2 -d p"
                 ]
             },
             "function": {
@@ -10401,9 +10417,21 @@
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
-                        "mv",
-                        "lookup-s",
+                        "mkdir",
+                        "-p",
                         "${CACHEABS}/lookup-s"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "cp",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -m ./cygpath -f cygpath)",
+                        "${CACHEABS}/lookup-s/cygpath"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "cp",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Workspace.Apparatus.Scripts@1.0.0 -p assets/s -m ./fix-install-sh.sh -f fix-install-sh.sh)",
+                        "${CACHEABS}/lookup-s/fix-install-sh.sh"
                     ],
                     [
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/tar.exe -d :)${/}bin${/}tar.exe",
@@ -10421,7 +10449,7 @@
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/patch.exe -d :)${/}bin${/}patch.exe",
                         "-p1",
                         "-i",
-                        "../p/ocaml-5.5.0-beta1-configure.patch"
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Workspace.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.5.0-beta1-configure.patch -f ocaml-5.5.0-beta1-configure.patch)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -14669,7 +14697,7 @@
                         "/usr/bin/patch",
                         "-p1",
                         "-i",
-                        "../p/ocaml-5.5.0-beta1-configure.patch"
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Workspace.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.5.0-beta1-configure.patch -f ocaml-5.5.0-beta1-configure.patch)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
