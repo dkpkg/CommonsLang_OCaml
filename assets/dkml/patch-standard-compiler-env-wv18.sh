@@ -5,7 +5,9 @@ file=$1
 tmp="$file.tmp"
 
 {
-    while IFS= read -r line; do
+    while IFS= read -r line || [ -n "$line" ]; do
+        line=${line//| PATH=\/usr\/bin:\/bin grep/| grep}
+        line=${line//| PATH=\/usr\/bin:\/bin sed/| sed}
         if [ "$line" = '    CFLAGS_MSVC="${autodetect_compiler_CFLAGS}"    ' ]; then
             printf '%s\n' '    # VS 2026 / MSVC 19.50 warns on mixed enum comparisons in OCaml 4.14 runtime code.'
             printf '%s\n' '    CFLAGS_MSVC="${autodetect_compiler_CFLAGS:+$autodetect_compiler_CFLAGS }/Wv:18"'

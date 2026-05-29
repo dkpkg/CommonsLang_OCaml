@@ -13,6 +13,7 @@ The planned package targets in this repository are:
 - `CommonsLang_OCaml.DkML@4.14.3`
 - `CommonsLang_OCaml.Opam@2.5.1`
 - `CommonsLang_OCaml.Dune@3.23.1`
+- `CommonsLang_GNU.UnixEssentials@1.0.0`
 
 This repository is being ported from the legacy package definitions copied
 into `etc\dk\v`.

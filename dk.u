@@ -4,34 +4,34 @@
   'import'
   'github-l2'
   { {
-      'CommonsBase_GNU', '2.5.202605232350', {
-        'blake2b-256:964a6c849d50821e1db13b6f4e37939385e02e617272d2fada3490c30b75c78c',
-        'sha256:d908f801e1b1ad8fd6a40259e2e1fec3bb7fc4dc52d57a40c9815adff42eb217',
-        'sha1:5a09d05d99e2602df5e5ec24b93eece870065c0f'
+      'CommonsBase_GNU', '2.5.20260528181832', {
+        'blake2b-256:da7fc272f6884cd61efb8356ba63838a175e9b4a2efc112c4863eb777350fbb1',
+        'sha256:0986a1e3b3987f529df45f0234084a7ecedd36eae1ffa27beb649a3e7dda926a',
+        'sha1:dfbf1af95f70d9b6e89510120defc65e0f96c05e'
       } },
     {
-      'CommonsBase_Build', '2.5.202605220745', {
-        'blake2b-256:69d5c4a938bd0b04724aa21500e9e7452a6aa3e974d475a8e63d78c903aeb084',
-        'sha256:b719335f5b201032f9bb45ece985ae5b1513b767c42dae221dbb870a3f472fed',
-        'sha1:63a8c0fb833639d03bfd9eeaa03d3cd687dd4c60'
+      'CommonsBase_Build', '2.5.202605280415', {
+        'blake2b-256:47530bd1841dde940db685eb52ebd988510fff56f3a20384cfb37da71a76acc1',
+        'sha256:7a87b11b9b988abf91798fa6001999a8ca302822119fef425cbdbfe60691997e',
+        'sha1:7d8da0506206466aee660d1ed41611f861c43ab5'
       } },
     {
-      'CommonsBase_FileMagic', '2.5.202605231534', {
-        'blake2b-256:44cbc5f606c8592bbf425aa8690432009d001983e8adfc6ae8775702b5112dce',
-        'sha256:06127fe38bffb9d0f900bb97064b61659edb3fd88ffd9b21f3943cbaf825991a',
-        'sha1:01b319abb7d4a136b9f744fe58d303bb2d370ac5'
+      'CommonsBase_FileMagic', '2.5.202605280452', {
+        'blake2b-256:780da4093cd9fc887a4a412d167a3b5c898c0474d83b919ef6c384dd571908e0',
+        'sha256:9fc3ae762a88d1acf1a617240fbf60430284ceb3990e5ed6850895356689d3d7',
+        'sha1:a934e15265d7b174626209796f45dd7fe9a7e4dc'
       } },
     {
-      'CommonsBase_LLVM', '2.5.202605230522', {
-        'blake2b-256:a0e00bd54b3c86b2e05c71bf3f5104a6167b52fe3cf8e9c0d7c3744536b4101d',
-        'sha256:33f83811b75615660131e128a8e42c23bfd6259d19bb5b7ba679215cb8832c66',
-        'sha1:d8718954bca973cb3e8fa18f75f358c73be2a474'
+      'CommonsBase_LLVM', '2.5.202605280427', {
+        'blake2b-256:d64bf2656ab18974453b25c0ea2c758d70f507ac0eb1024b2899ad08fce3a264',
+        'sha256:2e12aece0acf7696c96be28de5d260ccf58ebcc51233154eb90b12081e439820',
+        'sha1:ad8c8e3883efcc11f9e95042ec995c7bfb8d0997'
       } },
     {
-      'CommonsBase_Std', '2.5.202605230053', {
-        'blake2b-256:45d0f9a049ef179b55e4a4b1adc426d8bcbdaaf8901d9d78b0315b9388f89d3c',
-        'sha256:7f0e42ea1894c4f7108d0c028df48fdd63d528ded76b9b3e195e08f7306d2a67',
-        'sha1:a3d27aedec716fedfd8837f7d4fac419ccd5771e'
+      'CommonsBase_Std', '2.5.202605280411', {
+        'blake2b-256:278570d90d926f080f33e4a89df94486f855e4d2e88e48632abdee60b5c4a566',
+        'sha256:970b6ea33d306ff38f2d0d6961e3185b47bcb8ff5c610df29b49076fe464bd55',
+        'sha1:2404755f35fc0f1a7513426da6dc016ad79282fb'
       } } }
 
 ## Assets
@@ -68,10 +68,10 @@
   '710'
   { 'sha256:32e4de10e6ffdbba35c59daeeb7c77313a695e72201fbba92d522f9fe646838c' }
 
-  % unified.asset { name="DkMLRoot", file="assets/dkml/dkmlroot.2.4.2-13.txt" }
+  % unified.asset { name="DkMLRoot", file="assets/dkml/dkmlroot.2.4.2-22.txt" }
   'asset'
-  '27'
-  'sha256:3ff749d56303dd62a74987522488fe3e8d0e207e5d10168842dd8fc7a36d2ec0'
+  '26'
+  'sha256:154ec4988160b976fcfb867f5dcbec8dc92e4caca8f78d07c60490aa5ee06c96'
 
   % unified.asset { name="DkMLPatchRuntimeCommonVs18", file="assets/dkml/patch-runtime-common-vs18.sh" }
   'asset'

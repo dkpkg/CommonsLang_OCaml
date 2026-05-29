@@ -15,4 +15,5 @@ dk0 text eol=lf
 *.u text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+assets/table/** text eol=lf
 assets/wine-hostshim/* text eol=lf
