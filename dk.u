@@ -36,7 +36,7 @@
 
 ## Assets
 
-### CommonsLang_OCaml.Workspace.Apparatus@1.0.0
+### CommonsLang_OCaml.Apparatus@1.0.0
 
   % unified.asset { name="Patches", dir="assets/p" }
   'asset'
@@ -45,8 +45,23 @@
 
   % unified.asset { name="Scripts", dir="assets/s" }
   'asset'
-  '9236'
-  { 'sha256:ebf6b3f14a5191ae8027d0d0c39ea768ca2c617fe99b3afc497907568bbe9050' }
+  '10242'
+  { 'sha256:c30e67b670e3eb5ee6a93802df74f85aa547489252e48023b6484c1dd3bba891' }
+
+  % unified.asset { name="OpamWinBuild", file="assets/s/opam-win-build.sh" }
+  'asset'
+  '831'
+  'sha256:2dd845dc8c0a5fd0e4412e5f1a014781afb915ea61bec0d3570f370e588f9a45'
+
+  % unified.asset { name="OpamWinBuildV2", file="assets/s/opam-win-build-v2.sh" }
+  'asset'
+  '704'
+  'sha256:919c19379cb52cb4f6827eabe2508364315f863369bf0fa7bdb8b1c80c512612'
+
+  % unified.asset { name="Tables", dir="assets/table" }
+  'asset'
+  '2521'
+  { 'sha256:4b19dfa02f7f09293bdd710330acaecd7fd69ca3d1aaa05c5adc28e62c13426c' }
 
   % unified.asset { name="WineHostShim", dir="assets/wine-hostshim" }
   'asset'
@@ -60,25 +75,70 @@
 
   % unified.asset { name="DkMLPatchRuntimeCommonVs18", file="assets/dkml/patch-runtime-common-vs18.sh" }
   'asset'
-  '549'
-  'sha256:420252b45d1fbb0979d743efe13e48634517fb4b5f9924f01a0c77b7541b3d3c'
+  '7593'
+  'sha256:948fef0f84ca6564468563728dbd533be22399a0f6206e3904cb98a70198e375'
 
   % unified.asset { name="DkMLPatchRelocatableVersion", file="assets/dkml/patch-r-c-ocaml-1-setup-relocatable-version.sh" }
   'asset'
   '1987'
   'sha256:741306e16101152f5aca9a1ec073166d5e92126953c3a27413c9176a4c4d56b7'
 
+  % unified.asset { name="DkMLRunBuildHost", file="assets/dkml/run-build-host.sh" }
+  'asset'
+  '7815'
+  'sha256:7dfc34226b35dc91405aa32ce1536229916dd3f337fa01a6a721cf5ffc56209f'
+
   % unified.asset { name="DkMLRunBuildHostWithMakeWin", file="assets/dkml/run-build-host-with-make-win.sh" }
   'asset'
-  '240'
-  'sha256:885e4d8066c947e047d14e0b3adf1ac5df7dcfb4996635dbb4c7de22b94bd037'
+  '3623'
+  'sha256:2d5221073f46dafe8de25bd1d92367ad5cbaa249a5b1e43c4c51ef5c3bb6c889'
+
+  % unified.asset { name="DkMLDetectVsEnv", file="assets/dkml/detect-vsenv.ps1" }
+  'asset'
+  '3318'
+  'sha256:3ba5ef4f491726e985021f8ffc5f9b8fdc9212acadf81f0f5cca321bab9c4dc8'
+
+  % unified.asset { name="DkMLWriteCommonToolPathSed", file="assets/dkml/write-common-tool-path-sed.sh" }
+  'asset'
+  '257'
+  'sha256:aec4c8b628287d3addf159b64e805daec3f8060bafcd40ed1a144e02684afba2'
+
+  % unified.asset { name="DkMLWriteCommonToolPathSedV2", file="assets/dkml/write-common-tool-path-sed-v2.sh" }
+  'asset'
+  '257'
+  'sha256:aec4c8b628287d3addf159b64e805daec3f8060bafcd40ed1a144e02684afba2'
+
+  % unified.asset { name="DkMLPatchCommonToolPathV3", file="assets/dkml/patch-common-tool-path-v3.sh" }
+  'asset'
+  '445'
+  'sha256:f62cebbce5ce2c758ea233855d2a9bb5608c18b97d3673f6eb872396e2611e68'
+
+  % unified.asset { name="DkMLPatchCommonToolPathV4", file="assets/dkml/patch-common-tool-path-v4.sh" }
+  'asset'
+  '454'
+  'sha256:bdaa4260442ca4f6848cf19a3ec7c66414f23cefabe3f4179bb4ab53a4c7302a'
+
+  % unified.asset { name="DkMLPatchCommonToolPathV5", file="assets/dkml/patch-common-tool-path-v5.sh" }
+  'asset'
+  '478'
+  'sha256:941831bd736c33a78378afdba42fb953b862b4b2616948f5ca151107b1cb7f0a'
+
+  % unified.asset { name="DkMLPatchCommonToolPathV6", file="assets/dkml/patch-common-tool-path-v6.sh" }
+  'asset'
+  '478'
+  'sha256:941831bd736c33a78378afdba42fb953b862b4b2616948f5ca151107b1cb7f0a'
+
+  % unified.asset { name="DkMLRunWithHostAbi", file="assets/dkml/run-with-hostabi.sh" }
+  'asset'
+  '488'
+  'sha256:891ca241b4d1923fb107e59bfd42dc4182dfb34dcbcfc7f3c358a2609ece0b46'
 
   % unified.asset { name="DkMLCleanupSlot", file="assets/dkml/cleanup-dkml-slot.sh" }
   'asset'
-  '155'
-  'sha256:9eb0542780228b1c164ade672d894c117a88937c421c2c41a98c83c2991550f4'
+  '193'
+  'sha256:b4c7c2e7ec17dc80021dbe6a5a5824ed832f07e5d7a86c0ec741263ff0295ad8'
 
   % unified.asset { name="DkMLPatchStandardCompilerEnvWv18", file="assets/dkml/patch-standard-compiler-env-wv18.sh" }
   'asset'
-  '497'
-  'sha256:a6fa7f65e1b75b4e266d49bc51961ce597a86482d536e57f7551fb146f98c72a'
+  '629'
+  'sha256:f75da7664ac5c78c5e712b4e92555f7031665b9be59c5d0f057d5a397bc0fa6d'
