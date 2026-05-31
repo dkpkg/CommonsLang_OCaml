@@ -1,5 +1,5 @@
 // Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.Bundle@4.14.3 -d target/dkml-src
-// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.1.6 -d target/dkml-drc-src
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-9 -d target/dkml-drc-src
 // Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml --trust-local-package CommonsBase_GNU --trust-local-package CommonsBase_Std get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Windows_x86_64 -d target/dkml-winx64
 //
 // Source inputs for the non-opam DkML lane.
@@ -74,11 +74,11 @@
             ]
         },
         {
-            "id": "CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.1.6",
+            "id": "CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-9",
             "listing": {
                 "origins": [
                     {
-                        "name": "gh-dkml-runtime-common-2.1.6",
+                        "name": "gh-dkml-runtime-common",
                         "mirrors": [
                             "https://github.com/diskuv/dkml-runtime-common/archive/refs/tags"
                         ]
@@ -87,12 +87,12 @@
             },
             "assets": [
                 {
-                    "origin": "gh-dkml-runtime-common-2.1.6",
-                    "path": "2.1.6.zip",
+                    "origin": "gh-dkml-runtime-common",
+                    "path": "2.4.2-9.zip",
                     "checksum": {
-                        "sha256": "63b88e5868a5a7fc17df648f39934855b202af8df611c2094e8a4c374754660e"
+                        "sha256": "60f5bee9db7e0f697b4a0294ff8e760fa404c45eefde8a4af7c18ed7f54f8115"
                     },
-                    "size": 57704
+                    "size": 59155
                 }
             ]
         }
@@ -109,14 +109,12 @@
                 ]
             },
             "function": {
-                "execution": [
-                    {
-                        "name": "OSFamily",
-                        "value": "windows"
-                    }
-                ],
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin"
+                    "<PATH=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsBase_GNU.UnixEssentials@0.1.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin",
+                    "+DK_UNIX_COREUTILS=$(--path=absnative get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                    "+DK_UNIX_ESSENTIALS=$(--path=absnative get-object CommonsBase_GNU.UnixEssentials@0.1.0 -s Release.execution_abi -d : -e 'bin/*')",
+                    "+DK_RUNTIME_DIR=${RUNTIMEABS}"
                 ],
                 "commands": [
                     [
@@ -173,13 +171,8 @@
                         "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
                         "-R",
-                        "$(get-asset CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.1.6 -p 2.1.6.zip -n 1 -d :)/.",
+                        "$(get-asset CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-9 -p 2.4.2-9.zip -n 1 -d :)/.",
                         "s/dkmldir/vendor/drc"
-                    ],
-                    [
-                        "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)/bin/sh.exe",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLPatchRuntimeCommonVs18@1.0.0 -p assets/dkml/patch-runtime-common-vs18.sh -f patch-runtime-common-vs18.sh)",
-                        "s/dkmldir/vendor/drc/unix/crossplatform-functions.sh"
                     ],
                     [
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)/bin/sh.exe",
@@ -214,9 +207,10 @@
                         "DKML_SKIP_DKML_INSTALLTIME_VSDEV=1",
                         "DKML_HOST_OCAML_CONFIGURE=--disable-ocamltest",
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)/bin/sh.exe",
+                        "-x",
                         "src/r-c-ocaml-1-setup.sh",
                         "-b",
-                        "VS18.*",
+                        "VS18.*;VS17.*;VS16.*",
                         "-d",
                         "dkmldir",
                         "-t",
