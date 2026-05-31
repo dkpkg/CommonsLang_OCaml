@@ -68,15 +68,10 @@
   '710'
   { 'sha256:32e4de10e6ffdbba35c59daeeb7c77313a695e72201fbba92d522f9fe646838c' }
 
-  % unified.asset { name="DkMLRoot", file="assets/dkml/dkmlroot.2.4.2-22.txt" }
+  % unified.asset { name="DkMLRoot", file="assets/dkml/dkmlroot.2.4.2-24.txt" }
   'asset'
   '26'
-  'sha256:154ec4988160b976fcfb867f5dcbec8dc92e4caca8f78d07c60490aa5ee06c96'
-
-  % unified.asset { name="DkMLPatchRuntimeCommonVs18", file="assets/dkml/patch-runtime-common-vs18.sh" }
-  'asset'
-  '7593'
-  'sha256:948fef0f84ca6564468563728dbd533be22399a0f6206e3904cb98a70198e375'
+  'sha256:a096d259e4258d3e71d9543767d11568508ce4468fb8b9a05893a6d8e017cb93'
 
   % unified.asset { name="DkMLPatchRelocatableVersion", file="assets/dkml/patch-r-c-ocaml-1-setup-relocatable-version.sh" }
   'asset'
