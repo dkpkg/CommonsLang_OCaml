@@ -2,7 +2,6 @@ dk.u text eol=lf
 dk0 text eol=lf
 *.awk text eol=lf
 *.c text eol=lf
-*.cmd text eol=lf
 *.cpp text eol=lf
 *.h text eol=lf
 *.json text eol=lf
@@ -17,3 +16,6 @@ dk0 text eol=lf
 *.yaml text eol=lf
 assets/table/** text eol=lf
 assets/wine-hostshim/* text eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
