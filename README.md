@@ -19,10 +19,10 @@ into `etc\dk\v`.
 
 The current `CommonsLang_OCaml.DkML` work is split into
 `CommonsLang_OCaml.DkML.Bundle@4.14.3`,
-`CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.1.6`, and
+`CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-18`, and
 `CommonsLang_OCaml.DkML@4.14.3`. The split keeps the compiler and runtime
-archives separate while the compiler package stages `dkml-compiler@2.4.2-2`,
-`dkml-runtime-common@2.1.6`, the `dra27/ocaml` 4.14.3 base commit plus the
+archives separate while the compiler package stages `dkml-compiler@2.4.2-31`,
+`dkml-runtime-common@2.4.2-18`, the `dra27/ocaml` 4.14.3 base commit plus the
 relocatable backport patch series, and flexdll 0.43 and runs the upstream
 setup/build scripts directly without invoking opam.
 
