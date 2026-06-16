@@ -210,7 +210,7 @@
                         "--chdir",
                         "s",
                         "DKML_SKIP_DKML_INSTALLTIME_VSDEV=1",
-                        "DKML_HOST_OCAML_CONFIGURE=--disable-ocamltest",
+                        "\"DKML_HOST_OCAML_CONFIGURE=--disable-ocamltest --enable-runtime-search=always --enable-runtime-search-target=always\"",
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)/bin/sh.exe",
                         "-x",
                         "src/r-c-ocaml-1-setup.sh",
@@ -312,10 +312,10 @@
                             "bin/ocamlopt.exe",
                             "bin/ocamloptp.exe",
                             "bin/ocamlprof.exe",
+                            "bin/ocamlrun-v000.exe",
                             "bin/ocamlrun.exe",
-                            "bin/ocamlrund.exe",
-                            "bin/ocamlruni.exe",
-                            "bin/ocamlyacc.exe"
+                            "bin/ocamlyacc.exe",
+                            "bin/x86_64-pc-windows-ocamlrun-v004.exe"
                         ]
                     },
                     {
@@ -2271,9 +2271,9 @@
                             "lib/ocaml/string.mli",
                             "lib/ocaml/stringLabels.ml",
                             "lib/ocaml/stringLabels.mli",
-                            "lib/ocaml/stublibs/dllcamlstr.dll",
-                            "lib/ocaml/stublibs/dllthreads.dll",
-                            "lib/ocaml/stublibs/dllunix.dll",
+                            "lib/ocaml/stublibs/dllcamlstr-x86_64-pc-windows-v004.dll",
+                            "lib/ocaml/stublibs/dllthreads-x86_64-pc-windows-v004.dll",
+                            "lib/ocaml/stublibs/dllunix-x86_64-pc-windows-v004.dll",
                             "lib/ocaml/sys.ml",
                             "lib/ocaml/sys.mli",
                             "lib/ocaml/threads/condition.cmi",

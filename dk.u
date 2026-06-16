@@ -88,15 +88,10 @@
   '4845'
   'sha256:a44049eba182095367ac772f8135e6dd6019daec49b3e327f48aac09b07cf7df'
 
-  % unified.asset { name="DkMLRunWithHostAbi", file="assets/dkml/run-with-hostabi.sh" }
-  'asset'
-  '474'
-  'sha256:ec7ec42083315a43907786075e876f173153510644a7ea9707a73872a569995e'
-
   % unified.asset { name="DkMLCleanupSlot", file="assets/dkml/cleanup-dkml-slot.sh" }
   'asset'
-  '199'
-  'sha256:4416ebf0239aae6af0df0a4449233a537a4a4a60262a541d8f36f44a2d490573'
+  '394'
+  'sha256:41f2e0f539e75327bba815019663dea6b2a7b0d578c784869c13f27b962682ac'
 
   % unified.asset { name="DkMLPatchStandardCompilerEnvWv18", file="assets/dkml/patch-standard-compiler-env-wv18.sh" }
   'asset'
