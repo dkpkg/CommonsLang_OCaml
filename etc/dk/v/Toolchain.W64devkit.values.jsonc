@@ -86,11 +86,11 @@
 
                     // --- patch: use Compflags-win32.cmd not shell script Compflags
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "rm", "s/stdlib/Compflags"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
                         "$(get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./Compflags-win32.cmd -f Compflags.cmd)",
                         "s/stdlib/Compflags.cmd"
@@ -98,22 +98,22 @@
 
                     // --- clean move the patched OCaml source (s/) into cache ---
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "rm", "-rf", "${CACHE}/CommonsLang_OCaml.Toolchain.W64devkit@5.4.1/src"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir", "-p", "${CACHE}/CommonsLang_OCaml.Toolchain.W64devkit@5.4.1"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mv", "-n", "s", "${CACHE}/CommonsLang_OCaml.Toolchain.W64devkit@5.4.1/src"
                     ],
 
                     // --- create Wine prefix ---
                     // note: a wineserver is 1-1 with a Wine prefix. it may be started in the background if not already running.
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir", "-p",
                         "${STATE}/wineprefixes/CommonsLang_OCaml.Toolchain.W64devkit.${SLOTNAME.request}@5.4.1"
                     ],
@@ -136,7 +136,7 @@
 
                     // --- C:\**: make parent directories
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir", "-p",
                         "${STATE}/wineprefixes/CommonsLang_OCaml.Toolchain.W64devkit.${SLOTNAME.request}@5.4.1/drive_c/opt",
                         "${STATE}/wineprefixes/CommonsLang_OCaml.Toolchain.W64devkit.${SLOTNAME.request}@5.4.1/drive_c/src/CommonsLang_OCaml/w64devkit/5.4.1/bin"
@@ -145,7 +145,7 @@
                     // --- C:\src\CommonsLang_OCaml\w64devkit\5.4.1\src: OCaml source code
                     // using a symlink
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "ln", "--symbolic", "--force",
                         "--target-directory", "${STATE}/wineprefixes/CommonsLang_OCaml.Toolchain.W64devkit.${SLOTNAME.request}@5.4.1/drive_c/src/CommonsLang_OCaml/w64devkit/5.4.1",
                         "${CACHEABS}/CommonsLang_OCaml.Toolchain.W64devkit@5.4.1/src"
@@ -153,7 +153,7 @@
 
                     // --- C:\src\CommonsLang_OCaml\w64devkit\5.4.1\bin: Shims (cdsrc.sh, cdsrc.cmd)
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
                         "$(get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./cdsrc-w64devkit.sh -f cdsrc.sh)",
                         "$(get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./cdsrc-w64devkit.cmd -f cdsrc.cmd)",
@@ -162,7 +162,7 @@
 
                     // --- C:\opt\w64devkit: w64devkit toolchain with Windows x86_64 execution ABI ---
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp", "-r",
                         "$(get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.Windows_x86_64 -d :)",
                         "${STATE}/wineprefixes/CommonsLang_OCaml.Toolchain.W64devkit.${SLOTNAME.request}@5.4.1/drive_c/opt/w64devkit"
@@ -232,7 +232,7 @@
                     // --- 2. ./config.status
                     //   avoids Wine reparse links. docs/support/INVESTIGATE-2026-02-24-ocaml-flexlink.md
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env", "--chdir", "${CACHE}/CommonsLang_OCaml.Toolchain.W64devkit@5.4.1/src",
                         //      `enter-wine.sh WINEPREFIX sh.exe -l cdsrc.sh ./config.status`
                         "/bin/sh",
@@ -255,7 +255,7 @@
                         //      Use `env --chdir` to change Unix directory as well as `make -C`
                         //      to change the Windows directory to the same location. That is adopted
                         //      from CommonsLang_OCaml.Toolchain.LLVM_MinGW@5.4.1 even though it may not be necessary.
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env", "--chdir", "${STATEABS}/wineprefixes/CommonsLang_OCaml.Toolchain.W64devkit.${SLOTNAME.request}@5.4.1/drive_c/src/CommonsLang_OCaml/w64devkit/5.4.1/src",
                         //      `enter-wine.sh WINEPREFIX sh.exe -l cdsrc.sh make.exe`
                         "/bin/sh",
@@ -288,7 +288,7 @@
 
                     // --- 5. move into slot ---
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mv",
                         "${STATE}/wineprefixes/CommonsLang_OCaml.Toolchain.W64devkit.${SLOTNAME.request}@5.4.1/drive_c/opt/ocaml-5.4.1/bin",
                         "${STATE}/wineprefixes/CommonsLang_OCaml.Toolchain.W64devkit.${SLOTNAME.request}@5.4.1/drive_c/opt/ocaml-5.4.1/lib",

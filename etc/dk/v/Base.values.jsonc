@@ -8303,37 +8303,37 @@
                 ],
                 "commands": [
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir",
                         "-p",
                         "s"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir",
                         "-p",
                         "${CACHEABS}"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir",
                         "-p",
                         "${CACHEABS}/lookup-s"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
                         "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./cygpath -f cygpath)",
                         "${CACHEABS}/lookup-s/cygpath"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
                         "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./fix-install-sh.sh -f fix-install-sh.sh)",
                         "${CACHEABS}/lookup-s/fix-install-sh.sh"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
                         "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./fix-stdlib-ocamlopt.sh -f fix-stdlib-ocamlopt.sh)",
                         "${CACHEABS}/lookup-s/fix-stdlib-ocamlopt.sh"
@@ -8347,7 +8347,7 @@
                         "--strip-components=1"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -8357,7 +8357,7 @@
                         "../p/ocaml-4.14.3-configure.patch"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -8394,7 +8394,7 @@
                         "--disable-stdlib-manpages"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -8403,7 +8403,7 @@
                         "Makefile.build_config"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -8412,7 +8412,7 @@
                         "stdlib/Makefile"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -8422,7 +8422,7 @@
                         "world.opt"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -10407,31 +10407,31 @@
                 ],
                 "commands": [
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir",
                         "-p",
                         "s"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir",
                         "-p",
                         "${CACHEABS}"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir",
                         "-p",
                         "${CACHEABS}/lookup-s"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
                         "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./cygpath -f cygpath)",
                         "${CACHEABS}/lookup-s/cygpath"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
                         "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./fix-install-sh.sh -f fix-install-sh.sh)",
                         "${CACHEABS}/lookup-s/fix-install-sh.sh"
@@ -10445,7 +10445,7 @@
                         "--strip-components=1"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -10455,7 +10455,7 @@
                         "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.5.0-beta1-configure.patch -f ocaml-5.5.0-beta1-configure.patch)"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -10490,7 +10490,7 @@
                         "--disable-stdlib-manpages"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -10499,7 +10499,7 @@
                         "Makefile.build_config"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -10509,7 +10509,7 @@
                         "world.opt"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -12646,7 +12646,7 @@
                 ],
                 "commands": [
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir",
                         "-p",
                         "s"
@@ -12660,7 +12660,7 @@
                         "--strip-components=1"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -12670,7 +12670,7 @@
                         "../p/ocaml-4.14.3-configure.patch"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -12684,7 +12684,7 @@
                         "--disable-stdlib-manpages"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -12692,7 +12692,7 @@
                         "world.opt"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -14682,7 +14682,7 @@
                 ],
                 "commands": [
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir",
                         "-p",
                         "s"
@@ -14696,7 +14696,7 @@
                         "--strip-components=1"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -14706,7 +14706,7 @@
                         "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.5.0-beta1-configure.patch -f ocaml-5.5.0-beta1-configure.patch)"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -14723,7 +14723,7 @@
                         "--disable-stdlib-manpages"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
@@ -14731,7 +14731,7 @@
                         "world.opt"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
