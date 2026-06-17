@@ -1,0 +1,93 @@
+// Source inputs for the non-opam DkML lane: the OCaml 4.14.3 tree, the
+// flexdll source and the dkml-runtime-common tree, packaged as bundles.
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.Bundle@4.14.3 -d target/dkml-src
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-18 -d target/dkml-drc-src
+{
+    "$schema": "https://github.com/diskuv/dk/raw/refs/heads/V2_5/etc/jsonschema/dk-values.json",
+    "schema_version": {
+        "major": 1,
+        "minor": 0
+    },
+    "bundles": [
+        {
+            "id": "CommonsLang_OCaml.DkML.Bundle@4.14.3",
+            "listing": {
+                "origins": [
+                    {
+                        "name": "gh-dkml-compiler",
+                        "mirrors": [
+                            "https://github.com/diskuv/dkml-compiler/archive/refs/tags"
+                        ]
+                    },
+                    {
+                        "name": "gh-ocaml-ocaml-4.14.3",
+                        "mirrors": [
+                            "https://github.com/ocaml/ocaml/archive/refs/tags"
+                        ]
+                    },
+                    {
+                        "name": "caml-ocaml-4.14.3",
+                        "mirrors": [
+                            "https://caml.inria.fr/pub/distrib/ocaml-4.14/"
+                        ]
+                    },
+                    {
+                        "name": "gh-ocaml-flexdll-0.43",
+                        "mirrors": [
+                            "https://github.com/ocaml/flexdll/archive"
+                        ]
+                    }
+                ]
+            },
+            "assets": [
+                {
+                    "origin": "gh-dkml-compiler",
+                    "path": "2.4.2-31.zip",
+                    "checksum": {
+                        "sha256": "9b7774979202475a265f653a31b9ee978674e0c465f69cbdd10fc05334796571"
+                    },
+                    "size": 1525518
+                },
+                {
+                    "origin": "gh-ocaml-ocaml-4.14.3",
+                    "path": "4.14.3.tar.gz",
+                    "checksum": {
+                        "sha256": "e510689183b2d62b0a7513ea7e47be80ddb9173377a2df436dbc1ca927a64689"
+                    },
+                    "size": 5513909
+                },
+                {
+                    "origin": "gh-ocaml-flexdll-0.43",
+                    "path": "0.43.tar.gz",
+                    "checksum": {
+                        "sha256": "10e171ab7d2f8b2f238b53bb9944d4b26686f5703fbc1c059532791bc91be949"
+                    },
+                    "size": 70131
+                }
+            ]
+        },
+        {
+            "id": "CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-18",
+            "listing": {
+                "origins": [
+                    {
+                        "name": "gh-dkml-runtime-common",
+                        "mirrors": [
+                            "https://github.com/diskuv/dkml-runtime-common/archive/refs/tags"
+                        ]
+                    }
+                ]
+            },
+            "assets": [
+                {
+                    "origin": "gh-dkml-runtime-common",
+                    "path": "2.4.2-18.zip",
+                    "checksum": {
+                        "sha256": "0912c4166f3ef30646e0e010456d146ed37334f045f4f51d6383e403c7541530"
+                    },
+                    "size": 62133
+                }
+            ]
+        }
+    ]
+}

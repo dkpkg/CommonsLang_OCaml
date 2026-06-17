@@ -90,8 +90,8 @@
 
   % unified.asset { name="DkMLCleanupSlot", file="assets/dkml/cleanup-dkml-slot.sh" }
   'asset'
-  '394'
-  'sha256:41f2e0f539e75327bba815019663dea6b2a7b0d578c784869c13f27b962682ac'
+  '478'
+  'sha256:fe24fbdb88bf03166136974819a11dd98486f34a7ddd3eac5499e114448660d1'
 
   % unified.asset { name="DkMLPatchStandardCompilerEnvWv18", file="assets/dkml/patch-standard-compiler-env-wv18.sh" }
   'asset'
