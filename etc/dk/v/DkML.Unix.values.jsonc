@@ -123,8 +123,6 @@
                         "env",
                         "--chdir",
                         "${SLOTABS.Release.Linux_x86_64}",
-                        // Serial make (NUMCPUS=1) avoids a relocatable-backport byterntm/.depend parallel race on the Misc module.
-                        "NUMCPUS=1",
                         "HOST_LIBDIR=../lib/ocaml",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
@@ -171,8 +169,6 @@
                         "env",
                         "--chdir",
                         "${SLOTABS.Release.Linux_x86}",
-                        // Serial make (NUMCPUS=1) avoids a relocatable-backport byterntm/.depend parallel race on the Misc module.
-                        "NUMCPUS=1",
                         "HOST_LIBDIR=../lib/ocaml",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
@@ -219,8 +215,6 @@
                         "env",
                         "--chdir",
                         "${SLOTABS.Release.Linux_arm64}",
-                        // Serial make (NUMCPUS=1) avoids a relocatable-backport byterntm/.depend parallel race on the Misc module.
-                        "NUMCPUS=1",
                         "HOST_LIBDIR=../lib/ocaml",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
@@ -267,8 +261,6 @@
                         "env",
                         "--chdir",
                         "${SLOTABS.Release.Darwin_x86_64}",
-                        // Serial make (NUMCPUS=1) avoids a relocatable-backport byterntm/.depend parallel race on the Misc module.
-                        "NUMCPUS=1",
                         "HOST_LIBDIR=../lib/ocaml",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
@@ -315,8 +307,6 @@
                         "env",
                         "--chdir",
                         "${SLOTABS.Release.Darwin_arm64}",
-                        // Serial make (NUMCPUS=1) avoids a relocatable-backport byterntm/.depend parallel race on the Misc module.
-                        "NUMCPUS=1",
                         "HOST_LIBDIR=../lib/ocaml",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
