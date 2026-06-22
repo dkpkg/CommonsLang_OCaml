@@ -42,11 +42,11 @@
             "assets": [
                 {
                     "origin": "gh-dkml-compiler",
-                    "path": "2.4.2-41.zip",
+                    "path": "2.4.2-42.zip",
                     "checksum": {
-                        "sha256": "6af6d94bf64afef2592a7c12ab49524d376a1995cd7ccc623c44e541653c051a"
+                        "sha256": "c8a01a0d567e6a016d9432d9c72008c3c6b2dd410c61d6bc7af5761e89214394"
                     },
-                    "size": 1526558
+                    "size": 1526861
                 },
                 {
                     "origin": "gh-ocaml-ocaml-4.14.3",
