@@ -4,7 +4,7 @@
 // Opam 2.5.1 is built from its release tarball with vendored dependencies.
 // The current package publishes the slots already available from Base@5.5.0-beta1.
 {
-    "$schema": "https://github.com/diskuv/dk/raw/refs/heads/V2_5/etc/jsonschema/dk-values.json",
+    "$schema": "https://diskuv.com/dk/schema/dk-value-1.0.json",
     "schema_version": {
         "major": 1,
         "minor": 0

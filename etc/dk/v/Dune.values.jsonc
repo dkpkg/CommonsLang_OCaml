@@ -4,7 +4,7 @@
 // Dune 3.23.1 bootstraps itself with the OCaml compiler alone. For now this
 // package publishes the slots already available from CommonsLang_OCaml.Base@5.5.0-beta1.
 {
-    "$schema": "https://github.com/diskuv/dk/raw/refs/heads/V2_5/etc/jsonschema/dk-values.json",
+    "$schema": "https://diskuv.com/dk/schema/dk-value-1.0.json",
     "schema_version": {
         "major": 1,
         "minor": 0
