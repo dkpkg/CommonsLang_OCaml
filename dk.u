@@ -86,7 +86,7 @@
   % unified.asset { name="DkMLDetectVsEnvBat", file="assets/dkml/detect-vsenv.bat" }
   'asset'
   '4845'
-  'sha256:a44049eba182095367ac772f8135e6dd6019daec49b3e327f48aac09b07cf7df'
+  'sha256:71ad1b60c3b21822e078f7c92d5d7dadbb470445a685ba835c1153cbcedf50df'
 
   % unified.asset { name="DkMLCleanupSlot", file="assets/dkml/cleanup-dkml-slot.sh" }
   'asset'

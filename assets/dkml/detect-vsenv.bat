@@ -40,7 +40,7 @@ if not exist "%VSWHERE_EXE%" (
 )
 
 set "VSW_TMP=%TEMP%\\dkml-vswhere-%RANDOM%.txt"
-"%VSWHERE_EXE%" -latest -version [16.0,18.0) -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > "%VSW_TMP%" 2>nul
+"%VSWHERE_EXE%" -latest -version [16.0,19.0) -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > "%VSW_TMP%" 2>nul
 if exist "%VSW_TMP%" set /p INSTALLPATH=<"%VSW_TMP%"
 del "%VSW_TMP%" >nul 2>nul
 if not defined INSTALLPATH (
@@ -49,7 +49,7 @@ if not defined INSTALLPATH (
 )
 
 set "VSW_TMP=%TEMP%\\dkml-vswhere-%RANDOM%.txt"
-"%VSWHERE_EXE%" -latest -version [16.0,18.0) -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationVersion > "%VSW_TMP%" 2>nul
+"%VSWHERE_EXE%" -latest -version [16.0,19.0) -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationVersion > "%VSW_TMP%" 2>nul
 if exist "%VSW_TMP%" set /p INSTALLVERSION=<"%VSW_TMP%"
 del "%VSW_TMP%" >nul 2>nul
 if not defined INSTALLVERSION (
