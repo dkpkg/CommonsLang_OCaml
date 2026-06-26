@@ -1,7 +1,7 @@
 // Source inputs for the non-opam DkML lane: the OCaml 4.14.3 tree, the
 // flexdll source and the dkml-runtime-common tree, packaged as bundles.
 // Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.Bundle@4.14.3 -d target/dkml-src
-// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-25 -d target/dkml-drc-src
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-26 -d target/dkml-drc-src
 {
     "$schema": "https://diskuv.com/dk/schema/dk-value-1.0.json",
     "schema_version": {
@@ -67,13 +67,13 @@
             ]
         },
         {
-            "id": "CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-25",
+            "id": "CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-26",
             "listing": {
                 "origins": [
                     {
                         "name": "gh-dkml-runtime-common",
                         "mirrors": [
-                            "https://github.com/diskuv/dkml-runtime-common/releases/download/2.4.2-25"
+                            "https://github.com/diskuv/dkml-runtime-common/releases/download/2.4.2-26"
                         ]
                     }
                 ]
@@ -83,9 +83,9 @@
                     "origin": "gh-dkml-runtime-common",
                     "path": "src.zip",
                     "checksum": {
-                        "sha256": "598d9c52500c4db643554ee4fcfff186e5a7b410c9f3ad73d3a8c7f983611934"
+                        "sha256": "6dde51c5f6605a838e664d78b21a47b1d761650dba2254666bc66ae9a26d23ac"
                     },
-                    "size": 62920
+                    "size": 62587
                 }
             ]
         }
