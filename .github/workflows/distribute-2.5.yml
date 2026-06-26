@@ -37,14 +37,18 @@ jobs:
             distscript: dist-Darwin_x86_64.u
             execution-abi: Darwin_arm64
             target-abi: Darwin_x86_64
-          # Linux arm64: dk0 has no native arm64 binary yet, so it bootstraps
-          # MlFront from HEAD (experimental-mlfront-ref). This changes the
-          # producer version, so the combine step will mismatch unless every
-          # job uses the same setting.
-          - runs-on: ubuntu-24.04-arm
-            image: quay.io/pypa/manylinux_2_28_aarch64:2026.04.08-5
-            distscript: dist-Linux_arm64.u
-            experimental-mlfront-ref: true
+          # Linux arm64 is disabled until the arm64 toolchain ecosystem is
+          # ready (mirrors CommonsBase_GNU). Two blockers:
+          #   1. CommonsBase_Std.Coreutils has no Release.Linux_arm64 slot yet,
+          #      so the host-build commands cannot fetch coreutils.
+          #   2. dk0 has no native arm64 binary, so it must bootstrap MlFront
+          #      from HEAD (experimental-mlfront-ref: true). Mixing that with
+          #      the other non-experimental jobs makes the combine step fail on
+          #      a producer-version mismatch.
+          # - runs-on: ubuntu-24.04-arm
+          #   image: quay.io/pypa/manylinux_2_28_aarch64:2026.04.08-5
+          #   distscript: dist-Linux_arm64.u
+          #   experimental-mlfront-ref: true
     runs-on: ${{ matrix.runs-on }}
     container:
       image: ${{ matrix.image }}

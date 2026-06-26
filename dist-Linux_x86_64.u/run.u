@@ -4,12 +4,15 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -d ${RUNTIME}/Linux_x86_64-DkML-4.14.3
   \test(pass)
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "ocya2fuh7f2hyo4upzergxtgvypla6z62a7lb7vkkxqcgc3dr2rna")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
   \test(pass)
-  \dk.target(abi: "Linux_x86_64")[ELF 64-bit LSB executable, x86-64
+  \dk.target(abi: "Linux_x86_64")[ELF 64-bit LSB executable, x86-64, version 1 (SYSV)
   ]\;
 
   $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -version
   \test(pass)
+  \dk.target(abi: "Linux_x86_64")[4.14.3+relocatable
+  ]\;

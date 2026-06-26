@@ -18,12 +18,6 @@
                 ]
             },
             "function": {
-                "execution": [
-                    {
-                        "name": "OSFamily",
-                        "value": "linux"
-                    }
-                ],
                 "commands": [
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
