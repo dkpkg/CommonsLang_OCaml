@@ -5245,6 +5245,7 @@
                             "bin/ocamlprof.byte",
                             "bin/ocamlprof.opt",
                             "bin/ocamlrun-v000",
+                            "bin/ocamlrun",
                             "bin/ocamlyacc",
                             "bin/x86_64-apple-darwin-ocamlrun-v004",
                             "lib/ocaml/Makefile.config",
@@ -7647,6 +7648,7 @@
                         ],
                         "paths": [
                             "bin/aarch64-apple-darwin-ocamlrun-v004",
+                            "bin/ocamlrun",
                             "bin/ocaml",
                             "bin/ocamlc",
                             "bin/ocamlc.byte",
