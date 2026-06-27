@@ -4,12 +4,15 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Darwin_arm64 -d ${RUNTIME}/Darwin_arm64-DkML-4.14.3
   \test(pass)
+  \dk.object(abi: "Release.Darwin_arm64", value-id: "ok72aatgcjna7xaer25n3pprdz5vukuyf473npp3owowit4pjh5xa")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
   \test(pass)
-  \dk.target(abi: "Darwin_arm64")[Mach-O 64-bit executable
+  \dk.target(abi: "Darwin_arm64")[Mach-O 64-bit executable, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|WEAK_DEFINES|BINDS_TO_WEAK|PIE>
   ]\;
 
   $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Darwin_arm64 -e 'bin/*' -c bin/ocamlopt -- -version
   \test(pass)
+  \dk.target(abi: "Darwin_arm64")[4.14.3+relocatable
+  ]\;
