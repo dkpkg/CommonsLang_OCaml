@@ -4,14 +4,17 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Windows_x86 -d ${RUNTIME}/Windows_x86-DkML-4.14.3
   \test(pass)
+  \dk.object(abi: "Release.Windows_x86", value-id: "ozfumyb3b2kxsxxyveijaa26wohbzhrf5skocasbegizmfwajmuia")\;
 
 Release.Windows_x86_64 will be used as Release.execution_abi on normal (64-bit) build + CI machines.
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt.exe
   \test(pass)
-  \dk.target(abi: "Windows_x86")[PE32 executable
+  \dk.target(abi: "Windows_x86")[PE32 executable for MS Windows 6.00 (console),, 5 sections
   ]\;
 
   $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Windows_x86 -c bin/ocamlopt.exe -- -version
   \test(pass)
+  \dk.target(abi: "Windows_x86")[4.14.3+relocatable
+  ]\;
