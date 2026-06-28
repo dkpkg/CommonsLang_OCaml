@@ -97,6 +97,23 @@ jobs:
           echo "=== config.sub: version-less vs versioned ==="
           s=$(find . -name config.sub -path '*src-ocaml*' 2>/dev/null | head -1); [ -n "$s" ] && { echo -n "aarch64-apple-darwin -> "; sh "$s" aarch64-apple-darwin; echo -n "aarch64-apple-darwin25.4.0 -> "; sh "$s" aarch64-apple-darwin25.4.0; } || true
 
+      # Diagnostic (temporary): flexlink.exe fails to open during zip
+      # (GetLastError=2) even with the \\?\ path fix and the real-files install.
+      # Dump what each flexlink.exe actually is (symlink type, target, size) so
+      # the remaining failure can be diagnosed precisely.
+      - name: Diagnose Windows flexlink
+        if: ${{ !cancelled() && startsWith(matrix.runs-on, 'windows') }}
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse -Filter 'flexlink.exe' -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match 'Release\.Windows' } | ForEach-Object {
+              "PATH: $($_.FullName)"
+              "  LinkType:   $($_.LinkType)"
+              "  Target:     $($_.Target)"
+              "  Length:     $($_.Length)"
+              "  Attributes: $($_.Attributes)"
+            }
+
   combine:
     needs: distribute
     permissions:
