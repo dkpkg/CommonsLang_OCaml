@@ -33,12 +33,10 @@ jobs:
           - runs-on: macos-latest
             distscript: dist-Darwin_arm64.u
             execution-abi: Darwin_arm64
-            options: -nosysinc --verbose # diagnostic: capture full exit-128 trace
           - runs-on: macos-latest
             distscript: dist-Darwin_x86_64.u
             execution-abi: Darwin_arm64
             target-abi: Darwin_x86_64
-            options: -nosysinc --verbose # diagnostic: capture full exit-128 trace
           # Linux arm64 is disabled until the arm64 toolchain ecosystem is
           # ready (mirrors CommonsBase_GNU). Two blockers:
           #   1. CommonsBase_Std.Coreutils has no Release.Linux_arm64 slot yet,
@@ -79,40 +77,6 @@ jobs:
           target-abi: ${{ matrix.target-abi }}
           experimental-dk-owner: ${{ github.repository_owner == 'dkpkg' && 'diskuv' || github.repository_owner }}
           experimental-mlfront-ref: ${{ (github.ref_type != 'tag' || matrix.experimental-mlfront-ref) && 'HEAD' }}
-
-      # Diagnostic (temporary): the Darwin runtime-search-target name embeds the
-      # macOS version (aarch64-apple-darwin25.4.0-ocamlrun-v004) which varies
-      # across macos-latest runners. Dump the host triple, what ./configure
-      # recorded, the produced runtime names, and how config.sub normalizes a
-      # version-less triple, so the fix can be made precisely.
-      - name: Diagnose Darwin runtime triple
-        if: ${{ !cancelled() && startsWith(matrix.runs-on, 'macos') }}
-        run: |
-          echo "=== config.guess (raw host triple) ==="
-          g=$(find . -name config.guess -path '*src-ocaml*' 2>/dev/null | head -1); echo "found: $g"; [ -n "$g" ] && sh "$g" || true
-          echo "=== Makefile.config HOST/TARGET ==="
-          m=$(find . -name Makefile.config -path '*src-ocaml*' 2>/dev/null | head -1); [ -n "$m" ] && grep -nE '^(HOST|TARGET)=' "$m" || true
-          echo "=== produced runtime names ==="
-          find . -name '*ocamlrun-v*' 2>/dev/null | sed 's#.*/##' | sort -u || true
-          echo "=== config.sub: version-less vs versioned ==="
-          s=$(find . -name config.sub -path '*src-ocaml*' 2>/dev/null | head -1); [ -n "$s" ] && { echo -n "aarch64-apple-darwin -> "; sh "$s" aarch64-apple-darwin; echo -n "aarch64-apple-darwin25.4.0 -> "; sh "$s" aarch64-apple-darwin25.4.0; } || true
-
-      # Diagnostic (temporary): flexlink.exe fails to open during zip
-      # (GetLastError=2) even with the \\?\ path fix and the real-files install.
-      # Dump what each flexlink.exe actually is (symlink type, target, size) so
-      # the remaining failure can be diagnosed precisely.
-      - name: Diagnose Windows flexlink
-        if: ${{ !cancelled() && startsWith(matrix.runs-on, 'windows') }}
-        shell: pwsh
-        run: |
-          Get-ChildItem -Recurse -Filter 'flexlink.exe' -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -match 'Release\.Windows' } | ForEach-Object {
-              "PATH: $($_.FullName)"
-              "  LinkType:   $($_.LinkType)"
-              "  Target:     $($_.Target)"
-              "  Length:     $($_.Length)"
-              "  Attributes: $($_.Attributes)"
-            }
 
   combine:
     needs: distribute
