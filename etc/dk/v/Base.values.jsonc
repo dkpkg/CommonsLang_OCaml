@@ -2085,9 +2085,7 @@
                             "share/doc/ocaml/Changes",
                             "share/doc/ocaml/LICENSE",
                             "share/doc/ocaml/README.adoc",
-                            "share/doc/ocaml/README.win32.adoc",
-                            "___BEGIN___COMMAND_DONE_MARKER___0",
-                            "PS Y:\\source\\rotary-phone>"
+                            "share/doc/ocaml/README.win32.adoc"
                         ]
                     },
                     {
