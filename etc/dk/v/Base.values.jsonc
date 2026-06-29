@@ -1,7 +1,7 @@
 // Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Base.Bundle@4.14.3 -d target/base-4.14.3
-// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Base.Bundle@5.5.0-beta1 -d target/base-5.5.0-beta1
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Base.Bundle@5.5.0 -d target/base-5.5.0
 // Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-object CommonsLang_OCaml.Base@4.14.3 -s Release.Linux_x86_64 -d target/base-linux-4.14.3
-// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Linux_x86_64 -d target/base-linux-5.5.0-beta1
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Linux_x86_64 -d target/base-linux-5.5.0
 //
 // Source bundles plus Linux_x86_64 and Windows_x86_64 forms for the autoconf-based Base compiler tracks.
 // Linux_x86_64 and Windows_x86_64 are implemented in this file.
@@ -66,17 +66,17 @@
             ]
         },
         {
-            "id": "CommonsLang_OCaml.Base.Bundle@5.5.0-beta1",
+            "id": "CommonsLang_OCaml.Base.Bundle@5.5.0",
             "listing": {
                 "origins": [
                     {
-                        "name": "gh-ocaml-ocaml-5.5.0-beta1",
+                        "name": "gh-ocaml-ocaml-5.5.0",
                         "mirrors": [
                             "https://github.com/ocaml/ocaml/archive"
                         ]
                     },
                     {
-                        "name": "caml-ocaml-5.5.0-beta1",
+                        "name": "caml-ocaml-5.5.0",
                         "mirrors": [
                             "https://caml.inria.fr/pub/distrib/ocaml-5.5/"
                         ]
@@ -91,20 +91,20 @@
             },
             "assets": [
                 {
-                    "origin": "gh-ocaml-ocaml-5.5.0-beta1",
-                    "path": "5.5.0-beta1.tar.gz",
+                    "origin": "gh-ocaml-ocaml-5.5.0",
+                    "path": "5.5.0.tar.gz",
                     "checksum": {
-                        "sha256": "4828cb132d9df1e308127a8c257567deea3d83c4ce3bf0fbe54083ba4a938bcc"
+                        "sha256": "c018052c8264a3791a8f54f84179e6bcc78ed82eb889bacc2773df445259aed3"
                     },
-                    "size": 5008453
+                    "size": 5008847
                 },
                 {
-                    "origin": "caml-ocaml-5.5.0-beta1",
-                    "path": "ocaml-5.5.0~beta1.tar.gz",
+                    "origin": "caml-ocaml-5.5.0",
+                    "path": "ocaml-5.5.0.tar.gz",
                     "checksum": {
-                        "sha256": "f41fc19fc05c27d6696b0054051e8504bbb39d8af9ebe9881109b9590121744f"
+                        "sha256": "1a9537c2abda43335cd0af8edbc575bab588a6db68308d7ce8bd9ad80573a477"
                     },
-                    "size": 6602890
+                    "size": 6609018
                 },
                 {
                     "origin": "gh-ocaml-flexdll",
@@ -4040,11 +4040,11 @@
             }
         },
         {
-            "id": "CommonsLang_OCaml.Base@5.5.0-beta1",
+            "id": "CommonsLang_OCaml.Base@5.5.0",
             "precommands": {
                 "private": [
-                    "get-object CommonsLang_OCaml.Base.Unix@5.5.0-beta1 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
-                    "get-object CommonsLang_OCaml.Base.Win32@5.5.0-beta1 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}"
+                    "get-object CommonsLang_OCaml.Base.Unix@5.5.0 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
+                    "get-object CommonsLang_OCaml.Base.Win32@5.5.0 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}"
                 ]
             },
             "outputs": {
@@ -10385,10 +10385,10 @@
             }
         },
         {
-            "id": "CommonsLang_OCaml.Base.Win32@5.5.0-beta1",
+            "id": "CommonsLang_OCaml.Base.Win32@5.5.0",
             "precommands": {
                 "private": [
-                    "get-asset CommonsLang_OCaml.Base.Bundle@5.5.0-beta1 -p 0.44.zip -n 1 -d s/flexdll",
+                    "get-asset CommonsLang_OCaml.Base.Bundle@5.5.0 -p 0.44.zip -n 1 -d s/flexdll",
                     "get-asset CommonsLang_OCaml.Apparatus.Patches@1.0.0 -p assets/p -n 2 -d p"
                 ]
             },
@@ -10439,7 +10439,7 @@
                     [
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/tar.exe -d :)${/}bin${/}tar.exe",
                         "xzf",
-                        "$(get-asset CommonsLang_OCaml.Base.Bundle@5.5.0-beta1 -p ocaml-5.5.0~beta1.tar.gz -f ocaml-5.5.0~beta1.tar.gz)",
+                        "$(get-asset CommonsLang_OCaml.Base.Bundle@5.5.0 -p ocaml-5.5.0.tar.gz -f ocaml-5.5.0.tar.gz)",
                         "-C",
                         "s",
                         "--strip-components=1"
@@ -10452,7 +10452,7 @@
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/patch.exe -d :)${/}bin${/}patch.exe",
                         "-p1",
                         "-i",
-                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.5.0-beta1-configure.patch -f ocaml-5.5.0-beta1-configure.patch)"
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.5.0-configure.patch -f ocaml-5.5.0-configure.patch)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -14667,7 +14667,7 @@
             }
         },
         {
-            "id": "CommonsLang_OCaml.Base.Unix@5.5.0-beta1",
+            "id": "CommonsLang_OCaml.Base.Unix@5.5.0",
             "precommands": {
                 "private": [
                     "get-asset CommonsLang_OCaml.Apparatus.Patches@1.0.0 -p assets/p -n 2 -d p"
@@ -14690,7 +14690,7 @@
                     [
                         "/usr/bin/tar",
                         "-xzf",
-                        "$(get-asset CommonsLang_OCaml.Base.Bundle@5.5.0-beta1 -p ocaml-5.5.0~beta1.tar.gz -f ocaml-5.5.0~beta1.tar.gz)",
+                        "$(get-asset CommonsLang_OCaml.Base.Bundle@5.5.0 -p ocaml-5.5.0.tar.gz -f ocaml-5.5.0.tar.gz)",
                         "-C",
                         "s",
                         "--strip-components=1"
@@ -14703,7 +14703,7 @@
                         "/usr/bin/patch",
                         "-p1",
                         "-i",
-                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.5.0-beta1-configure.patch -f ocaml-5.5.0-beta1-configure.patch)"
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.5.0-configure.patch -f ocaml-5.5.0-configure.patch)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",

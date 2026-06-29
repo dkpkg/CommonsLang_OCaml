@@ -2,7 +2,7 @@
 // Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -d target/dune-win64
 //
 // Dune 3.23.1 bootstraps itself with the OCaml compiler alone. For now this
-// package publishes the slots already available from CommonsLang_OCaml.Base@5.5.0-beta1.
+// package publishes the slots already available from CommonsLang_OCaml.Base@5.5.0.
 {
     "$schema": "https://diskuv.com/dk/schema/dk-value-1.0.json",
     "schema_version": {
@@ -74,7 +74,7 @@
                     }
                 ],
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Windows_x86_64 -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d : -e 'bin/*')${/}bin",
                     "<PATH=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin"
                 ],
                 "commands": [
@@ -137,7 +137,7 @@
                     }
                 ],
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Linux_x86_64 -d : -e 'bin/*')${/}bin"
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Linux_x86_64 -d : -e 'bin/*')${/}bin"
                 ],
                 "commands": [
                     [

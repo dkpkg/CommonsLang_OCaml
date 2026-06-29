@@ -2,7 +2,7 @@
 // Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.Windows_x86_64 -d target/opam-win64
 //
 // Opam 2.5.1 is built from its release tarball with vendored dependencies.
-// The current package publishes the slots already available from Base@5.5.0-beta1.
+// The current package publishes the slots already available from Base@5.5.0.
 {
     "$schema": "https://diskuv.com/dk/schema/dk-value-1.0.json",
     "schema_version": {
@@ -74,7 +74,7 @@
                     }
                 ],
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Windows_x86_64 -d :)${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin",
                     "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -d : -e 'bin/*')${/}bin",
                     "<PATH=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin"
                 ],
@@ -117,11 +117,11 @@
                         "--chdir",
                         "s",
                         "PATH=${CACHEABS}${/}lookup-s;$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin",
-                        "OCAMLC=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamlc.exe",
-                        "OCAML=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Windows_x86_64 -d :)${/}bin${/}ocaml.exe",
-                        "OCAMLDEP=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamldep.exe",
-                        "OCAMLMKTOP=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamlmktop.exe",
-                        "OCAMLMKLIB=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamlmklib.exe",
+                        "OCAMLC=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamlc.exe",
+                        "OCAML=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin${/}ocaml.exe",
+                        "OCAMLDEP=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamldep.exe",
+                        "OCAMLMKTOP=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamlmktop.exe",
+                        "OCAMLMKLIB=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamlmklib.exe",
                         "DUNE=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -e bin/dune.exe -d :)${/}bin${/}dune.exe",
                         "CC=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/x86_64-w64-mingw32-gcc.exe -d :)${/}bin${/}x86_64-w64-mingw32-gcc.exe",
                         "AWK=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/awk.exe -d :)${/}bin${/}awk.exe",
@@ -136,7 +136,7 @@
                         "env",
                         "--chdir",
                         "s",
-                        "PATH=${CACHEABS}${/}lookup-s;$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Windows_x86_64 -d :)${/}bin;$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -d : -e 'bin/*')${/}bin;$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin",
+                        "PATH=${CACHEABS}${/}lookup-s;$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin;$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -d : -e 'bin/*')${/}bin;$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin",
                         "DUNE=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -e bin/dune.exe -d :)${/}bin${/}dune.exe",
                         "CC=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/x86_64-w64-mingw32-gcc.exe -d :)${/}bin${/}x86_64-w64-mingw32-gcc.exe",
                         "AWK=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/awk.exe -d :)${/}bin${/}awk.exe",
@@ -176,7 +176,7 @@
                     }
                 ],
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0-beta1 -s Release.Linux_x86_64 -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Linux_x86_64 -d : -e 'bin/*')${/}bin",
                     "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Linux_x86_64 -d : -e 'bin/*')${/}bin"
                 ],
                 "commands": [
