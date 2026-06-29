@@ -14774,7 +14774,7 @@
                         "env",
                         "--chdir",
                         "s",
-                        "$(get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -e bin/make -d :)/bin/make${.exe.execution}",
+                        "$(--path=absnative get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -e bin/make -d :)/bin/make${.exe.execution}",
                         "world.opt"
                     ],
                     [
@@ -14782,7 +14782,7 @@
                         "env",
                         "--chdir",
                         "s",
-                        "$(get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -e bin/make -d :)/bin/make${.exe.execution}",
+                        "$(--path=absnative get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -e bin/make -d :)/bin/make${.exe.execution}",
                         "install"
                     ]
                 ]
