@@ -16,3 +16,8 @@
   \test(pass)
   \dk.target(abi: "Darwin_arm64")[4.14.3+relocatable
   ]\;
+
+## Base
+
+  $ get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Darwin_arm64 -d ${RUNTIME}/Darwin_arm64-Base-5.5.0
+  \test(pass)

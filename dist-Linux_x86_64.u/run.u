@@ -16,3 +16,8 @@
   \test(pass)
   \dk.target(abi: "Linux_x86_64")[4.14.3+relocatable
   ]\;
+
+## Base
+
+  $ get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Linux_x86_64 -d ${RUNTIME}/Linux_x86_64-Base-5.5.0
+  \test(pass)
