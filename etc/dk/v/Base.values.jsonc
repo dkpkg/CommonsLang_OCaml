@@ -4044,7 +4044,9 @@
             "precommands": {
                 "private": [
                     "get-object CommonsLang_OCaml.Base.Unix@5.5.0 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
-                    "get-object CommonsLang_OCaml.Base.Win32@5.5.0 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}"
+                    "get-object CommonsLang_OCaml.Base.Win32@5.5.0 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}",
+                    "get-object CommonsLang_OCaml.Base.Unix@5.5.0 -s Release.Darwin_arm64 -d ${SLOT.Release.Darwin_arm64}",
+                    "get-object CommonsLang_OCaml.Base.Unix@5.5.0 -s Release.Darwin_x86_64 -d ${SLOT.Release.Darwin_x86_64}"
                 ]
             },
             "outputs": {
@@ -8275,6 +8277,23 @@
                             "share/doc/ocaml/LICENSE",
                             "share/doc/ocaml/README.adoc",
                             "share/doc/ocaml/README.win32.adoc"
+                        ]
+                    }
+                ,
+                    {
+                        "slots": [
+                            "Release.Darwin_arm64"
+                        ],
+                        "paths": [
+                            "bin/ocaml"
+                        ]
+                    },
+                    {
+                        "slots": [
+                            "Release.Darwin_x86_64"
+                        ],
+                        "paths": [
+                            "bin/ocaml"
                         ]
                     }
                 ]
@@ -14674,12 +14693,6 @@
                 ]
             },
             "function": {
-                "execution": [
-                    {
-                        "name": "OSFamily",
-                        "value": "linux"
-                    }
-                ],
                 "commands": [
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -14715,6 +14728,122 @@
                         "--host=x86_64-linux-gnu",
                         "\"CC=gcc -m64\"",
                         "--prefix=${SLOTABS.Release.Linux_x86_64}",
+                        "--with-relative-libdir=../lib/ocaml",
+                        "--enable-runtime-search",
+                        "--enable-runtime-search-target=fallback",
+                        "--disable-ocamldoc",
+                        "--disable-ocamltest",
+                        "--disable-stdlib-manpages"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "$(get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -e bin/make -d :)/bin/make${.exe.execution}",
+                        "world.opt"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "$(get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -e bin/make -d :)/bin/make${.exe.execution}",
+                        "install"
+                    ]
+                ,
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "mkdir",
+                        "-p",
+                        "s"
+                    ],
+                    [
+                        "/usr/bin/tar",
+                        "-xzf",
+                        "$(get-asset CommonsLang_OCaml.Base.Bundle@5.5.0 -p ocaml-5.5.0.tar.gz -f ocaml-5.5.0.tar.gz)",
+                        "-C",
+                        "s",
+                        "--strip-components=1"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "/usr/bin/patch",
+                        "-p1",
+                        "-i",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.5.0-configure.patch -f ocaml-5.5.0-configure.patch)"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "/bin/sh",
+                        "./configure",
+                        "--host=aarch64-apple-darwin",
+                        "\"CC=cc\"",
+                        "--prefix=${SLOTABS.Release.Darwin_arm64}",
+                        "--with-relative-libdir=../lib/ocaml",
+                        "--enable-runtime-search",
+                        "--enable-runtime-search-target=fallback",
+                        "--disable-ocamldoc",
+                        "--disable-ocamltest",
+                        "--disable-stdlib-manpages"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "$(get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -e bin/make -d :)/bin/make${.exe.execution}",
+                        "world.opt"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "$(get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -e bin/make -d :)/bin/make${.exe.execution}",
+                        "install"
+                    ]
+                ,
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "mkdir",
+                        "-p",
+                        "s"
+                    ],
+                    [
+                        "/usr/bin/tar",
+                        "-xzf",
+                        "$(get-asset CommonsLang_OCaml.Base.Bundle@5.5.0 -p ocaml-5.5.0.tar.gz -f ocaml-5.5.0.tar.gz)",
+                        "-C",
+                        "s",
+                        "--strip-components=1"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "/usr/bin/patch",
+                        "-p1",
+                        "-i",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Patches@1.0.0 -p assets/p -m ./ocaml-5.5.0-configure.patch -f ocaml-5.5.0-configure.patch)"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "/bin/sh",
+                        "./configure",
+                        "--host=x86_64-apple-darwin",
+                        "\"CC=cc -arch x86_64\"",
+                        "--prefix=${SLOTABS.Release.Darwin_x86_64}",
                         "--with-relative-libdir=../lib/ocaml",
                         "--enable-runtime-search",
                         "--enable-runtime-search-target=fallback",
@@ -16863,6 +16992,23 @@
                             "share/doc/ocaml/README.win32.adoc",
                             "___BEGIN___COMMAND_DONE_MARKER___0",
                             "PS Y:\\source\\rotary-phone>"
+                        ]
+                    }
+                ,
+                    {
+                        "slots": [
+                            "Release.Darwin_arm64"
+                        ],
+                        "paths": [
+                            "bin/ocaml"
+                        ]
+                    },
+                    {
+                        "slots": [
+                            "Release.Darwin_x86_64"
+                        ],
+                        "paths": [
+                            "bin/ocaml"
                         ]
                     }
                 ]
