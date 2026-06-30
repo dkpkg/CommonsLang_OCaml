@@ -14,6 +14,5 @@
 
 ## Base
 
-  $ get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Darwin_x86_64 -d ${RUNTIME}/Darwin_x86_64-Base-5.5.0
+  $ run-object CommonsLang_OCaml.Base@5.5.0 -s Release.Darwin_x86_64 -e 'bin/*' -c bin/ocamlopt -- -version
   \test(pass)
-  \dk.object(abi: "Release.Darwin_x86_64", value-id: "o73d7ijhl3s5quhtirlzfaveikka33kdetdhi4lkl3ef63244m2fa")\;
