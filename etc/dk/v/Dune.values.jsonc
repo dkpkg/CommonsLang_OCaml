@@ -40,7 +40,9 @@
             "precommands": {
                 "private": [
                     "get-object CommonsLang_OCaml.Dune.Unix@3.23.1 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
-                    "get-object CommonsLang_OCaml.Dune.Win32@3.23.1 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}"
+                    "get-object CommonsLang_OCaml.Dune.Win32@3.23.1 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}",
+                    "get-object CommonsLang_OCaml.Dune.Darwin@3.23.1 -s Release.Darwin_arm64 -d ${SLOT.Release.Darwin_arm64}",
+                    "get-object CommonsLang_OCaml.Dune.Darwin@3.23.1 -s Release.Darwin_x86_64 -d ${SLOT.Release.Darwin_x86_64}"
                 ]
             },
             "outputs": {
@@ -56,6 +58,22 @@
                     {
                         "slots": [
                             "Release.Windows_x86_64"
+                        ],
+                        "paths": [
+                            "bin/dune.exe"
+                        ]
+                    },
+                    {
+                        "slots": [
+                            "Release.Darwin_arm64"
+                        ],
+                        "paths": [
+                            "bin/dune.exe"
+                        ]
+                    },
+                    {
+                        "slots": [
+                            "Release.Darwin_x86_64"
                         ],
                         "paths": [
                             "bin/dune.exe"
@@ -97,6 +115,11 @@
                         "-C",
                         "s",
                         "--strip-components=1"
+                    ],
+                    [
+                        "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)${/}bin${/}sh.exe",
+                        "-c",
+                        "\"echo '(version 3.23.1)' >> s/dune-project\""
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -161,6 +184,11 @@
                         "--strip-components=1"
                     ],
                     [
+                        "/bin/sh",
+                        "-c",
+                        "\"echo '(version 3.23.1)' >> s/dune-project\""
+                    ],
+                    [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
@@ -181,6 +209,81 @@
                     {
                         "slots": [
                             "Release.Linux_x86_64"
+                        ],
+                        "paths": [
+                            "bin/dune.exe"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "CommonsLang_OCaml.Dune.Darwin@3.23.1",
+            "function": {
+                "execution": [
+                    {
+                        "name": "OSFamily",
+                        "value": "darwin"
+                    }
+                ],
+                "envmods": [
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin"
+                ],
+                "commands": [
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "mkdir",
+                        "-p",
+                        "s"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "mkdir",
+                        "-p",
+                        "${SLOTABS.request}/bin"
+                    ],
+                    [
+                        "/usr/bin/tar",
+                        "-xzf",
+                        "$(get-asset CommonsLang_OCaml.Dune.Bundle@3.23.1 -p 3.23.1.tar.gz -f 3.23.1.tar.gz)",
+                        "-C",
+                        "s",
+                        "--strip-components=1"
+                    ],
+                    [
+                        "/bin/sh",
+                        "-c",
+                        "\"echo '(version 3.23.1)' >> s/dune-project\""
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "env",
+                        "--chdir",
+                        "s",
+                        "ocaml",
+                        "boot/bootstrap.ml"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "cp",
+                        "s/_boot/dune.exe",
+                        "${SLOTABS.request}/bin/dune.exe"
+                    ]
+                ]
+            },
+            "outputs": {
+                "assets": [
+                    {
+                        "slots": [
+                            "Release.Darwin_arm64"
+                        ],
+                        "paths": [
+                            "bin/dune.exe"
+                        ]
+                    },
+                    {
+                        "slots": [
+                            "Release.Darwin_x86_64"
                         ],
                         "paths": [
                             "bin/dune.exe"
