@@ -19,5 +19,5 @@
 
 ## Base
 
-  $ get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d ${RUNTIME}/Windows_x86_64-Base-5.5.0
+  $ run-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -e 'bin/*' -c bin/ocamlopt.exe -- -version
   \test(pass)
