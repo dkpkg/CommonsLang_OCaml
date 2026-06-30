@@ -21,3 +21,4 @@
 
   $ get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Darwin_arm64 -d ${RUNTIME}/Darwin_arm64-Base-5.5.0
   \test(pass)
+  \dk.object(abi: "Release.Darwin_arm64", value-id: "o72l2h4ulqosr5yznnnsxe3nssffpdbzp6stgmqcr5ixpveqbuvaq")\;
