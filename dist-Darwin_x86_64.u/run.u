@@ -16,3 +16,5 @@
 
   $ run-object CommonsLang_OCaml.Base@5.5.0 -s Release.Darwin_x86_64 -e 'bin/*' -c bin/ocamlopt -- -version
   \test(pass)
+  \dk.target(abi: "Darwin_x86_64")[5.5.0
+  ]\;
