@@ -11,3 +11,10 @@
   \test(pass)
   \dk.target(abi: "Linux_x86")[ELF 32-bit LSB executable, Intel i386, version 1 (SYSV)
   ]\;
+
+## Dune
+
+  $ run-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Linux_x86 -e 'bin/*' -c bin/dune.exe -- --version
+  \test(pass)
+  \dk.target(abi: "Linux_x86")[3.23.1
+  ]\;
