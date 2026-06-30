@@ -133,3 +133,8 @@
   'asset'
   '629'
   'sha256:f75da7664ac5c78c5e712b4e92555f7031665b9be59c5d0f057d5a397bc0fa6d'
+
+  % unified.asset { name="DuneBootstrapMsvc", file="assets/dune/bootstrap-msvc.bat" }
+  'asset'
+  '1334'
+  'sha256:4bd81311d1983157f77ba3cd342624fd3d18995c0731a3d84ed8b465dcf733c2'
