@@ -25,3 +25,10 @@ Release.Windows_x86_64 will be used as Release.execution_abi on normal (64-bit) 
   \test(pass)
   \dk.target(abi: "Windows_x86")[3.23.1
   ]\;
+
+## Opam
+
+  $ run-object CommonsLang_OCaml.Opam@2.5.1 -s Release.Windows_x86 -e 'bin/*' -c bin/opam.exe -- --version
+  \test(pass)
+  \dk.target(abi: "Windows_x86")[2.5.1
+  ]\;

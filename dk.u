@@ -138,3 +138,23 @@
   'asset'
   '1334'
   'sha256:4bd81311d1983157f77ba3cd342624fd3d18995c0731a3d84ed8b465dcf733c2'
+
+  % unified.asset { name="OpamBuildWin", file="assets/opam/opam-build-win.sh" }
+  'asset'
+  '2470'
+  'sha256:03f5ee45d42552b30571412efc52df25b53f10b027304fcdf30a5dad7ef64042'
+
+  % unified.asset { name="OpamBuildWinVcvars", file="assets/opam/opam-build-win-vcvars.bat" }
+  'asset'
+  '731'
+  'sha256:21e5965cd9626ebd8c4b5aa204c63b3f8ecff8f548449054ad38dac55340eb46'
+
+  % unified.asset { name="OpamMsvsDetectStub", file="assets/opam/msvs-detect-stub.sh" }
+  'asset'
+  '1016'
+  'sha256:050acd529a1bc35608239c390d2da6a94a1dde49d343813ab230fc31439ea651'
+
+  % unified.asset { name="OpamMccsGlpkStub", file="assets/opam/mccs-glpk-wrmip-stub.c" }
+  'asset'
+  '726'
+  'sha256:ce730a5008fd4f856e01ea02a62c9e17a8adcb272ca91679ecc413a2e17672a9'

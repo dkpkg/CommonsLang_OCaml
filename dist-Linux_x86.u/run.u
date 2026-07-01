@@ -18,3 +18,10 @@
   \test(pass)
   \dk.target(abi: "Linux_x86")[3.23.1
   ]\;
+
+## Opam
+
+  $ run-object CommonsLang_OCaml.Opam@2.5.1 -s Release.Linux_x86 -e 'bin/*' -c bin/opam.exe -- --version
+  \test(pass)
+  \dk.target(abi: "Linux_x86")[2.5.1
+  ]\;

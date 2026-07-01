@@ -1,8 +1,27 @@
 // Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Opam.Bundle@2.5.1 -d target/opam-src
-// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.Windows_x86_64 -d target/opam-win64
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml --trust-local-package CommonsBase_GNU --trust-local-package CommonsBase_Std get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.Windows_x86_64 -d target/opam-win64
 //
-// Opam 2.5.1 is built from its release tarball with vendored dependencies.
-// The current package publishes the slots already available from Base@5.5.0.
+// Opam 2.5.1 is built from its release tarball with vendored dependencies. Like
+// Dune, this package builds opam off CommonsLang_OCaml.DkML@4.14.3 so it covers
+// every DkML slot, including the 32-bit Windows_x86 and Linux_x86 ABIs that
+// OCaml 5 (Base) drops.
+//
+// Unlike Dune's pure-OCaml bootstrap, opam's build compiles C (opam's own stubs,
+// the vendored mccs/glpk, ...). A build whose OCaml arch does not match the
+// active MSVC arch fails to link, so the two Windows arches cannot share one
+// form the way Dune's do; they are split into Opam.Win32.X64 and Opam.Win32.X86,
+// each building only its arch with a clean source tree.
+//
+// Windows specifics (see assets/opam/opam-build-win.sh):
+//   * DkML's OCaml is MSVC, so the build runs under a Visual Studio environment
+//     activated by opam-build-win-vcvars.bat (vswhere -> vcvarsall).
+//   * opam's shell/msvs-detect is bash-4 and overflows BusyBox-w32 ash; it is
+//     replaced by msvs-detect-stub.sh, which reports the already-active vcvars.
+//   * opam vendors menhir, whose demo symlinks Windows tar cannot create; the
+//     symlink-free menhir is provided by the Opam.Menhir.Bundle below (published
+//     reproducibly by the opam-menhir-no-symlinks workflow).
+//   * mccs's vendored glpk omits glp_write_lp; mccs-glpk-wrmip-stub.c supplies
+//     the unused symbol so the MSVC link succeeds.
 {
     "$schema": "https://diskuv.com/dk/schema/dk-value-1.0.json",
     "schema_version": {
@@ -32,6 +51,29 @@
                     "size": 1277085
                 }
             ]
+        },
+        {
+            "id": "CommonsLang_OCaml.Opam.Menhir.Bundle@2025.9.3",
+            "listing": {
+                "origins": [
+                    {
+                        "name": "gh-dkpkg-menhir-nosym",
+                        "mirrors": [
+                            "https://github.com/dkpkg/CommonsLang_OCaml/releases/download/opam-menhir-20250903-no-symlinks"
+                        ]
+                    }
+                ]
+            },
+            "assets": [
+                {
+                    "origin": "gh-dkpkg-menhir-nosym",
+                    "path": "menhir-20250903-no-symlinks.tar",
+                    "checksum": {
+                        "sha256": "087792aff8fb12384788c6523023d08e8bbe3ab56c226dc76ab499a891ca392d"
+                    },
+                    "size": 4433920
+                }
+            ]
         }
     ],
     "forms": [
@@ -39,33 +81,29 @@
             "id": "CommonsLang_OCaml.Opam@2.5.1",
             "precommands": {
                 "private": [
+                    "get-object CommonsLang_OCaml.Opam.Win32.X64@2.5.1 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}",
+                    "get-object CommonsLang_OCaml.Opam.Win32.X86@2.5.1 -s Release.Windows_x86 -d ${SLOT.Release.Windows_x86}",
                     "get-object CommonsLang_OCaml.Opam.Unix@2.5.1 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
-                    "get-object CommonsLang_OCaml.Opam.Win32@2.5.1 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}"
+                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.1 -s Release.Linux_x86 -d ${SLOT.Release.Linux_x86}",
+                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.1 -s Release.Linux_arm64 -d ${SLOT.Release.Linux_arm64}",
+                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.1 -s Release.Darwin_x86_64 -d ${SLOT.Release.Darwin_x86_64}",
+                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.1 -s Release.Darwin_arm64 -d ${SLOT.Release.Darwin_arm64}"
                 ]
             },
             "outputs": {
                 "assets": [
-                    {
-                        "slots": [
-                            "Release.Linux_x86_64"
-                        ],
-                        "paths": [
-                            "bin/opam.exe"
-                        ]
-                    },
-                    {
-                        "slots": [
-                            "Release.Windows_x86_64"
-                        ],
-                        "paths": [
-                            "bin/opam.exe"
-                        ]
-                    }
+                    { "slots": ["Release.Windows_x86_64"], "paths": ["bin/opam.exe"] },
+                    { "slots": ["Release.Windows_x86"], "paths": ["bin/opam.exe"] },
+                    { "slots": ["Release.Linux_x86_64"], "paths": ["bin/opam.exe"] },
+                    { "slots": ["Release.Linux_x86"], "paths": ["bin/opam.exe"] },
+                    { "slots": ["Release.Linux_arm64"], "paths": ["bin/opam.exe"] },
+                    { "slots": ["Release.Darwin_x86_64"], "paths": ["bin/opam.exe"] },
+                    { "slots": ["Release.Darwin_arm64"], "paths": ["bin/opam.exe"] }
                 ]
             }
         },
         {
-            "id": "CommonsLang_OCaml.Opam.Win32@2.5.1",
+            "id": "CommonsLang_OCaml.Opam.Win32.X64@2.5.1",
             "function": {
                 "execution": [
                     {
@@ -74,8 +112,9 @@
                     }
                 ],
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin",
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -d : -e 'bin/*')${/}bin",
+                    "<PATH=${CACHEABS}${/}lookup-s",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Win32@4.14.3 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
                     "<PATH=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin"
                 ],
                 "commands": [
@@ -112,72 +151,32 @@
                         "--strip-components=1"
                     ],
                     [
-                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
-                        "env",
-                        "--chdir",
-                        "s",
-                        "PATH=${CACHEABS}${/}lookup-s;$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin",
-                        "OCAMLC=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamlc.exe",
-                        "OCAML=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin${/}ocaml.exe",
-                        "OCAMLDEP=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamldep.exe",
-                        "OCAMLMKTOP=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamlmktop.exe",
-                        "OCAMLMKLIB=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin${/}ocamlmklib.exe",
-                        "DUNE=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -e bin/dune.exe -d :)${/}bin${/}dune.exe",
-                        "CC=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/x86_64-w64-mingw32-gcc.exe -d :)${/}bin${/}x86_64-w64-mingw32-gcc.exe",
-                        "AWK=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/awk.exe -d :)${/}bin${/}awk.exe",
-                        "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)${/}bin${/}sh.exe",
-                        "./configure",
-                        "--with-vendored-deps",
-                        "--disable-checks",
-                        "--prefix=${SLOTABS.Release.Windows_x86_64}"
-                    ],
-                    [
-                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
-                        "env",
-                        "--chdir",
-                        "s",
-                        "PATH=${CACHEABS}${/}lookup-s;$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -d :)${/}bin;$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -d : -e 'bin/*')${/}bin;$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin",
-                        "DUNE=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Windows_x86_64 -e bin/dune.exe -d :)${/}bin${/}dune.exe",
-                        "CC=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/x86_64-w64-mingw32-gcc.exe -d :)${/}bin${/}x86_64-w64-mingw32-gcc.exe",
-                        "AWK=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/awk.exe -d :)${/}bin${/}awk.exe",
-                        "SHELL=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)${/}bin${/}sh.exe",
-                        "MAKESHELL=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)${/}bin${/}sh.exe",
-                        "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/make.exe -d :)${/}bin${/}make.exe",
-                        "opam"
-                    ],
-                    [
-                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
-                        "cp",
-                        "s/opam.exe",
-                        "${SLOTABS.Release.Windows_x86_64}/bin/opam.exe"
+                        "--cmd.exe",
+                        "/c",
+                        "\"`\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWinVcvars@1.0.0 -p assets/opam/opam-build-win-vcvars.bat -f opam-build-win-vcvars.bat)`\" `\"$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe`\" x64 `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWin@1.0.0 -p assets/opam/opam-build-win.sh -f opam-build-win.sh)`\" `\"${SLOTABS.Release.Windows_x86_64}${/}bin`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMsvsDetectStub@1.0.0 -p assets/opam/msvs-detect-stub.sh -f msvs-detect-stub.sh)`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMccsGlpkStub@1.0.0 -p assets/opam/mccs-glpk-wrmip-stub.c -f mccs-glpk-wrmip-stub.c)`\" `\"${SLOTABS.Release.Windows_x86_64}`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Opam.Menhir.Bundle@2025.9.3 -p menhir-20250903-no-symlinks.tar -f menhir-20250903-no-symlinks.tar)`\"\""
                     ]
                 ]
             },
             "outputs": {
                 "assets": [
-                    {
-                        "slots": [
-                            "Release.Windows_x86_64"
-                        ],
-                        "paths": [
-                            "bin/opam.exe"
-                        ]
-                    }
+                    { "slots": ["Release.Windows_x86_64"], "paths": ["bin/opam.exe"] }
                 ]
             }
         },
         {
-            "id": "CommonsLang_OCaml.Opam.Unix@2.5.1",
+            "id": "CommonsLang_OCaml.Opam.Win32.X86@2.5.1",
             "function": {
                 "execution": [
                     {
                         "name": "OSFamily",
-                        "value": "linux"
+                        "value": "windows"
                     }
                 ],
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Base@5.5.0 -s Release.Linux_x86_64 -d : -e 'bin/*')${/}bin",
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Linux_x86_64 -d : -e 'bin/*')${/}bin"
+                    "<PATH=${CACHEABS}${/}lookup-s",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Win32@4.14.3 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin"
                 ],
                 "commands": [
                     [
@@ -190,7 +189,54 @@
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "mkdir",
                         "-p",
-                        "${SLOTABS.Release.Linux_x86_64}/bin"
+                        "${CACHEABS}/lookup-s"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "mkdir",
+                        "-p",
+                        "${SLOTABS.Release.Windows_x86}/bin"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "cp",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./cygpath -f cygpath)",
+                        "${CACHEABS}/lookup-s/cygpath"
+                    ],
+                    [
+                        "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/tar.exe -d :)${/}bin${/}tar.exe",
+                        "xzf",
+                        "$(get-asset CommonsLang_OCaml.Opam.Bundle@2.5.1 -p 2.5.1.tar.gz -f 2.5.1.tar.gz)",
+                        "-C",
+                        "s",
+                        "--strip-components=1"
+                    ],
+                    [
+                        "--cmd.exe",
+                        "/c",
+                        "\"`\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWinVcvars@1.0.0 -p assets/opam/opam-build-win-vcvars.bat -f opam-build-win-vcvars.bat)`\" `\"$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe`\" x86 `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWin@1.0.0 -p assets/opam/opam-build-win.sh -f opam-build-win.sh)`\" `\"${SLOTABS.Release.Windows_x86}${/}bin`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMsvsDetectStub@1.0.0 -p assets/opam/msvs-detect-stub.sh -f msvs-detect-stub.sh)`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMccsGlpkStub@1.0.0 -p assets/opam/mccs-glpk-wrmip-stub.c -f mccs-glpk-wrmip-stub.c)`\" `\"${SLOTABS.Release.Windows_x86}`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Opam.Menhir.Bundle@2025.9.3 -p menhir-20250903-no-symlinks.tar -f menhir-20250903-no-symlinks.tar)`\"\""
+                    ]
+                ]
+            },
+            "outputs": {
+                "assets": [
+                    { "slots": ["Release.Windows_x86"], "paths": ["bin/opam.exe"] }
+                ]
+            }
+        },
+        {
+            "id": "CommonsLang_OCaml.Opam.Unix@2.5.1",
+            "function": {
+                "envmods": [
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Unix@4.14.3 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin"
+                ],
+                "commands": [
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "mkdir",
+                        "-p",
+                        "s"
                     ],
                     [
                         "/usr/bin/tar",
@@ -210,7 +256,7 @@
                         "./configure",
                         "--with-vendored-deps",
                         "--disable-checks",
-                        "--prefix=${SLOTABS.Release.Linux_x86_64}"
+                        "--prefix=${CACHEABS}/opam-prefix"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -222,22 +268,48 @@
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
-                        "cp",
+                        "install",
+                        "-D",
                         "s/opam",
                         "${SLOTABS.Release.Linux_x86_64}/bin/opam.exe"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "install",
+                        "-D",
+                        "s/opam",
+                        "${SLOTABS.Release.Linux_x86}/bin/opam.exe"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "install",
+                        "-D",
+                        "s/opam",
+                        "${SLOTABS.Release.Linux_arm64}/bin/opam.exe"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "install",
+                        "-D",
+                        "s/opam",
+                        "${SLOTABS.Release.Darwin_x86_64}/bin/opam.exe"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "install",
+                        "-D",
+                        "s/opam",
+                        "${SLOTABS.Release.Darwin_arm64}/bin/opam.exe"
                     ]
                 ]
             },
             "outputs": {
                 "assets": [
-                    {
-                        "slots": [
-                            "Release.Linux_x86_64"
-                        ],
-                        "paths": [
-                            "bin/opam.exe"
-                        ]
-                    }
+                    { "slots": ["Release.Linux_x86_64"], "paths": ["bin/opam.exe"] },
+                    { "slots": ["Release.Linux_x86"], "paths": ["bin/opam.exe"] },
+                    { "slots": ["Release.Linux_arm64"], "paths": ["bin/opam.exe"] },
+                    { "slots": ["Release.Darwin_x86_64"], "paths": ["bin/opam.exe"] },
+                    { "slots": ["Release.Darwin_arm64"], "paths": ["bin/opam.exe"] }
                 ]
             }
         }

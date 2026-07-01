@@ -30,3 +30,10 @@
   \test(pass)
   \dk.target(abi: "Darwin_arm64")[3.23.1
   ]\;
+
+## Opam
+
+  $ run-object CommonsLang_OCaml.Opam@2.5.1 -s Release.Darwin_arm64 -e 'bin/*' -c bin/opam.exe -- --version
+  \test(pass)
+  \dk.target(abi: "Darwin_arm64")[2.5.1
+  ]\;
