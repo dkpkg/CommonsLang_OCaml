@@ -1,0 +1,73 @@
+name: opam menhir no-symlinks
+
+# Manual job. opam 2.5.1 vendors the menhir source archive, which contains demo
+# symlinks (demos/*/Makefile -> ../Makefile.demo, etc.). Windows tar cannot
+# create symlinks, so extracting it during the Windows opam build fails. This
+# job downloads the upstream archive, strips demos/ (the only thing that holds
+# symlinks; opam does not build the demos), repacks it deterministically, and
+# publishes it as a GitHub release that the opam Windows build downloads instead
+# of the upstream archive.
+#
+# Reproducible + auditable: upstream is verified by SHA256, the strip is a single
+# documented exclusion, and the repack is a byte-deterministic plain tar (sorted
+# entries, zero mtime/owner, pax atime/ctime removed), so re-running the job
+# yields the same artifact.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: menhir gitlab archive ref (date tag)
+        required: true
+        default: "20250903"
+      sha256:
+        description: expected SHA256 of the upstream archive.tar.gz
+        required: true
+        default: "f1f698c244d1f9fae5fb1f64ea85356ee08396a594c6239c8a758648cef1d373"
+
+permissions:
+  contents: write
+
+jobs:
+  sanitize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and verify upstream menhir
+        run: |
+          set -eu
+          ref='${{ inputs.ref }}'
+          curl -LSs -o upstream.tar.gz "https://gitlab.inria.fr/fpottier/menhir/-/archive/${ref}/archive.tar.gz"
+          echo "${{ inputs.sha256 }}  upstream.tar.gz" | sha256sum -c -
+
+      - name: Strip demo symlinks and repack deterministically
+        run: |
+          set -eu
+          ref='${{ inputs.ref }}'
+          rm -rf tree && mkdir tree
+          tar -xzf upstream.tar.gz -C tree --exclude='*/demos' --exclude='*/demos/*'
+          top=$(ls tree)
+          out="menhir-${ref}-no-symlinks.tar"
+          # Byte-deterministic tar (no gzip layer): sorted entries, zeroed
+          # mtime/owner/group, and pax headers with atime/ctime removed so the
+          # archive is reproducible.
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+              --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
+              -C tree -cf "$out" "$top"
+          if tar -tvf "$out" | grep -q ' -> '; then
+            echo 'ERROR: symlinks remain after sanitize'; exit 1
+          fi
+          sha256sum "$out" | tee "$out.sha256"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          ref='${{ inputs.ref }}'
+          tag="opam-menhir-${ref}-no-symlinks"
+          out="menhir-${ref}-no-symlinks.tar"
+          gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1 || \
+            gh release create "$tag" --repo "${{ github.repository }}" \
+              --title "menhir ${ref} (no symlinks, for opam Windows)" \
+              --notes "Symlink-free repack of menhir ${ref} (demos/ removed) for the Windows opam build. Deterministic strip + re-tar; see opam-menhir-no-symlinks.yml."
+          gh release upload "$tag" "$out" "$out.sha256" --clobber --repo "${{ github.repository }}"
