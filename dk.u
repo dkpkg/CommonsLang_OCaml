@@ -81,18 +81,8 @@
 
   % unified.asset { name="Scripts", dir="assets/s" }
   'asset'
-  '10242'
-  { 'sha256:c30e67b670e3eb5ee6a93802df74f85aa547489252e48023b6484c1dd3bba891' }
-
-  % unified.asset { name="OpamWinBuild", file="assets/s/opam-win-build.sh" }
-  'asset'
-  '831'
-  'sha256:2dd845dc8c0a5fd0e4412e5f1a014781afb915ea61bec0d3570f370e588f9a45'
-
-  % unified.asset { name="OpamWinBuildV2", file="assets/s/opam-win-build-v2.sh" }
-  'asset'
-  '704'
-  'sha256:919c19379cb52cb4f6827eabe2508364315f863369bf0fa7bdb8b1c80c512612'
+  '9236'
+  { 'sha256:ebf6b3f14a5191ae8027d0d0c39ea768ca2c617fe99b3afc497907568bbe9050' }
 
   % unified.asset { name="Tables", dir="assets/table" }
   'asset'
