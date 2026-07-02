@@ -380,12 +380,19 @@ function uirules.Solve(command, request)
   -- "$schema" is not a valid constructor identifier key; assign it.
   lock["$schema"] = "https://diskuv.com/dk/schema/dk-opam-lock-1.0.json"
 
-  local file = request.io.open(out, "w")
-  request.io.write(file, CommonsLang_OCaml__Dk_OpamLock__1_0_0.json_encode(lock, ""))
-  request.io.write(file, "\n")
-  local realpath = request.io.realpath(file)
-  request.io.close(file)
-  print("wrote opam lock to " .. realpath)
+  -- Publish the lock into the checked-in project tree with a compare-and-swap
+  -- guard: the file must be absent (first generation) or unchanged since the
+  -- checksum taken just above (regeneration), so a concurrent writer is never
+  -- silently clobbered. request.ui.checksum returns nil for a missing file.
+  local body = CommonsLang_OCaml__Dk_OpamLock__1_0_0.json_encode(lock, "") .. "\n"
+  -- Use the string "false" (not the Lua boolean) for the absent case: a boolean
+  -- false is dropped by the lua-ml table-to-record marshaling.
+  local meta = request.ui.checksum { path = out }
+  local expected = "false"
+  if meta and meta.sha256 then expected = meta.sha256 end
+  local ok, written = request.ui.writefile { path = out, content = body, expected_sha256 = expected }
+  assert(ok, "could not write opam lock to `" .. out .. "`: " .. tostring(written))
+  print("wrote opam lock to " .. tostring(written))
   return { submit = {} }
 end
 
