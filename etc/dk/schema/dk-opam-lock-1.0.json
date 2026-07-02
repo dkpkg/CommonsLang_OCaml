@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://diskuv.com/dk/schema/dk-opam-lock-1.0.json",
+  "title": "dk opam lock 1.0",
+  "description": "A reproducible, slot-aware lock of a solved opam dependency closure. Generated at author time by CommonsLang_OCaml.Dk.OpamLock@1.0.0 and consumed at build time by a per-package dk build rule. Package metadata is shared across slots and keyed by '<name>.<version>'; each slot records only which package keys are in its solution (opam filters can differ per slot, e.g. conf-mingw only on Windows).",
+  "type": "object",
+  "required": ["$schema", "schema_version", "opam_repositories", "packages", "slots"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema_version": { "$ref": "#/$defs/schema_version" },
+    "generated": {
+      "type": "object",
+      "description": "Non-authoritative provenance for humans; never read by the build.",
+      "additionalProperties": true,
+      "properties": {
+        "tool": { "type": "string" },
+        "opam_version": { "type": "string" }
+      }
+    },
+    "opam_repositories": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered opam repositories (highest priority first) with pinned commits for reproducibility.",
+      "items": { "$ref": "#/$defs/repository" }
+    },
+    "packages": {
+      "type": "object",
+      "description": "Map from '<name>.<version>' package key to its locked metadata. Shared by every slot that lists the key in its solution.",
+      "additionalProperties": { "$ref": "#/$defs/package" }
+    },
+    "slots": {
+      "type": "object",
+      "description": "Map from dk slot name (e.g. 'Release.Linux_x86_64') to the solution solved for that slot.",
+      "additionalProperties": { "$ref": "#/$defs/slot_solution" }
+    }
+  },
+  "$defs": {
+    "schema_version": {
+      "type": "object",
+      "required": ["major", "minor"],
+      "additionalProperties": false,
+      "properties": {
+        "major": { "const": 1 },
+        "minor": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "required": ["url"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "url": {
+          "type": "string",
+          "description": "opam repository URL, e.g. 'git+https://github.com/ocaml/opam-repository.git'."
+        },
+        "commit": {
+          "type": ["string", "null"],
+          "description": "Pinned VCS commit for reproducibility; null for a floating or non-VCS repository."
+        }
+      }
+    },
+    "checksum": {
+      "type": "string",
+      "pattern": "^(md5|sha256|sha512)=[0-9a-fA-F]+$",
+      "description": "opam-style checksum '<algo>=<hex>'."
+    },
+    "source": {
+      "type": ["object", "null"],
+      "description": "Upstream source archive. null for a locally-pinned package, which is built from a project-provided source asset rather than a downloaded archive.",
+      "required": ["url", "checksums"],
+      "additionalProperties": false,
+      "properties": {
+        "url": { "type": "string" },
+        "checksums": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/checksum" }
+        }
+      }
+    },
+    "package": {
+      "type": "object",
+      "required": ["name", "version", "source", "depends"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "local": {
+          "type": "boolean",
+          "description": "true when the package is pinned to a project-local source (source is then null)."
+        },
+        "source": { "$ref": "#/$defs/source" },
+        "depends": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Direct dependency package NAMES that also appear in at least one slot solution. These are the DAG edges the build walks; version-constraint and filter fidelity is preserved in depends_raw."
+        },
+        "depends_raw": {
+          "type": ["string", "null"],
+          "description": "Verbatim opam 'depends:' field, for filter and version-constraint fidelity."
+        },
+        "build": {
+          "type": ["string", "null"],
+          "description": "Verbatim opam 'build:' field in opam command-template format (quoted literals, bare variables such as name/jobs, and {filters}). Resolved per-slot at build time; null when absent."
+        },
+        "install": {
+          "type": ["string", "null"],
+          "description": "Verbatim opam 'install:' field, same format as build; null when absent."
+        },
+        "extra": {
+          "type": "object",
+          "description": "Reserved for extra-files, patches, and substs captured in a later revision.",
+          "additionalProperties": true
+        }
+      }
+    },
+    "slot_solution": {
+      "type": "object",
+      "required": ["solution"],
+      "additionalProperties": false,
+      "properties": {
+        "opam_vars": {
+          "type": "object",
+          "description": "The OPAMVAR_* overrides used to solve this slot (e.g. os, arch).",
+          "additionalProperties": { "type": "string" }
+        },
+        "solution": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The package keys ('<name>.<version>') forming this slot's closure. Order is not significant; the build topologically orders via each package's depends edges."
+        }
+      }
+    }
+  }
+}
