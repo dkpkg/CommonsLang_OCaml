@@ -90,21 +90,27 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.words(s)
 end
 
 function CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(tbl, sep)
-  local r = ""
-  local first = true
+  local r = nil
   local k, v = next(tbl)
   while k do
-    if first then r = tostring(v); first = false else r = r .. sep .. tostring(v) end
+    if r == nil then
+      r = tostring(v)
+    else
+      r = r .. sep .. tostring(v)
+    end
     k, v = next(tbl, k)
   end
+  if r == nil then return "" end
   return r
 end
 
 function CommonsLang_OCaml__Dk_OpamLock__1_0_0.set_from_list(tbl)
   local set = {}
   if tbl == nil then return set end
+  -- Store the value itself (not the boolean true): lua-ml does not reliably
+  -- persist/iterate `true` table values.
   local k, v = next(tbl)
-  while k do set[tostring(v)] = true; k, v = next(tbl, k) end
+  while k do set[tostring(v)] = tostring(v); k, v = next(tbl, k) end
   return set
 end
 
@@ -286,7 +292,7 @@ function uirules.Solve(command, request)
     local keys = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(r.stdout)
     slot_solutions[slot] = { opam_vars = vars, solution = keys }
     local ik, ikey = next(keys)
-    while ik do all_keys[ikey] = true; ik, ikey = next(keys, ik) end
+    while ik do all_keys[ikey] = ikey; ik, ikey = next(keys, ik) end
 
     k, slot = next(slots, k)
   end
@@ -297,7 +303,7 @@ function uirules.Solve(command, request)
   local ak = next(all_keys)
   while ak do
     local dot = CommonsLang_OCaml__Dk_OpamLock__1_0_0.first_dot(ak)
-    if dot then name_in_closure[string.sub(ak, 1, dot - 1)] = true end
+    if dot then name_in_closure[string.sub(ak, 1, dot - 1)] = ak end
     ak = next(all_keys, ak)
   end
 
@@ -325,7 +331,7 @@ function uirules.Solve(command, request)
       dk, dname = next(depnames, dk)
     end
 
-    local is_local = locals_set[name] == true
+    local is_local = locals_set[name] ~= nil
     local source
     if is_local or url == "" or next(sums) == nil then
       source = CommonsLang_OCaml__Dk_OpamLock__1_0_0.NULL   -- local pin, or a virtual/compiler package with no archive
