@@ -249,15 +249,116 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.json_encode(v, indent)
   return "null"
 end
 
-function uirules.Solve(command, request)
+-- Idempotently set up the opam solve switch from a pin table (dk-opam-pins.txt).
+-- The table lines are: `repo <name> <url>`, `pin <name> <version>`,
+-- `float <name>` (# comments ignored). Adds the pinned repositories, creates the
+-- empty switch bound to them if absent, applies the version pins, removes pins
+-- for floated packages, and (when local_opam_dir is given) path-pins each local
+-- project package. This is generic to any opam project, so it lives in the rule
+-- rather than in per-OS wrapper scripts.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switch, pinsfile, local_opam_dir, locals)
+  -- Read the pin table from the real project tree. request.io reads the UI
+  -- sandbox, not the project, so use request.ui.readfile (the read counterpart
+  -- of request.ui.writefile).
+  local content = assert(request.ui.readfile { path = pinsfile },
+    "could not read pin table `" .. pinsfile .. "`")
+
+  local repos = {}
+  local reponames = {}
+  local pins = {}
+  local floats = {}
+  local plines = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(content)
+  local lk, lv = next(plines)
+  while lk do
+    if string.sub(lv, 1, 1) ~= "#" then
+      local w = CommonsLang_OCaml__Dk_OpamLock__1_0_0.words(lv)
+      if w[1] == "repo" and w[2] and w[3] then
+        table.insert(repos, { name = w[2], url = w[3] }); table.insert(reponames, w[2])
+      elseif w[1] == "pin" and w[2] and w[3] then
+        table.insert(pins, { name = w[2], ver = w[3] })
+      elseif w[1] == "float" and w[2] then
+        table.insert(floats, w[2])
+      end
+    end
+    lk, lv = next(plines, lk)
+  end
+
+  -- add repositories globally (ignore "already exists")
+  local rk, rv = next(repos)
+  while rk do
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "repository", "add", rv.name, rv.url, "--dont-select", "--yes" }, nil, true)
+    rk, rv = next(repos, rk)
+  end
+
+  -- create the empty switch bound to those repositories if it does not exist
+  local swres = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "switch", "list", "--short" }, nil, true)
+  local swlines = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(swres.stdout)
+  local have = false
+  local sk, sv = next(swlines)
+  while sk do if sv == switch then have = true end; sk, sv = next(swlines, sk) end
+  if not have then
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "switch", "create", switch, "--empty", "--repositories=" .. CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(reponames, ","), "--yes" }, nil, false)
+  end
+
+  -- apply version pins
+  local pk, pv = next(pins)
+  while pk do
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "add", "--switch=" .. switch, "-n", "-y", "-k", "version", pv.name, pv.ver }, nil, false)
+    pk, pv = next(pins, pk)
+  end
+
+  -- remove pins for floated packages (may not be pinned; ignore failure)
+  local fk, fv = next(floats)
+  while fk do
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "remove", "--switch=" .. switch, "--no-action", "-y", fv }, nil, true)
+    fk, fv = next(floats, fk)
+  end
+
+  -- path-pin the local project packages (versionless: opam reads <name>.opam)
+  if local_opam_dir and locals then
+    local ck, cv = next(locals)
+    while ck do
+      CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "add", "--switch=" .. switch, "-n", "-y", cv, local_opam_dir }, nil, false)
+      ck, cv = next(locals, ck)
+    end
+  end
+end
+
+-- Pick the opam binary, then run the solve. When `opam=<path>` is given, use
+-- that binary directly: this is developer/PATH mode, keeping your own opam (and
+-- OPAMROOT) so a differing opam version cannot force an OPAMROOT upgrade. When
+-- absent (the hermetic default), fetch opam from the CommonsLang_OCaml.Opam
+-- module across a continuation: the first `submit` returns a get-object
+-- expression for the opam directory, and dk0 re-invokes with continue_="solve"
+-- and the materialized directory in request.continued.opam.
+function uirules.Solve(command, request, continue_)
   if command == "ui" then
     print("CommonsLang_OCaml.Dk.OpamLock@1.0.0: lock written.")
     return
   end
   if command ~= "submit" then return end
+  if request.user.opam then
+    return CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, request.user.opam)
+  end
+  if continue_ ~= "solve" then
+    return {
+      submit = {
+        expressions = {
+          dirs = { opam = "$(get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.execution_abi -d :)" }
+        },
+        andthen = { continue_ = { state = "solve" } }
+      }
+    }
+  end
+  local opamexe = CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(request.io.realpath(request.continued.opam)) .. "/bin/opam"
+  if request.execution and request.execution.OSFamily == "windows" then opamexe = opamexe .. ".exe" end
+  return CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opamexe)
+end
 
-  -- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock@1.0.0 key=val ...)
-  local opam = request.user.opam or "opam"
+-- Solve each requested slot with the `opam` program, capture per-package
+-- metadata, and publish the lock via request.ui.writefile.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam)
+  -- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.Solve@1.0.0 key=val ...)
   local out = assert(request.user.out, "please provide 'out=PROJECT_RELATIVE_LOCK_PATH'")
   local roots = assert(request.user.roots, "please provide 'roots[]=PKG1' 'roots[]=PKG2' ...")
   assert(type(roots) == "table", "roots must be a table: 'roots[]=PKG1' 'roots[]=PKG2' ...")
@@ -267,6 +368,12 @@ function uirules.Solve(command, request)
 
   local switchargs = {}
   if request.user.switch then table.insert(switchargs, "--switch=" .. request.user.switch) end
+
+  -- When a pin table is supplied, set up the switch from it before solving.
+  if request.user.pins then
+    assert(request.user.switch, "pins= requires switch=<name> (the switch to set up)")
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, request.user.switch, request.user.pins, request.user.local_opam_dir, request.user.locals)
+  end
 
   local rootscsv = CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(roots, ",")
 
