@@ -42,3 +42,4 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
   \test(pass)
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "odcu2mkosi2s67gnoe35lykezqrgpolallbrk7kncugajpziq5uba")\;
