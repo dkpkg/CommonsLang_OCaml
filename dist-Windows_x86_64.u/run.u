@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Windows_x86_64 -d ${RUNTIME}/Windows_x86_64-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "ofyrcaqzqs7oe2dognanx6syrl6hkjlmlgemwoc24l5jyp4yr4haq")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "ofyrcaqzqs7oe2dognanx6syrl6hkjlmlgemwoc24l5jyp4yr4haq", byteSize: "118679741")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt.exe
@@ -47,4 +47,4 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "odcu2mkosi2s67gnoe35lykezqrgpolallbrk7kncugajpziq5uba")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "odcu2mkosi2s67gnoe35lykezqrgpolallbrk7kncugajpziq5uba", byteSize: "252")\;
