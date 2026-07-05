@@ -37,3 +37,13 @@
   \test(pass)
   \dk.target(abi: "Darwin_arm64")[2.5.1
   ]\;
+
+## Dk.OpamLock
+
+Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
+author-time OpamLock uirule ships in this distribution. Running any rule of a
+scriptmodule brings in the whole scriptmodule; the marker output is otherwise
+unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
+  \test(pass)

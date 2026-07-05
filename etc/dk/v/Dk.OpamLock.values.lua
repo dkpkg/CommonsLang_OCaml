@@ -324,6 +324,55 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
   end
 end
 
+-- No-op build rule. A CommonsLang_OCaml distribution script exports a
+-- scriptmodule by running one of its rules ("running one rule brings in the
+-- entire script module"). This scriptmodule otherwise has only the author-time
+-- uirule uirules.Solve, which a non-interactive distribution cannot run, so this
+-- trivial function rule gives the distribution something to run, causing the
+-- whole scriptmodule (including uirules.Solve) to ship and be runnable from an
+-- import. Its output is an empty marker; it does nothing else.
+function rules.Export(command, request)
+  local slots = {
+    "Release.Windows_x86_64", "Release.Windows_x86", "Release.Windows_arm64",
+    "Release.Darwin_x86_64", "Release.Darwin_arm64",
+    "Release.Linux_x86_64", "Release.Linux_arm64", "Release.Linux_x86"
+  }
+  if command == "declareoutput" then
+    return {
+      declareoutput = {
+        return_objects = {
+          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0",
+          slots = slots,
+          execution_slot = "Release.execution_abi"
+        }
+      }
+    }
+  elseif command == "submit" then
+    return {
+      submit = {
+        values = {
+          schema_version = { major = 1, minor = 0 },
+          forms = {
+            {
+              id = request.submit.outputid,
+              function_ = {
+                commands = {
+                  "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                  "touch",
+                  "${SLOT.request}/opamlock-scriptmodule"
+                }
+              },
+              outputs = {
+                assets = { { slots = slots, paths = { "opamlock-scriptmodule" } } }
+              }
+            }
+          }
+        }
+      }
+    }
+  end
+end
+
 -- Pick the opam binary, then run the solve. When `opam=<path>` is given, use
 -- that binary directly: this is developer/PATH mode, keeping your own opam (and
 -- OPAMROOT) so a differing opam version cannot force an OPAMROOT upgrade. When
