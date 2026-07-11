@@ -1,0 +1,32 @@
+{
+  "continuations": {
+    "attestation": {
+      "openbsd_signify": {
+        "signature": "untrusted comment: signed by key 2b19619c380dd657\nRWQrGWGcOA3WV/SC5szyffbUIzdMAOjD33Y9fQe9ngEw7QoRVn5420I7hpPpiOR1WF4pLrxV5L0AHe3zRd7zAHSOjc/0d8TwsAU=\n"
+      }
+    },
+    "continuations_to_sign": {
+      "0.2": {
+        "application": { "name": "dk0", "version": "2.4.2+rev-253" },
+        "openbsd_signify": {
+          "public_key": "untrusted comment: CommonsLang_OCaml-0.2\nRWRnKsyKvFT87Z/voU2a8RFDBjdtzKzfcFgCn+eTXCTheCs3Nd2BGz0H\n"
+        }
+      },
+      "1.0": {
+        "application": { "name": "dk0", "version": "2.4.2+rev-253" },
+        "openbsd_signify": {
+          "public_key": "untrusted comment: CommonsLang_OCaml-1.0\nRWRLh0MTaL/vE2fN07NUPRSEHBMs2FZpBBSCi++qsCUY3vHSttJWh66e\n"
+        }
+      }
+    }
+  },
+  "id": "CommonsLang_OCaml@0.1.0",
+  "license": { "spdx": "Apache-2.0" },
+  "producer": {
+    "application": { "name": "dk0", "version": "2.4.2+rev-253" },
+    "github_slsa_v1_l2": { "repository": "dkpkg/CommonsLang_OCaml" },
+    "openbsd_signify": {
+      "public_key": "untrusted comment: CommonsLang_OCaml-0.1\nRWQrGWGcOA3WV93QbuXdm8aAWjDkYvCM5jgFAanfDRiW9n3PzSvLESmR\n"
+    }
+  }
+}
