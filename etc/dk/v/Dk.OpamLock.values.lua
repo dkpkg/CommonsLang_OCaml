@@ -283,6 +283,58 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
     lk, lv = next(plines, lk)
   end
 
+  -- initialise the opam root if needed. The hermetic module-opam path
+  -- starts from a fresh OPAMROOT (a developer's PATH opam is normally
+  -- already initialised), and every later command needs an initialised
+  -- root. --bare skips the compiler switch. An init config file written to
+  -- the UI sandbox seeds ALL pinned repositories at once, so the large
+  -- upstream default repository is never fetched. --disable-sandboxing
+  -- keeps Linux containers without bwrap working (the lock solve never
+  -- builds packages, so no sandbox is needed).
+  local ini = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "var", "root", "--global" }, nil, true)
+  if ini.status ~= "exit" or ini.code ~= 0 then
+    local initargs = { "init", "--bare", "--no-setup", "--disable-sandboxing", "--yes" }
+    if repos[1] then
+      local rcfile = assert(request.io.open("opamrc-bootstrap", "w"), "could not open opamrc-bootstrap for write")
+      request.io.write(rcfile, "opam-version: \"2.0\"\n")
+      request.io.write(rcfile, "repositories: [\n")
+      local bk, bv = next(repos)
+      while bk do
+        request.io.write(rcfile, "  \"" .. bv.name .. "\" {\"" .. bv.url .. "\"}\n")
+        bk, bv = next(repos, bk)
+      end
+      request.io.write(rcfile, "]\n")
+      -- Hermetic/portable init settings:
+      -- * no default compiler/invariant: nothing is ever built in this root
+      -- * no eval-variables: the defaults probe the host ocamlc
+      --   (sys-ocaml-version/system/arch/cc/libc), which would leak host
+      --   state into filter evaluation and vary the solve per machine
+      -- * no required/recommended tools: solve-only needs no make, tar,
+      --   unzip, curl or bwrap present at init time
+      -- * no init-scripts and no wrap commands: declaratively sandbox-free
+      --   (complements --disable-sandboxing on the command line)
+      -- eval-variables and init-scripts are omitted: the opamrc grammar
+      -- rejects an empty list for them, and omitted fields fall back to
+      -- the built-in defaults. The default eval-variables probe the host
+      -- ocamlc (sys-ocaml-*), a residual host leak that the full ocaml
+      -- version pin neutralizes for this solve. The default sandbox
+      -- init-script may be written but is never used: the explicit empty
+      -- wrap-*-commands below are what disable sandboxing.
+      request.io.write(rcfile, "default-compiler: []\n")
+      request.io.write(rcfile, "default-invariant: []\n")
+      request.io.write(rcfile, "required-tools: []\n")
+      request.io.write(rcfile, "recommended-tools: []\n")
+      request.io.write(rcfile, "wrap-build-commands: []\n")
+      request.io.write(rcfile, "wrap-install-commands: []\n")
+      request.io.write(rcfile, "wrap-remove-commands: []\n")
+      request.io.flush(rcfile)
+      local rcpath = request.io.realpath(rcfile)
+      request.io.close(rcfile)
+      table.insert(initargs, "--config=" .. rcpath)
+    end
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, initargs, nil, false)
+  end
+
   -- add repositories globally (ignore "already exists")
   local rk, rv = next(repos)
   while rk do
@@ -393,14 +445,18 @@ function uirules.Solve(command, request, continue_)
     return {
       submit = {
         expressions = {
-          dirs = { opam = "$(get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.execution_abi -d :)" }
+          directories = { opam = "$(get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.execution_abi -d :)" }
         },
         andthen = { continue_ = { state = "solve" } }
       }
     }
   end
-  local opamexe = CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(request.io.realpath(request.continued.opam)) .. "/bin/opam"
+  local opamdir = request.continued.opam
+  local opamexe = CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(request.io.realpath(opamdir)) .. "/bin/opam"
   if request.execution and request.execution.OSFamily == "windows" then opamexe = opamexe .. ".exe" end
+  -- Close the continued directory object: leaving it open fails the
+  -- continuation finalizer (open continued file objects are leaks).
+  request.io.close(opamdir)
   return CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opamexe)
 end
 
