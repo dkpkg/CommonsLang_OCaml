@@ -47,7 +47,7 @@ x64 tree through WOW64/emulation.
 
   $ get-object CommonsLang_OCaml.MSYS2@2026.6.11 -s Release.Windows_x86_64 -f ${RUNTIME}/Windows_x86_64-MSYS2-2026.6.11.zip
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "ofyrcaqzqs7oe2dognanx6syrl6hkjlmlgemwoc24l5jyp4yr4haq")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "ozjqpoyewgl2wsnrk5uekbleo3644auhcyri2gexstfr3k5slof5q")\;
 
 ## Dk.OpamLock
 
