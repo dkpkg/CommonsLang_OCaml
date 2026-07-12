@@ -33,14 +33,25 @@ CommonsLang_OCaml__Dk_OpamLock__1_0_0.SLOT_VARS["Release.Darwin_arm64"]   = { os
 
 -- lua-ml's string library does not implement gsub, so trim by scanning for the
 -- first/last non-space with find (which does support patterns).
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.iswhite(c)
+  local b = string.byte(c)
+  return b == 32 or b == 9 or b == 13 or b == 10
+end
+
+-- Explicit whitespace checks (space/tab/CR/LF by byte value: raw control
+-- bytes and \r are unrepresentable in lua-ml string literals): lua-ml's %s
+-- class does not match CR, which left a trailing CR on every line of CRLF
+-- opam output on Windows (ex. the
+-- switch-exists check compared name-plus-CR ~= name and re-created the
+-- switch).
 function CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(s)
   if s == nil then return "" end
   local n = string.len(s)
   local a = 1
-  while a <= n and string.find(string.sub(s, a, a), "%s") do a = a + 1 end
+  while a <= n and CommonsLang_OCaml__Dk_OpamLock__1_0_0.iswhite(string.sub(s, a, a)) do a = a + 1 end
   if a > n then return "" end
   local b = n
-  while b >= 1 and string.find(string.sub(s, b, b), "%s") do b = b - 1 end
+  while b >= 1 and CommonsLang_OCaml__Dk_OpamLock__1_0_0.iswhite(string.sub(s, b, b)) do b = b - 1 end
   return string.sub(s, a, b)
 end
 
@@ -76,10 +87,10 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.words(s)
   local i = 1
   local n = string.len(s)
   while i <= n do
-    while i <= n and string.find(string.sub(s, i, i), "%s") do i = i + 1 end
+    while i <= n and CommonsLang_OCaml__Dk_OpamLock__1_0_0.iswhite(string.sub(s, i, i)) do i = i + 1 end
     if i <= n then
       local j = i
-      while j <= n and not string.find(string.sub(s, j, j), "%s") do j = j + 1 end
+      while j <= n and not CommonsLang_OCaml__Dk_OpamLock__1_0_0.iswhite(string.sub(s, j, j)) do j = j + 1 end
       table.insert(out, string.sub(s, i, j - 1))
       i = j
     else
@@ -120,13 +131,19 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, program, args, envmo
   local opts = { program = program, args = args, max_output_bytes = 16777211 }
   if envmods then opts.envmods = envmods end
   print("+ " .. program .. " " .. CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(args, " "))
+  -- allowfailure is a truthy NUMBER (1), never a boolean: lua-ml drops a boolean
+  -- literal passed as a trailing call argument (it arrives as nil), so tolerant
+  -- callers pass 1 and strict callers omit it. Branch on `not allowfailure` and
+  -- raise via assert(false, ...) so no assert-of-a-truthy-value is relied on.
   local result, msg, kind = request.ui.capture(opts)
   if not result then
-    assert(allowfailure, "could not run `" .. program .. "`: " .. tostring(kind) .. ": " .. tostring(msg))
+    if not allowfailure then
+      assert(false, "could not run `" .. program .. "`: " .. tostring(kind) .. ": " .. tostring(msg))
+    end
     return { status = "capture", code = 255, stdout = "", stderr = tostring(msg) }
   end
-  if result.status ~= "exit" or result.code ~= 0 then
-    assert(allowfailure, "`" .. program .. "` exited with code " .. tostring(result.code) .. ": " .. tostring(result.stderr))
+  if (result.status ~= "exit" or result.code ~= 0) and not allowfailure then
+    assert(false, "`" .. program .. "` exited with code " .. tostring(result.code) .. ": " .. tostring(result.stderr))
   end
   return result
 end
@@ -138,7 +155,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_field(request, opam, switcha
   local k, v = next(switchargs)
   while k do table.insert(args, v); k, v = next(switchargs, k) end
   table.insert(args, key)
-  local r = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, args, nil, true)
+  local r = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, args, nil, 1)
   if r.status ~= "exit" or r.code ~= 0 then return "" end
   return CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(r.stdout)
 end
@@ -193,6 +210,77 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.checksums(s)
     if string.find(u, "=") then table.insert(out, u) end
   end
   return out
+end
+
+-- Build the opam content-addressed cache URL from a checksum list. The opam
+-- repository mirrors every published archive at
+-- `https://opam.ocaml.org/cache/<kind>/<first2hex>/<hash>` keyed by its
+-- checksum, so this URL is stable, byte-reproducible (unlike a GitHub
+-- auto-generated archive, whose bytes and thus checksum can drift), and always
+-- returns a Content-Length. Preferring it fixes both lock reproducibility (R4)
+-- and the source-size HEAD probe. Prefer sha256, fall back to md5. Returns nil
+-- when no usable checksum is present.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.cache_url(sums)
+  local sha, md5 = nil, nil
+  local k, v = next(sums)
+  while k do
+    if string.sub(v, 1, 7) == "sha256=" then sha = string.sub(v, 8)
+    elseif string.sub(v, 1, 4) == "md5=" then md5 = string.sub(v, 5) end
+    k, v = next(sums, k)
+  end
+  local kind, hex = nil, nil
+  if sha then kind = "sha256"; hex = sha
+  elseif md5 then kind = "md5"; hex = md5 end
+  if hex == nil or string.len(hex) < 2 then return nil end
+  return "https://opam.ocaml.org/cache/" .. kind .. "/" .. string.sub(hex, 1, 2) .. "/" .. hex
+end
+
+-- True when the checksum list already carries a kind that a dk bundle asset can
+-- express (sha256/sha1/blake2b256). opam records md5/sha512 for older packages,
+-- which a bundle cannot represent, so those need a computed sha256.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.has_bundle_checksum(sums)
+  local k, v = next(sums)
+  while k do
+    if string.sub(v, 1, 7) == "sha256=" or string.sub(v, 1, 5) == "sha1="
+      or string.sub(v, 1, 11) == "blake2b256=" then return true end
+    k, v = next(sums, k)
+  end
+  return false
+end
+
+-- Compute the sha256 of a source archive by downloading it and hashing. Used
+-- only when opam offers no bundle-compatible checksum. curl saves the archive to
+-- the capture working directory; certutil (always present on Windows) prints the
+-- hash. Returns a lowercase hex sha256, or nil on any failure.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_sha256(request, url)
+  -- Windows-only (certutil). Check inline: a `local x = nil` does not bind
+  -- reliably in lua-ml, so avoid a nil-initialized local and init both paths to
+  -- non-nil strings after the guard.
+  if not (request.execution and request.execution.OSFamily == "windows") then return nil end
+  local curlexe = "C:\\Windows\\System32\\curl.exe"
+  local certutil = "C:\\Windows\\System32\\certutil.exe"
+  local tmp = "dk-opamlock-src.download"
+  local dl = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, curlexe, { "-sL", "-o", tmp, url }, nil, 1)
+  if dl.status ~= "exit" or dl.code ~= 0 then return nil end
+  local h = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, certutil, { "-hashfile", tmp, "SHA256" }, nil, 1)
+  if h.status ~= "exit" or h.code ~= 0 then return nil end
+  -- certutil prints the 64-hex digest on its own line (may contain spaces on old
+  -- builds); find the line that is 64 hex characters after removing spaces.
+  local lns = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(h.stdout)
+  local lk, ln = next(lns)
+  while lk do
+    local hex = ""
+    local i = 1
+    local n = string.len(ln)
+    while i <= n do
+      local c = string.lower(string.sub(ln, i, i))
+      if (c >= "0" and c <= "9") or (c >= "a" and c <= "f") then hex = hex .. c end
+      i = i + 1
+    end
+    if string.len(hex) == 64 then return hex end
+    lk, ln = next(lns, lk)
+  end
+  return nil
 end
 
 -- JSON-escape a string (quotes included). Handles the escapes opam fields
@@ -291,7 +379,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
   -- upstream default repository is never fetched. --disable-sandboxing
   -- keeps Linux containers without bwrap working (the lock solve never
   -- builds packages, so no sandbox is needed).
-  local ini = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "var", "root", "--global" }, nil, true)
+  local ini = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "var", "root", "--global" }, nil, 1)
   if ini.status ~= "exit" or ini.code ~= 0 then
     local initargs = { "init", "--bare", "--no-setup", "--disable-sandboxing", "--yes" }
     if repos[1] then
@@ -350,18 +438,28 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
   -- add repositories globally (ignore "already exists")
   local rk, rv = next(repos)
   while rk do
-    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "repository", "add", rv.name, rv.url, "--dont-select", "--yes" }, nil, true)
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "repository", "add", rv.name, rv.url, "--dont-select", "--yes" }, nil, 1)
     rk, rv = next(repos, rk)
   end
 
   -- create the empty switch bound to those repositories if it does not exist
-  local swres = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "switch", "list", "--short" }, nil, true)
+  local swres = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "switch", "list", "--short" }, nil, 1)
   local swlines = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(swres.stdout)
   local have = false
   local sk, sv = next(swlines)
   while sk do if sv == switch then have = true end; sk, sv = next(swlines, sk) end
   if not have then
-    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "switch", "create", switch, "--empty", "--repositories=" .. CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(reponames, ","), "--yes" }, nil, false)
+    -- Tolerate an already-installed switch. The list-based detection above can
+    -- miss a switch that is genuinely present (an idempotent re-run over a
+    -- persisted OPAMROOT), so create with allowfailure and accept only the
+    -- "already ... installed switch" outcome; any other create failure is fatal.
+    local cres = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "switch", "create", switch, "--empty", "--repositories=" .. CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(reponames, ","), "--yes" }, nil, 1)
+    if cres.status ~= "exit" or cres.code ~= 0 then
+      local se = (cres.stderr or "") .. (cres.stdout or "")
+      if string.find(se, "already") == nil then
+        assert(false, "could not create switch `" .. switch .. "`: " .. se)
+      end
+    end
   end
 
   -- apply version pins
@@ -374,7 +472,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
   -- remove pins for floated packages (may not be pinned; ignore failure)
   local fk, fv = next(floats)
   while fk do
-    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "remove", "--switch=" .. switch, "--no-action", "-y", fv }, nil, true)
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "remove", "--switch=" .. switch, "--no-action", "-y", fv }, nil, 1)
     fk, fv = next(floats, fk)
   end
 
@@ -437,6 +535,48 @@ function rules.Export(command, request)
   end
 end
 
+
+-- Probe the byte size of a source archive with a HEAD request (curl -sIL,
+-- following redirects; the LAST Content-Length wins). The dk bundle asset
+-- schema requires `size`, so consumers that turn lock sources into bundle
+-- assets need it pinned in the lock. Returns nil when curl is unavailable
+-- or no Content-Length is reported; the lock field is then omitted.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, url)
+  -- The UI capture spawns with an explicit program path (no PATH search on
+  -- Windows CreateProcess), so a bare "curl" is not found. Windows always ships
+  -- curl at System32; on Unix execvp resolves the bare name against PATH.
+  local curlexe = "curl"
+  if request.execution and request.execution.OSFamily == "windows" then
+    curlexe = "C:\\Windows\\System32\\curl.exe"
+  end
+  local r = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, curlexe, { "-sIL", url }, nil, 1)
+  if r.status ~= "exit" or r.code ~= 0 then return nil end
+  local lns = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(r.stdout)
+  local size = nil
+  local k, ln = next(lns)
+  while k do
+    local low = string.lower(ln)
+    if string.sub(low, 1, 15) == "content-length:" then
+      local digits = ""
+      local i = 16
+      local n = string.len(ln)
+      local stopped = false
+      while i <= n and not stopped do
+        local c = string.sub(ln, i, i)
+        if c >= "0" and c <= "9" then
+          digits = digits .. c
+        elseif digits ~= "" then
+          stopped = true
+        end
+        i = i + 1
+      end
+      if digits ~= "" then size = tonumber(digits) end
+    end
+    k, ln = next(lns, k)
+  end
+  return size
+end
+
 -- Pick the opam binary, then run the solve. When `opam=<path>` is given, use
 -- that binary directly: this is developer/PATH mode, keeping your own opam (and
 -- OPAMROOT) so a differing opam version cannot force an OPAMROOT upgrade. When
@@ -495,7 +635,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam)
   local rootscsv = CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(roots, ",")
 
   -- opam version, for non-authoritative provenance.
-  local verres = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "--version" }, nil, true)
+  local verres = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "--version" }, nil, 1)
   local opamver = CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(verres.stdout)
 
   -- 1. Solve each requested slot. Package keys are '<name>.<version>'.
@@ -560,7 +700,26 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam)
     if is_local or url == "" or next(sums) == nil then
       source = CommonsLang_OCaml__Dk_OpamLock__1_0_0.NULL   -- local pin, or a virtual/compiler package with no archive
     else
+      -- Keep the upstream url (its basename carries the real archive extension,
+      -- which the build-time rule needs for tar-type detection). Size is probed
+      -- from opam's content-addressed cache first (a reliable Content-Length,
+      -- byte-identical to the checksummed archive) and only falls back to the
+      -- upstream url. The build-time rule can reconstruct the same cache URL from
+      -- the sha256 for a reproducible fetch, so the lock need not store it.
+      -- A dk bundle asset can only carry sha256/sha1/blake2b256. When opam offers
+      -- none of those (older packages ship md5/sha512), compute a sha256 from the
+      -- upstream archive (the same bytes the build-time fetch verifies) and add it
+      -- so the package is expressible as a bundle.
+      if not CommonsLang_OCaml__Dk_OpamLock__1_0_0.has_bundle_checksum(sums) then
+        local computed = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_sha256(request, url)
+        if computed ~= nil then table.insert(sums, "sha256=" .. computed) end
+      end
       source = { url = url, checksums = sums }
+      local cu = CommonsLang_OCaml__Dk_OpamLock__1_0_0.cache_url(sums)
+      local sz = nil
+      if cu ~= nil then sz = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, cu) end
+      if sz == nil then sz = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, url) end
+      if sz ~= nil then source.size = sz end
     end
 
     packages[ak] = {
@@ -583,7 +742,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam)
   -- `opam repository list --all` prints a `#`-prefixed header then rows of
   -- "name  url  switches(rank)..."; take the first two whitespace tokens.
   local repos = {}
-  local rr = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "repository", "list", "--all" }, nil, true)
+  local rr = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "repository", "list", "--all" }, nil, 1)
   local rlines = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(rr.stdout)
   local rlk, rline = next(rlines)
   while rlk do
