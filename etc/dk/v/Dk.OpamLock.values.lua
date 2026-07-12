@@ -218,34 +218,55 @@ end
 -- checksum, so this URL is stable, byte-reproducible (unlike a GitHub
 -- auto-generated archive, whose bytes and thus checksum can drift), and always
 -- returns a Content-Length. Preferring it fixes both lock reproducibility (R4)
--- and the source-size HEAD probe. Prefer sha256, fall back to md5. Returns nil
--- when no usable checksum is present.
+-- and the source-size HEAD probe. Prefer an opam-recorded kind (sha512 > md5 >
+-- sha256) so the cache always serves it: a sha256 this rule *computed* for a
+-- package opam shipped as md5/sha512-only is NOT in the cache, so sha256 is the
+-- last resort. Returns nil when no usable checksum is present.
 function CommonsLang_OCaml__Dk_OpamLock__1_0_0.cache_url(sums)
-  local sha, md5 = nil, nil
+  local sha512, md5, sha256 = "", "", ""
   local k, v = next(sums)
   while k do
-    if string.sub(v, 1, 7) == "sha256=" then sha = string.sub(v, 8)
+    if string.sub(v, 1, 7) == "sha512=" then sha512 = string.sub(v, 8)
+    elseif string.sub(v, 1, 7) == "sha256=" then sha256 = string.sub(v, 8)
     elseif string.sub(v, 1, 4) == "md5=" then md5 = string.sub(v, 5) end
     k, v = next(sums, k)
   end
-  local kind, hex = nil, nil
-  if sha then kind = "sha256"; hex = sha
-  elseif md5 then kind = "md5"; hex = md5 end
-  if hex == nil or string.len(hex) < 2 then return nil end
+  local kind, hex = "", ""
+  if sha512 ~= "" then kind = "sha512"; hex = sha512
+  elseif md5 ~= "" then kind = "md5"; hex = md5
+  elseif sha256 ~= "" then kind = "sha256"; hex = sha256 end
+  if string.len(hex) < 2 then return nil end
   return "https://opam.ocaml.org/cache/" .. kind .. "/" .. string.sub(hex, 1, 2) .. "/" .. hex
 end
 
 -- True when the checksum list already carries a kind that a dk bundle asset can
 -- express (sha256/sha1/blake2b256). opam records md5/sha512 for older packages,
 -- which a bundle cannot represent, so those need a computed sha256.
+-- Classify a source archive by its URL basename extension. The build-time rule
+-- fetches from the opam cache whose filename is a bare hash (no extension), so
+-- the archive type must be recorded explicitly. Defaults to tgz (opam's common
+-- case) when the extension is unrecognized.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.archive_type(url)
+  local n = string.len(url)
+  if string.sub(url, n - 6) == ".tar.gz" or string.sub(url, n - 3) == ".tgz" then return "tgz" end
+  if string.sub(url, n - 6) == ".tar.xz" or string.sub(url, n - 3) == ".txz" then return "txz" end
+  if string.sub(url, n - 7) == ".tar.bz2" or string.sub(url, n - 3) == ".tbz" then return "tbz" end
+  if string.sub(url, n - 3) == ".tar" then return "tar" end
+  return "tgz"
+end
+
+-- Returns 1 when the checksum list carries a bundle-expressible kind
+-- (sha256/sha1/blake2b256), else 0. Numeric, not boolean: lua-ml `return true`/
+-- `return false` both come back as nil, so a boolean result is unusable.
 function CommonsLang_OCaml__Dk_OpamLock__1_0_0.has_bundle_checksum(sums)
   local k, v = next(sums)
   while k do
-    if string.sub(v, 1, 7) == "sha256=" or string.sub(v, 1, 5) == "sha1="
-      or string.sub(v, 1, 11) == "blake2b256=" then return true end
+    if string.sub(v, 1, 7) == "sha256=" then return 1 end
+    if string.sub(v, 1, 5) == "sha1=" then return 1 end
+    if string.sub(v, 1, 11) == "blake2b256=" then return 1 end
     k, v = next(sums, k)
   end
-  return false
+  return 0
 end
 
 -- Compute the sha256 of a source archive by downloading it and hashing. Used
@@ -253,11 +274,16 @@ end
 -- the capture working directory; certutil (always present on Windows) prints the
 -- hash. Returns a lowercase hex sha256, or nil on any failure.
 function CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_sha256(request, url)
-  -- Windows-only (certutil). Check inline: a `local x = nil` does not bind
-  -- reliably in lua-ml, so avoid a nil-initialized local and init both paths to
-  -- non-nil strings after the guard.
-  if not (request.execution and request.execution.OSFamily == "windows") then return nil end
-  local curlexe = "C:\\Windows\\System32\\curl.exe"
+  -- Windows-only (certutil). Mirror source_size's exact positive OSFamily test
+  -- (lua-ml mishandles a `local x = nil` binding and a negated `not (A and B)`
+  -- guard, both of which silently no-op'd this function).
+  local curlexe = "curl"
+  local iswin = 0
+  if request.execution and request.execution.OSFamily == "windows" then
+    curlexe = "C:\\Windows\\System32\\curl.exe"
+    iswin = 1
+  end
+  if iswin == 0 then return nil end
   local certutil = "C:\\Windows\\System32\\certutil.exe"
   local tmp = "dk-opamlock-src.download"
   local dl = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, curlexe, { "-sL", "-o", tmp, url }, nil, 1)
@@ -750,11 +776,21 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
       -- none of those (older packages ship md5/sha512), compute a sha256 from the
       -- upstream archive (the same bytes the build-time fetch verifies) and add it
       -- so the package is expressible as a bundle.
-      if not CommonsLang_OCaml__Dk_OpamLock__1_0_0.has_bundle_checksum(sums) then
-        local computed = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_sha256(request, url)
-        if computed ~= nil then table.insert(sums, "sha256=" .. computed) end
+      -- Compute the missing sha256 from the opam CACHE bytes (not upstream), so
+      -- the recorded sha256, the probed size, and the build-time fetch all refer
+      -- to the same content. github auto-archives fetch unreliably and can drift;
+      -- the content-addressed cache is stable.
+      if CommonsLang_OCaml__Dk_OpamLock__1_0_0.has_bundle_checksum(sums) == 0 then
+        local cu0 = CommonsLang_OCaml__Dk_OpamLock__1_0_0.cache_url(sums)
+        if cu0 ~= nil then
+          local computed = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_sha256(request, cu0)
+          if computed ~= nil then table.insert(sums, "sha256=" .. computed) end
+        end
       end
       source = { url = url, checksums = sums }
+      -- archive type for the build-time tar (the cache filename is a bare hash)
+      source.archive = CommonsLang_OCaml__Dk_OpamLock__1_0_0.archive_type(url)
+      -- size probed from the same cache URL the build fetches
       local cu = CommonsLang_OCaml__Dk_OpamLock__1_0_0.cache_url(sums)
       local sz = nil
       if cu ~= nil then sz = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, cu) end
