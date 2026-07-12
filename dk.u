@@ -4,70 +4,94 @@
   'import'
   'github-l2'
   { {
-      'CommonsBase_GNU', '2.5.202606262052', {
-        'blake2b-256:cafc6b0af4619a79d2521bf3d3305de342f18c565c13a1e64580fd7dfa3b727d',
-        'sha256:c10b455c881fda298a8fc319959fe29e19f5ba46c9a411cc906aa69a4773203a',
-        'sha1:71826d0a78b888270d41196031e22d3a679f94d6'
+      'CommonsBase_GNU', '0.1.20260711131127', {
+        'blake2b-256:61f30d245b1d38b2ed80dcf93b12fbee5aeef39dc8b3c4f2dde67e5ca900c74e',
+        'sha256:0666222941f713f0c2035024ddf653369473be02a6713ba1dd56155077fa9d63',
+        'sha1:9c556e96bd6533eca61ab6753ca7a5a673f601a2'
       } },
     {
-      'CommonsBase_Build', '2.5.202606262035', {
-        'blake2b-256:e0c911ac306eec0894b7bb8bd9288424e4fbc3974f2d47c2fb777e452552beb0',
-        'sha256:ec474d5c879ed5e384860df4f5dcfacdeec4f344e3bc51e52642054f6eac6e36',
-        'sha1:225af735f9743fbcaee4bfc37ee3e6754f95c6e4'
+      'CommonsBase_Build', '0.1.20260707131124', {
+        'blake2b-256:ee5519a121205f83ca067aa6e6098c82118bd37238e1bb54c840edb3c1a10304',
+        'sha256:84c901c73178a0c784c7d893bf4e6895fbe09ffe86b8436557530cc4ba0000aa',
+        'sha1:85848478330e6c8ecf377f3dc2af449311ce3518'
       } },
     {
-      'CommonsBase_FileMagic', '2.5.202606260339', {
-        'blake2b-256:e493f5360697ab40a071b101bfb0a35392ea1675485b4d4592c10e950fe1cb09',
-        'sha256:bdfc012cd409dfcf83b94e5589be310e2659997632d71d86bfc35d64f6d0393c',
-        'sha1:42d6f05436b4361240a0f0ce1152edc46fc2f02b'
+      'CommonsBase_FileMagic', '0.1.20260711004745', {
+        'blake2b-256:43c9d8f64f623f65e1d0236edaa1af4f0ddb4075c03c617e38a190e7b7aebd9a',
+        'sha256:e19c85c8a15903631b8b0808f703780657523fc9b801d9389ef69f149d78ff84',
+        'sha1:973c3449761d4c7b1e3e2dd04a6284a73631ac95'
       } },
     {
-      'CommonsBase_FileMagic', '2.5.202606262047', {
-        'blake2b-256:266b8435a34e20e3435bfb930b9e7eda7d3b3c0822139a3a6fcb0ecdb82bd700',
-        'sha256:6e83c3fb03c66920c23349ca4a49b5fb4eaa56b2e195b2ff40eb88593aa26e59',
-        'sha1:d058be16ddb29e50b4f510629e22f8476dbf551e'
+      'CommonsBase_LLVM', '0.1.20260706064049', {
+        'blake2b-256:96b2b482db4652a60893713c652b3bb5be89a143f5e3e7ca6178c99071e0cb11',
+        'sha256:8f32bfb59d849ce62898f23e712c58538c294c37d4cd3cf501f2f66b5cbf5820',
+        'sha1:a59ef674dab40f1c6cc2d2110464784320ab19bd'
       } },
     {
-      'CommonsBase_GNU', '2.5.202606260339', {
-        'blake2b-256:35d18482aefa34c1c70188775f02e0bbef7dd8b6701000da4cd01017ae70ea4f',
-        'sha256:29234c2ad45b06629ba8d2e4c3c39b7f5eba24bdd967baf25dfc52ec6083d733',
-        'sha1:d8c257e1f3c4832a233e4d624787121a19ed3812'
+      'CommonsBase_Remote', '0.1.20260711003204', {
+        'blake2b-256:0d28e832c2b4f9b4cf51f01efda13a4db6edb78c15bbf96dbe151d1de14fd94c',
+        'sha256:726c83e218ef22204dc7c1a8633539c650911a9d34b3113955061899e78a37d2',
+        'sha1:95ec85359195709ef23964952af21a1e66fc8f0e'
       } },
     {
-      'CommonsBase_LLVM', '2.5.202606260339', {
-        'blake2b-256:b07de5d4cda43075c4e71aa41cd8577953d282872d869803cd8bb13beb57c147',
-        'sha256:6615b5af558e9e08a7d4fdf150716253c4399587a567383cecf75fb55d9b8c89',
-        'sha1:e6f46f909276cae8cd04a74e0a9e1012f655834a'
+      'CommonsBase_Remote', '0.1.20260711004226', {
+        'blake2b-256:fefb1339cc0c17f9af74c447f19e919d62bf488e3e0f8249945e8a991418f4a6',
+        'sha256:64096f4246e3a0fd9b628d7e7f15bdc214cdbcb6e4ee4dc1db21cdc6be241255',
+        'sha1:9c2138db329d45714e2ef43ff5e0274b6fa9a5b0'
       } },
     {
-      'CommonsBase_LLVM', '2.5.202606262035', {
-        'blake2b-256:be28d427463915d7d76cd77843c219ed9f3c090867d3504697faa10530b55ad4',
-        'sha256:e406a9f363bdbdbdb31d5412a29b85483c03c50096669b447a9034a5d76c673c',
-        'sha1:2fa025e836655a9c83f7272c8203e20f424232eb'
+      'CommonsBase_Std', '2.6.20260705051043', {
+        'blake2b-256:156d1836ac816b113880ce282f686b35d9c75e3cb4d69523313f85983ba12d4a',
+        'sha256:105ff8e83d42da3aaa79f37540303f3b3db4cd237cecfd80739387c28c866564',
+        'sha1:f3e1dac5323d0dca4f7df6c77564051a99cd6dac'
       } },
     {
-      'CommonsBase_Remote', '2.5.202606251324', {
-        'blake2b-256:b77d54a3c7da56fedbd5061b5136ccad82565fd08f98d1915a41dae618b45cbf',
-        'sha256:4bde4707cde42505eb22e3e13b9efdccae4729ebda35449fa5b22484acbc8b2f',
-        'sha1:42e12d7f93c28edea2d7e191cce000af68147d12'
+      'CommonsBase_Std', '2.6.20260705103327', {
+        'blake2b-256:ef622d15f7fc08b9b30beb5fb767790c213f6e7d08aa266f17b6bae4b7a3f7c0',
+        'sha256:13cba7aa2844019b1acff5ee2ac929fb3cb9193fbfd684412ccc4563424a6d8c',
+        'sha1:44a9a04a3339a99b3c326907d69a689aa103f135'
       } },
     {
-      'CommonsBase_Remote', '2.5.202606262035', {
-        'blake2b-256:ddf3324c63d73e0f6496befb840c3ead6db52934048b64c52b6bd413d7d2c46e',
-        'sha256:f8173d95c31c1441efc5c9435861b2eea8e3ea96508c36db79ebd056243376e3',
-        'sha1:f1e88a95965f9c3e198c4fc44f8beb1e260c0fb9'
+      'CommonsBase_Std', '2.6.20260706021729', {
+        'blake2b-256:9d442eb18b3cce1667fbe8c3585825aafb3384aa6df825740cb6d30df41fde59',
+        'sha256:b8c8a247672604c9487de530cda33ac4e13bf586b6ec1cc47c4562fe879a4897',
+        'sha1:daa9de5e3ed097e8259f973455a722056d84cba6'
       } },
     {
-      'CommonsBase_Std', '2.5.202606240625', {
-        'blake2b-256:6450d810180892d71647fe63c2313d17df5ce23eef80e1050a13cf7ad4417b31',
-        'sha256:9eac4142bc0a80e5b51d3b89e83069672873ec628256afe849408ab64f954100',
-        'sha1:8c02d3bf95fe54717dd1798f292c6d6688a63faa'
+      'CommonsBase_Std', '2.6.20260707120738', {
+        'blake2b-256:fbf6d2ea9bb17069c9f7cd463ee027c291f6fb6692821286501d1523db0febe2',
+        'sha256:d312d776756f822769de278bbf8ccbb167ea2d84d7b1dbf61b47f3c4cdf86a71',
+        'sha1:bfbb3d5be41f7a88023a4367dc84b1ce5dcad14e'
       } },
     {
-      'CommonsBase_Std', '2.5.202606262031', {
-        'blake2b-256:900b27b1b73e76e5f1c7d95c8484b4457245ec430e05c89c443705622abaa6b4',
-        'sha256:7e4e8b645e75a415f78be7361f928a6be1cc092d133f13406e58f388dbf988df',
-        'sha1:757c997d4893f1c93e53df5578a4105c294a5713'
+      'CommonsBase_Std', '2.6.20260708055043', {
+        'blake2b-256:41961cab7bdb7b6c703c091ad9ccb75bf48819c1a8ab7aaf9ce5d947072a586b',
+        'sha256:686d8f60f50d6debb12c2faa46f33ae7438be0b30787a01d88de52bebc832f78',
+        'sha1:94296e5e1ad55f335a222fcd27aea40d96355322'
+      } } }
+
+  %% import { type="github-l2", repo="dkpkg/CommonsBase_Std" }
+  'import'
+  'github-l2'
+  { {
+      'CommonsBase_Std', '2.6.20260712022859', {
+        'blake2b-256:067aa3813ed34659a49ab962891b92de108ce14cd87fb0093aa6ec83f7c21f27',
+        'sha256:da0a40d7e8585c2e5979ced1daaa0b85fa029df9a774088309d8bd42354cdb5e',
+        'sha1:8d4b6c8fdd760c12074e8a01102aeb3877e7751f'
+      } } }
+
+  %% import { type="github-l2", repo="dkpkg/CommonsBase_Build" }
+  'import'
+  'github-l2'
+  { {
+      'CommonsBase_Build', '0.1.20260712024957', {
+        'blake2b-256:2075bbce2d2ba71fa2760a3a1b898c15a98d8163a018aafeb46f14446442f535', 'sha256:0f4361bb36d02a685d906d8e148c92eb6131ba81f680202a87b0f0fcd0242907',
+        'sha1:a02b33d105db77719a14ca87f22071ac2fd34cbf'
+      } },
+    {
+      'CommonsBase_Std', '2.6.20260712022859', {
+        'blake2b-256:067aa3813ed34659a49ab962891b92de108ce14cd87fb0093aa6ec83f7c21f27', 'sha256:da0a40d7e8585c2e5979ced1daaa0b85fa029df9a774088309d8bd42354cdb5e',
+        'sha1:8d4b6c8fdd760c12074e8a01102aeb3877e7751f'
       } } }
 
 ## Assets
@@ -81,8 +105,8 @@
 
   % unified.asset { name="Scripts", dir="assets/s" }
   'asset'
-  '9236'
-  { 'sha256:ebf6b3f14a5191ae8027d0d0c39ea768ca2c617fe99b3afc497907568bbe9050' }
+  '9301'
+  { 'sha256:0040769cb2d2619a1ccf24fb4fbfa6d01035eebcda6a9b0ae3ae3972cf188711' }
 
   % unified.asset { name="Tables", dir="assets/table" }
   'asset'

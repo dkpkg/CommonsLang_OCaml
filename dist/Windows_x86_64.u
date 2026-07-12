@@ -38,6 +38,17 @@
   \dk.target(abi: "Windows_x86_64")[2.5.1
   ]\;
 
+## MSYS2
+
+MSYS2 tree for `opam init --cygwin-local-install --cygwin-location=<obj>` in
+the Dk.OpamLock hermetic bootstrap (opam detects MSYS2 via
+usr/bin/cygpath.exe). Windows x86_64 only: x86/arm64 Windows hosts run the
+x64 tree through WOW64/emulation.
+
+  $ get-object CommonsLang_OCaml.MSYS2@2026.6.11 -s Release.Windows_x86_64 -f ${RUNTIME}/Windows_x86_64-MSYS2-2026.6.11.zip
+  \test(pass)
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "ofyrcaqzqs7oe2dognanx6syrl6hkjlmlgemwoc24l5jyp4yr4haq")\;
+
 ## Dk.OpamLock
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
