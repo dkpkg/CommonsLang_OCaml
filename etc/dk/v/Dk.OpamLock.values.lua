@@ -344,7 +344,7 @@ end
 -- for floated packages, and (when local_opam_dir is given) path-pins each local
 -- project package. This is generic to any opam project, so it lives in the rule
 -- rather than in per-OS wrapper scripts.
-function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switch, pinsfile, local_opam_dir, locals)
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switch, pinsfile, local_opam_dir, locals, winlocs)
   -- Read the pin table from the real project tree. request.io reads the UI
   -- sandbox, not the project, so use request.ui.readfile (the read counterpart
   -- of request.ui.writefile).
@@ -382,6 +382,20 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
   local ini = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "var", "root", "--global" }, nil, 1)
   if ini.status ~= "exit" or ini.code ~= 0 then
     local initargs = { "init", "--bare", "--no-setup", "--disable-sandboxing", "--yes" }
+    if winlocs then
+      -- Provide the dk-packaged MSYS2 tree and MinGit instead of letting
+      -- opam install an internal Cygwin (~224 MB downloaded from Cygwin
+      -- mirrors at solve time, ~2 minutes, not hermetic). opam has no
+      -- msys2-named options: the --cygwin-* family is its only Unix
+      -- infrastructure interface and accepts MSYS2 trees (detection keys
+      -- off usr/bin/cygpath.exe). --git-location wants the directory
+      -- holding git.exe WITHOUT a bash beside it (MinGit cmd/). These
+      -- opam options are marked experimental; the owner accepted that
+      -- risk explicitly.
+      table.insert(initargs, "--cygwin-local-install")
+      table.insert(initargs, "--cygwin-location=" .. winlocs.msys2)
+      table.insert(initargs, "--git-location=" .. winlocs.git)
+    end
     if repos[1] then
       local rcfile = assert(request.io.open("opamrc-bootstrap", "w"), "could not open opamrc-bootstrap for write")
       request.io.write(rcfile, "opam-version: \"2.0\"\n")
@@ -594,10 +608,21 @@ function uirules.Solve(command, request, continue_)
     return CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, request.user.opam)
   end
   if continue_ ~= "solve" then
+    -- On Windows execution hosts also fetch the MSYS2 tree and MinGit so
+    -- the init bootstrap in setup_switch never installs an internal Cygwin.
+    -- MSYS2 ships only Release.Windows_x86_64 (x86/arm64 Windows hosts run
+    -- the x64 tree through WOW64/emulation), so its slot is pinned rather
+    -- than resolved via Release.execution_abi; Git.MinGit has all three
+    -- Windows slots.
+    local dirs = { opam = "$(get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.execution_abi -d :)" }
+    if request.execution and request.execution.OSFamily == "windows" then
+      dirs.msys2 = "$(get-object CommonsLang_OCaml.MSYS2@2026.6.11 -s Release.Windows_x86_64 -d :)"
+      dirs.git = "$(get-object CommonsBase_Build.Git.MinGit@2.55.0 -s Release.execution_abi -d :)"
+    end
     return {
       submit = {
         expressions = {
-          directories = { opam = "$(get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.execution_abi -d :)" }
+          directories = dirs
         },
         andthen = { continue_ = { state = "solve" } }
       }
@@ -606,15 +631,30 @@ function uirules.Solve(command, request, continue_)
   local opamdir = request.continued.opam
   local opamexe = CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(request.io.realpath(opamdir)) .. "/bin/opam"
   if request.execution and request.execution.OSFamily == "windows" then opamexe = opamexe .. ".exe" end
-  -- Close the continued directory object: leaving it open fails the
+  -- Close EACH continued directory object: leaving one open fails the
   -- continuation finalizer (open continued file objects are leaks).
   request.io.close(opamdir)
-  return CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opamexe)
+  -- The Windows-only msys2/git continuations become the Unix-infrastructure
+  -- locations that the init bootstrap passes to opam.
+  local winlocs = nil
+  if request.continued.msys2 then
+    local msys2dir = request.continued.msys2
+    local gitdir = request.continued.git
+    winlocs = {
+      msys2 = CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(request.io.realpath(msys2dir)),
+      git = CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(request.io.realpath(gitdir)) .. "/cmd"
+    }
+    request.io.close(msys2dir)
+    request.io.close(gitdir)
+  end
+  return CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opamexe, winlocs)
 end
 
 -- Solve each requested slot with the `opam` program, capture per-package
--- metadata, and publish the lock via request.ui.writefile.
-function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam)
+-- metadata, and publish the lock via request.ui.writefile. `winlocs` is nil
+-- (PATH-opam mode and non-Windows hosts) or the Windows Unix-infrastructure
+-- roots { msys2 = DIR, git = DIR } for the hermetic init bootstrap.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
   -- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.Solve@1.0.0 key=val ...)
   local out = assert(request.user.out, "please provide 'out=PROJECT_RELATIVE_LOCK_PATH'")
   local roots = assert(request.user.roots, "please provide 'roots[]=PKG1' 'roots[]=PKG2' ...")
@@ -629,7 +669,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam)
   -- When a pin table is supplied, set up the switch from it before solving.
   if request.user.pins then
     assert(request.user.switch, "pins= requires switch=<name> (the switch to set up)")
-    CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, request.user.switch, request.user.pins, request.user.local_opam_dir, request.user.locals)
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, request.user.switch, request.user.pins, request.user.local_opam_dir, request.user.locals, winlocs)
   end
 
   local rootscsv = CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(roots, ",")
