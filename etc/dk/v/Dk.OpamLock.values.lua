@@ -286,7 +286,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_sha256(request, url)
   if iswin == 0 then return nil end
   local certutil = "C:\\Windows\\System32\\certutil.exe"
   local tmp = "dk-opamlock-src.download"
-  local dl = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, curlexe, { "-sL", "-o", tmp, url }, nil, 1)
+  local dl = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, curlexe, { "-f", "-sL", "-o", tmp, url }, nil, 1)
   if dl.status ~= "exit" or dl.code ~= 0 then return nil end
   local h = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, certutil, { "-hashfile", tmp, "SHA256" }, nil, 1)
   if h.status ~= "exit" or h.code ~= 0 then return nil end
@@ -589,7 +589,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, url)
   if request.execution and request.execution.OSFamily == "windows" then
     curlexe = "C:\\Windows\\System32\\curl.exe"
   end
-  local r = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, curlexe, { "-sIL", url }, nil, 1)
+  local r = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, curlexe, { "-f", "-sIL", url }, nil, 1)
   if r.status ~= "exit" or r.code ~= 0 then return nil end
   local lns = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(r.stdout)
   local size = nil
@@ -776,24 +776,34 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
       -- none of those (older packages ship md5/sha512), compute a sha256 from the
       -- upstream archive (the same bytes the build-time fetch verifies) and add it
       -- so the package is expressible as a bundle.
-      -- Compute the missing sha256 from the opam CACHE bytes (not upstream), so
-      -- the recorded sha256, the probed size, and the build-time fetch all refer
-      -- to the same content. github auto-archives fetch unreliably and can drift;
-      -- the content-addressed cache is stable.
+      -- Prefer the opam CACHE bytes (stable, content-addressed) so the recorded
+      -- sha256, the probed size, and the build-time fetch all refer to the same
+      -- content. But a custom fork/pin is not mirrored in the opam cache: the
+      -- cache URL 404s (curl -f fails), so fall back to the direct upstream URL
+      -- and record source.incache=0 so the build fetches from the URL too.
+      local incache = 1
       if CommonsLang_OCaml__Dk_OpamLock__1_0_0.has_bundle_checksum(sums) == 0 then
         local cu0 = CommonsLang_OCaml__Dk_OpamLock__1_0_0.cache_url(sums)
-        if cu0 ~= nil then
-          local computed = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_sha256(request, cu0)
-          if computed ~= nil then table.insert(sums, "sha256=" .. computed) end
+        -- "" not nil: lua-ml mis-binds `local x = nil` (it once no-op'd this rule)
+        local computed = ""
+        if cu0 ~= nil then computed = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_sha256(request, cu0) or "" end
+        if computed == "" then
+          computed = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_sha256(request, url) or ""
+          if computed ~= "" then incache = 0 end
         end
+        if computed ~= "" then table.insert(sums, "sha256=" .. computed) end
       end
       source = { url = url, checksums = sums }
       -- archive type for the build-time tar (the cache filename is a bare hash)
       source.archive = CommonsLang_OCaml__Dk_OpamLock__1_0_0.archive_type(url)
-      -- size probed from the same cache URL the build fetches
-      local cu = CommonsLang_OCaml__Dk_OpamLock__1_0_0.cache_url(sums)
+      -- The build defaults to the cache; record incache=0 only for direct sources.
+      if incache == 0 then source.incache = 0 end
+      -- size probed from the same URL the build fetches (cache, else direct)
       local sz = nil
-      if cu ~= nil then sz = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, cu) end
+      if incache == 1 then
+        local cu = CommonsLang_OCaml__Dk_OpamLock__1_0_0.cache_url(sums)
+        if cu ~= nil then sz = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, cu) end
+      end
       if sz == nil then sz = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, url) end
       if sz ~= nil then source.size = sz end
     end
