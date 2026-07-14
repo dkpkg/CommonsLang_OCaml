@@ -871,4 +871,240 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
   return { submit = {} }
 end
 
+-- ---------------------------------------------------------------------------
+-- GenerateDriver: lock -> driver values file
+-- ---------------------------------------------------------------------------
+
+-- Index of the first occurrence of the single character `ch` in `s`, or nil.
+-- (string.find treats `.` as a pattern wildcard, so scan by byte instead.)
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.indexof_char(s, ch)
+  local i = 1
+  local n = string.len(s)
+  while i <= n do
+    if string.sub(s, i, i) == ch then return i end
+    i = i + 1
+  end
+  return nil
+end
+
+-- Decimal digits of a lua-ml number (no string.format; concat of a number is
+-- unreliable). Mirrors CommonsBase_Dk.Dk0Build.numstr.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.numstr(v)
+  if type(v) == "string" then return v end
+  if type(v) ~= "number" then return tostring(v) end
+  if v == 0 then return "0" end
+  local n = v
+  local digits = ""
+  while n >= 1 do
+    local d = n % 10
+    local di = d - (d % 1)
+    digits = string.sub("0123456789", di + 1, di + 1) .. digits
+    n = (n - d) / 10
+  end
+  return digits
+end
+
+-- An opam package name as a dk namespace term segment ([A-Z][a-z0-9_]*):
+-- `-`/`.` become `_`, the first character is uppercased and the rest
+-- lowercased. MUST match the modsegment transform in the per-package build
+-- rule (CommonsBase_Dk.Dk0Build), which derives sibling Pkg object ids from
+-- dependency names with the same function.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.modsegment(name)
+  local out = ""
+  local i = 1
+  local n = string.len(name)
+  while i <= n do
+    local c = string.sub(name, i, i)
+    if c == "-" or c == "." then c = "_" end
+    if i == 1 then c = string.upper(c) else c = string.lower(c) end
+    out = out .. c
+    i = i + 1
+  end
+  return out
+end
+
+-- Packages provided by the DkML toolchain objects or purely virtual: never
+-- built as Pkg objects, so the driver never chains them. The default for
+-- GenerateDriver's provided[] parameter; a project on another toolchain
+-- passes its own list. Mirrors PROVIDED in CommonsBase_Dk.Dk0Build.
+CommonsLang_OCaml__Dk_OpamLock__1_0_0.DKML_PROVIDED = {
+  "ocaml", "ocaml-base-compiler", "ocaml-config", "ocaml-options-vanilla",
+  "base-unix", "base-threads", "base-bigarray", "dune", "flexdll",
+  "conf-mingw-w64-gcc-x86_64", "host-arch-x86_64", "host-arch-x86_32",
+  "host-arch-arm64", "host-system-mingw", "host-system-other"
+}
+
+-- The 7 DkML slots; the default for GenerateDriver's slots[] parameter.
+CommonsLang_OCaml__Dk_OpamLock__1_0_0.DKML_SLOTS = {
+  "Release.Windows_x86_64", "Release.Windows_x86",
+  "Release.Linux_x86_64", "Release.Linux_x86", "Release.Linux_arm64",
+  "Release.Darwin_x86_64", "Release.Darwin_arm64"
+}
+
+-- Depth-first post-order walk of `name`'s dependencies in the lock, appending
+-- each buildable package to `order` after its dependencies. `seen` is marked
+-- before recursing (opam dependency graphs are acyclic, so no cycle check).
+-- A dependency with neither a source nor the local mark (a virtual package
+-- such as `seq`) is skipped; a dependency absent from the lock is an error.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.driver_visit(byname, provided, name, seen, order)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_0_0
+  if seen[name] ~= nil or provided[name] ~= nil then return end
+  local e = byname[name]
+  assert(e ~= nil, "dependency `" .. name .. "` is not in the lock")
+  seen[name] = name
+  if type(e.source) ~= "table" and e["local"] ~= "t" then return end
+  local i = 1
+  while e.depends ~= nil and e.depends[i] ~= nil do
+    H.driver_visit(byname, provided, e.depends[i], seen, order)
+    i = i + 1
+  end
+  table.insert(order, name)
+end
+
+-- Generate the per-package driver values file from a checked-in opam lock: a
+-- form whose sequential precommands run-function the per-package build rule
+-- for every package in the root's dependency closure, in topological order,
+-- so each package becomes its own content-addressed dk object and the final
+-- run-function produces the root. Author-time companion to Solve: re-run it
+-- whenever the lock changes.
+--
+-- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.0.0):
+--   lock=PATH          project-relative lock file (the Solve output)
+--   out=PATH           project-relative driver values file to write
+--   root=PKG           opam package whose closure is chained (built last,
+--                      into the `built` directory)
+--   formid=ID@VER      the driver form id (ex. CommonsBase_Dk.Dk0@2.4.2)
+--   pkgpath=MODPATH    module path under which Pkg objects live
+--                      (ex. pkgpath=CommonsBase_Dk.Dk0 places csexp at
+--                      CommonsBase_Dk.Dk0.Pkg.Csexp)
+--   version=VER        version of the Pkg objects
+--   rulefn=ID@VER      the per-package build rule
+--                      (ex. CommonsBase_Dk.Dk0Build.F_BuildLockedPackage@2.4.2)
+--   lockmodver=ID@VER  bundle holding the lock asset at build time
+--   lockassetpath=PATH asset path of the lock within that bundle
+--   'prelude[]=...'    optional raw precommand lines inserted before the
+--                      chain (ex. the localize run-function that produces a
+--                      shared local-package source object)
+--   'provided[]=...'   optional toolchain-provided package names to skip
+--                      (default: the DkML set)
+--   'slots[]=...'      optional output slots (default: the 7 DkML slots)
+function uirules.GenerateDriver(command, request)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_0_0
+  if command == "ui" then
+    print("CommonsLang_OCaml.Dk.OpamLock@1.0.0: driver written.")
+    return
+  end
+  if command ~= "submit" then return end
+
+  local lockpath = assert(request.user.lock, "please provide 'lock=PROJECT_RELATIVE_LOCK_PATH'")
+  local out = assert(request.user.out, "please provide 'out=PROJECT_RELATIVE_DRIVER_PATH'")
+  local root = assert(request.user.root, "please provide 'root=PKG'")
+  local formid = assert(request.user.formid, "please provide 'formid=MODULE@VERSION'")
+  local pkgpath = assert(request.user.pkgpath, "please provide 'pkgpath=MODULE_PATH' (ex. CommonsBase_Dk.Dk0)")
+  local version = assert(request.user.version, "please provide 'version=VER' (ex. 2.4.2)")
+  local rulefn = assert(request.user.rulefn, "please provide 'rulefn=MODULE.FN@VERSION'")
+  local lockmodver = assert(request.user.lockmodver, "please provide 'lockmodver=MODULE@VERSION'")
+  local lockassetpath = assert(request.user.lockassetpath, "please provide 'lockassetpath=PATH'")
+  local prelude = request.user.prelude
+  local provided = H.set_from_list(request.user.provided)
+  if next(provided) == nil then provided = H.set_from_list(H.DKML_PROVIDED) end
+  local slots = request.user.slots
+  if slots == nil then slots = H.DKML_SLOTS end
+
+  local content = assert(request.ui.readfile { path = lockpath },
+    "could not read lock `" .. lockpath .. "`")
+  local jd = require("jsondk")
+  local lock = jd.decode(content)
+  assert(lock and lock.packages, "could not decode the lock (no packages)")
+
+  -- Lock keys are `name.version`; index entries by bare name.
+  local byname = {}
+  local k = next(lock.packages)
+  while k do
+    local dot = H.indexof_char(k, ".")
+    if dot ~= nil then byname[string.sub(k, 1, dot - 1)] = lock.packages[k] end
+    k = next(lock.packages, k)
+  end
+
+  local order = {}
+  local seen = {}
+  H.driver_visit(byname, provided, root, seen, order)
+  assert(order[1] ~= nil, "root `" .. root .. "` has no buildable closure in the lock")
+
+  -- Emit the driver as JSONC. Concatenate in index order (the module `join`
+  -- iterates with next(), which scrambles array order).
+  local nl = "\n"
+  local body = "// Driver for the per-package opam build of `" .. root .. "`: run-functions the" .. nl
+    .. "// per-package build rule for every package in the root's dependency closure in" .. nl
+    .. "// topological order, so each package is its own content-addressed dk object" .. nl
+    .. "// and an interrupted build resumes from the completed objects." .. nl
+    .. "//" .. nl
+    .. "// GENERATED by the CommonsLang_OCaml.Dk.OpamLock.GenerateDriver dialog from" .. nl
+    .. "// `" .. lockpath .. "`. Regenerate (do not hand-edit) when the lock changes." .. nl
+    .. "{" .. nl
+    .. "  \"$schema\": \"https://diskuv.com/dk/schema/dk-value-1.0.json\"," .. nl
+    .. "  \"schema_version\": { \"major\": 1, \"minor\": 0 }," .. nl
+    .. "  \"forms\": [" .. nl
+    .. "    {" .. nl
+    .. "      \"id\": \"" .. formid .. "\"," .. nl
+    .. "      \"precommands\": {" .. nl
+    .. "        \"sequential\": true," .. nl
+    .. "        \"private\": [" .. nl
+  local lines = {}
+  local pi = 1
+  while prelude ~= nil and prelude[pi] ~= nil do
+    table.insert(lines, "          \"" .. prelude[pi] .. "\"")
+    pi = pi + 1
+  end
+  local oi = 1
+  while order[oi] ~= nil do
+    local name = order[oi]
+    local dir = "p" .. H.numstr(oi - 1)
+    if name == root then dir = "built" end
+    table.insert(lines, "          \"run-function " .. rulefn .. " -d " .. dir
+      .. " modver=" .. pkgpath .. ".Pkg." .. H.modsegment(name) .. "@" .. version
+      .. " pkg=" .. name
+      .. " lockmodver=" .. lockmodver
+      .. " lockassetpath=" .. lockassetpath .. "\"")
+    oi = oi + 1
+  end
+  local li = 1
+  while lines[li] ~= nil do
+    body = body .. lines[li]
+    if lines[li + 1] ~= nil then body = body .. "," end
+    body = body .. nl
+    li = li + 1
+  end
+  local slotlist = ""
+  local si = 1
+  while slots[si] ~= nil do
+    if si > 1 then slotlist = slotlist .. ", " end
+    slotlist = slotlist .. "\"" .. slots[si] .. "\""
+    si = si + 1
+  end
+  body = body
+    .. "        ]" .. nl
+    .. "      }," .. nl
+    .. "      \"function\": {" .. nl
+    .. "        \"commands\": [" .. nl
+    .. "          [" .. nl
+    .. "            \"$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')\"," .. nl
+    .. "            \"cp\", \"built/install.zip\", \"${SLOT.request}/install.zip\"" .. nl
+    .. "          ]" .. nl
+    .. "        ]" .. nl
+    .. "      }," .. nl
+    .. "      \"outputs\": { \"assets\": [ { \"slots\": [" .. slotlist .. "], \"paths\": [\"install.zip\"] } ] }" .. nl
+    .. "    }" .. nl
+    .. "  ]" .. nl
+    .. "}" .. nl
+
+  local meta = request.ui.checksum { path = out }
+  local expected = "false"
+  if meta and meta.sha256 then expected = meta.sha256 end
+  local ok, written = request.ui.writefile { path = out, content = body, expected_sha256 = expected }
+  assert(ok, "could not write driver to `" .. out .. "`: " .. tostring(written))
+  print("wrote driver (" .. H.numstr(oi - 1) .. " packages) to " .. tostring(written))
+  return { submit = {} }
+end
+
 return M
