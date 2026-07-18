@@ -17,6 +17,15 @@
   \dk.target(abi: "Linux_x86_64")[4.14.3+relocatable
   ]\;
 
+The native_pack_linker must be a relocatable, PATH-resolved partial linker (a
+bare `ld -r -o`), never an absolute build-host path such as the ephemeral
+`.../src-ocaml/support/with-host-c-compiler.sh.ld64.sh` a stock build bakes;
+otherwise `ocamlopt -pack` fails off the build machine.
+
+  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -config-var native_pack_linker
+  \test(pass)
+  \dk.target(abi: "Linux_x86_64")[ld -r -o ]\;
+
 ## Base
 
   $ run-object CommonsLang_OCaml.Base@5.5.0 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -version

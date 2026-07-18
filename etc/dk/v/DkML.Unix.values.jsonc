@@ -118,6 +118,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Linux_x86_64}",
                         "HOST_LIBDIR=../lib/ocaml",
+                        "\"PARTIALLD=ld -r\"",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
                     ],
@@ -164,6 +165,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Linux_x86}",
                         "HOST_LIBDIR=../lib/ocaml",
+                        "\"PARTIALLD=ld -melf_i386 -r\"",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
                     ],
@@ -210,6 +212,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Linux_arm64}",
                         "HOST_LIBDIR=../lib/ocaml",
+                        "\"PARTIALLD=ld -r\"",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
                     ],
@@ -256,6 +259,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Darwin_x86_64}",
                         "HOST_LIBDIR=../lib/ocaml",
+                        "\"PARTIALLD=ld -r\"",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
                     ],
@@ -302,6 +306,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Darwin_arm64}",
                         "HOST_LIBDIR=../lib/ocaml",
+                        "\"PARTIALLD=ld -r\"",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
                     ],
