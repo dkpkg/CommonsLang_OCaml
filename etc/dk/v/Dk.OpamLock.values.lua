@@ -614,6 +614,19 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, url)
     end
     k, ln = next(lns, k)
   end
+  -- HEAD `Content-Length` is unreliable for some CDN-backed release assets: the
+  -- redirect target may omit it, leaving only the 3xx `Content-Length: 0` and so
+  -- a spurious size of 0 (which the build-time rule then rejects, or fetches as 0
+  -- bytes). Fall back to a real GET that reports the true downloaded byte count.
+  if size == nil or size == 0 then
+    local nul = "/dev/null"
+    if request.execution and request.execution.OSFamily == "windows" then nul = "NUL" end
+    local g = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, curlexe, { "-f", "-sL", "-o", nul, "-w", "%{size_download}", url }, nil, 1)
+    if g.status == "exit" and g.code == 0 then
+      local n = tonumber(CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(g.stdout))
+      if n ~= nil and n > 0 then size = n end
+    end
+  end
   return size
 end
 
@@ -760,6 +773,26 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
       if name_in_closure[dname] and dname ~= name then table.insert(depends, dname) end
       dk, dname = next(depnames, dk)
     end
+    -- Activated optional dependencies (depopts) become real build edges. A topkg
+    -- package builds an optional sublibrary gated on `--with-X %{X:installed}%`;
+    -- when the depopt X is in the solved closure (name_in_closure) opam installed
+    -- it into the shared switch, so the sublibrary WAS compiled and a dependent
+    -- that needs it must build after X and stage it. That edge is absent from the
+    -- opam `depends:` formula, so add it here from `depopts:`. A real opam switch
+    -- records this implicitly via install order. (e.g. fmt/uucp/uuidm -> cmdliner,
+    -- logs -> fmt,cmdliner.) Everything downstream keys off `depends`.
+    local depset = {}
+    local si, sn = next(depends)
+    while si do depset[sn] = true; si, sn = next(depends, si) end
+    local depopts_raw = CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_field(request, opam, switchargs, "depopts:", ak)
+    local optnames = CommonsLang_OCaml__Dk_OpamLock__1_0_0.top_level_quoted(depopts_raw)
+    local ok2, oname = next(optnames)
+    while ok2 do
+      if name_in_closure[oname] and oname ~= name and not depset[oname] then
+        table.insert(depends, oname); depset[oname] = true
+      end
+      ok2, oname = next(optnames, ok2)
+    end
 
     local is_local = locals_set[name] ~= nil
     local source
@@ -805,7 +838,12 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
         if cu ~= nil then sz = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, cu) end
       end
       if sz == nil then sz = CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, url) end
-      if sz ~= nil then source.size = sz end
+      -- Only record a positive size. A real source archive is never 0 bytes; a
+      -- 0 comes from a degenerate size probe (e.g. curl -sIL capturing only a
+      -- 3xx redirect's `Content-Length: 0` when the final 2xx length did not come
+      -- through). Recording size:0 makes the build fetch 0 bytes, so treat it as
+      -- "unknown" (omit) exactly as when the probe returns nil.
+      if sz ~= nil and sz > 0 then source.size = sz end
     end
 
     packages[ak] = {
