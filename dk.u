@@ -1,3 +1,21 @@
+# CommonsLang_OCaml
+
+## Overview
+
+Relocatable OCaml compiler toolchains and developer tools — the OCaml compiler, flexdll, dune, and opam, plus Diskuv's DkML MSVC track — as dk packages for Windows, Linux, and macOS.
+
+`CommonsLang_OCaml` builds and redistributes an OCaml developer toolchain —
+the OCaml compiler, runtime, and standard library (4.14.3, 5.4.1, and
+5.5.0-beta1), the flexdll linker, dune 3.23.1, and opam 2.5.1 — across the
+dk build system's Windows, Linux, and macOS slots. It also ships Diskuv's
+Apache-2.0 DkML MSVC track and an MSYS2 tree used to build and run the
+Windows toolchain. Because it is assembled from many upstreams, its
+redistributed payload carries several licenses in combination.
+
+## License
+
+Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only WITH OCaml-LGPL-linking-exception AND LGPL-3.0-or-later AND GPL-2.0-only AND Zlib AND MIT AND GPL-3.0-or-later AND BSD-2-Clause AND Info-ZIP
+
 ## workspace
   %% actual_version("2.4.2.279")
 
