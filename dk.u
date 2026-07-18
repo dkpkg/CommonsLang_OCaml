@@ -149,11 +149,6 @@
   '629'
   'sha256:f75da7664ac5c78c5e712b4e92555f7031665b9be59c5d0f057d5a397bc0fa6d'
 
-  % unified.asset { name="DkMLPatchStandardCompilerEnvPartialLd", file="assets/dkml/patch-standard-compiler-env-partialld.sh" }
-  'asset'
-  '2013'
-  'sha256:bda8e6646bd1ab520eed749f8f693706c8a79a2b5482d7198519818e8f4f82df'
-
   % unified.asset { name="DuneBootstrapMsvc", file="assets/dune/bootstrap-msvc.bat" }
   'asset'
   '1334'
