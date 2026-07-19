@@ -765,7 +765,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- per-package archive: it is built from the project's shared in-tree source,
   -- staged (get-object) from the localized-source object named by the driver's
   -- `localsrc=` parameter (for dk0, CommonsBase_Dk.Dk0.MlFrontSource, produced by
-  -- CommonsBase_Dk.Dk0Localize.F_LocalizeSource). External packages carry their
+  -- the CommonsBase_Dk.Dk0.MlFrontSource form). External packages carry their
   -- own source and get a synthesized .Src bundle below. The vars default to the
   -- local case; the else branch fills in the external source (opam cache or, for
   -- a custom fork, the direct URL). srcname/srcbundle are unused for local (its
@@ -823,7 +823,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   elseif arch == "txz" then tarflag = "J"
   elseif arch == "tbz" then tarflag = "j"
   elseif arch == "tar" then tarflag = ""
-  elseif arch == "zip" then tarflag = ""   -- localized-source object (F_LocalizeSource)
+  elseif arch == "zip" then tarflag = ""   -- localized-source object (Dk0.MlFrontSource)
   else assert(false, "unsupported archive type `" .. tostring(arch) .. "` for " .. pkg) end
 
   local toybox = "$(get-object CommonsBase_Std.Toybox@0.8.9 -s Release.execution_abi -m ./toybox -f toybox.exe -e '*')"
@@ -913,7 +913,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- "local":"t") stages its source from a single shared localized-source object
   -- named by the driver's `localsrc=MODULE@VERSION` parameter -- every local
   -- package in a project shares one such object (e.g. dk0's MlFront tree,
-  -- produced by CommonsBase_Dk.Dk0Localize.F_LocalizeSource). A project with no
+  -- produced by the CommonsBase_Dk.Dk0.MlFrontSource form). A project with no
   -- local packages never needs it. An external package instead fetches its
   -- per-package archive asset from the synthesized .Src bundle (get-asset).
   local srcfetch
