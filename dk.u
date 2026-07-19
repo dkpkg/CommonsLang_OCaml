@@ -225,3 +225,15 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
   'asset'
   '726'
   'sha256:ce730a5008fd4f856e01ea02a62c9e17a8adcb272ca91679ecc413a2e17672a9'
+
+### CommonsLang_OCaml.Dk.OpamBuild@1.0.0
+
+  % unified.asset { name="Wrapper", file="assets/opam/build-locked-package.sh" }
+  'asset'
+  '12945'
+  'sha256:34fc2da6ac8d38d433edb9c7451de4cb9dc04abf8743af019edad725d67af1f2'
+
+  % unified.asset { name="SeqMeta", file="assets/opam/seq-META" }
+  'asset'
+  '137'
+  'sha256:e95062b4d0519ef8335c02f7d0f1952d11b814c7ab7e6d566a206116162fa2be'

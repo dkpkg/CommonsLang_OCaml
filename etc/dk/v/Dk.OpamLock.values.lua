@@ -1020,6 +1020,9 @@ end
 --                      (ex. CommonsBase_Dk.Dk0Build.F_BuildLockedPackage@2.4.2)
 --   lockmodver=ID@VER  bundle holding the lock asset at build time
 --   lockassetpath=PATH asset path of the lock within that bundle
+--   localsrc=ID@VER    optional shared localized-source object, threaded onto
+--                      every precommand (the build rule uses it only for lock
+--                      entries marked "local":"t"); omit for opam-only projects
 --   'prelude[]=...'    optional raw precommand lines inserted before the
 --                      chain (ex. the localize run-function that produces a
 --                      shared local-package source object)
@@ -1044,6 +1047,11 @@ function uirules.GenerateDriver(command, request)
   local lockmodver = assert(request.user.lockmodver, "please provide 'lockmodver=MODULE@VERSION'")
   local lockassetpath = assert(request.user.lockassetpath, "please provide 'lockassetpath=PATH'")
   local prelude = request.user.prelude
+  -- Optional: the shared localized-source object for in-tree "local" packages.
+  -- Threaded verbatim onto every emitted precommand (the build rule uses it only
+  -- for packages the lock marks "local":"t"); omitted when the project builds
+  -- purely from opam archives.
+  local localsrc = request.user.localsrc
   local provided = H.set_from_list(request.user.provided)
   if next(provided) == nil then provided = H.set_from_list(H.DKML_PROVIDED) end
   local slots = request.user.slots
@@ -1099,11 +1107,13 @@ function uirules.GenerateDriver(command, request)
     local name = order[oi]
     local dir = "p" .. H.numstr(oi - 1)
     if name == root then dir = "built" end
-    table.insert(lines, "          \"run-function " .. rulefn .. " -d " .. dir
+    local rf = "          \"run-function " .. rulefn .. " -d " .. dir
       .. " modver=" .. pkgpath .. ".Pkg." .. H.modsegment(name) .. "@" .. version
       .. " pkg=" .. name
       .. " lockmodver=" .. lockmodver
-      .. " lockassetpath=" .. lockassetpath .. "\"")
+      .. " lockassetpath=" .. lockassetpath
+    if localsrc ~= nil then rf = rf .. " localsrc=" .. localsrc end
+    table.insert(lines, rf .. "\"")
     oi = oi + 1
   end
   local li = 1
