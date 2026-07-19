@@ -173,10 +173,10 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
   'import'
   'github-l2'
   { {
-      'CommonsBase_Std', '2.6.20260719041108', {
-        'blake2b-256:242b1f89d4ad03d6a33cfdd3d0697021f3624d3ec7de8ed611949b58ba230a23',
-        'sha256:23cd5cb282405d8cffef0a764bc800086a8994c7e3d66daabea210f2a07dc2a0',
-        'sha1:b71f3b4b54a8335644f2d6453db9f90ae0125489'
+      'CommonsBase_Std', '2.6.20260719050058', {
+        'blake2b-256:b4887b451b4450013df5c28117c1a21c3a339d5e2816c1b18165ea63d2d57ce0',
+        'sha256:41c855f506cb00226675fe47f285596105683c013898c8a17d6529c55a2e9f42',
+        'sha1:f2fcc5a02f2e8f4a68bd5c4808f3518f61c1e489'
       } } }
 
   %% import { type="github-l2", repo="dkpkg/CommonsBase_Build" }
