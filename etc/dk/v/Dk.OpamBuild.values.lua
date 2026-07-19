@@ -839,7 +839,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- object to stage, so the rule places the stub directly into every prefix.
   table.insert(commands, {
     coreutils, "cp",
-    "$(get-asset CommonsLang_OCaml.Dk.OpamBuild.SeqMeta@1.0.0 -p assets/opam/seq-META -f seq-meta-src)",
+    "$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildSeqMeta@1.0.0 -p assets/opam/seq-META -f seq-meta-src)",
     "p/lib/seq/META"
   })
 
@@ -1030,7 +1030,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- OCAML_TOPLEVEL_PATH=p/lib/findlib. This works for ANY such package because it
   -- always depends on ocamlfind (topfind IS findlib), so ocamlfind is in its p/
   -- closure -- nothing package-specific is required here.
-  local wrapperfetch = "$(get-asset CommonsLang_OCaml.Dk.OpamBuild.Wrapper@1.0.0 -p assets/opam/build-locked-package.sh -f build-wrapper.sh)"
+  local wrapperfetch = "$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildWrapper@1.0.0 -p assets/opam/build-locked-package.sh -f build-wrapper.sh)"
   -- The Windows POSIX shell is MSYS2's dash (its runtime translates the unix-form
   -- PATH into Windows form for the native dune.exe/cl.exe children, and provides
   -- cygpath). MSYS2 ships only the Windows_x86_64 tree; a Windows_x86 host runs

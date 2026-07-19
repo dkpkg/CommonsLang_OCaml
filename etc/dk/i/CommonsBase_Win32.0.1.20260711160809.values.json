@@ -1,0 +1,161 @@
+{
+  "bundles": [
+    {
+      "assets": [
+        {
+          "checksum": {
+            "blake2b256": "dc56bac43d4247e8198b0289e13488efca6afb2bc2159a1221f3ad86296fa776"
+          },
+          "origin": "CommonsBase_Win32",
+          "path": "CommonsBase_Win32-macos.distmeta.cts.1.tracestore",
+          "size": 300272
+        },
+        {
+          "checksum": {
+            "blake2b256": "94a20a053343b026d046591e254cdb5b3fda1834e27a21e0078a471f6c86f9cd"
+          },
+          "indexes": [
+            {
+              "type": "zip",
+              "zip": {
+                "local_offset": 0,
+                "central_offset": 135310,
+                "central_size": 1463,
+                "checksum": {
+                  "blake2b256": "e3e008dbec30185a9a6061f0a089a244feb1468ec998452720a144ecbe281b61"
+                }
+              }
+            }
+          ],
+          "origin": "CommonsBase_Win32",
+          "path": "CommonsBase_Win32-macos.distmeta.valuestore.zip",
+          "size": 136773
+        },
+        {
+          "checksum": {
+            "blake2b256": "789c647a6c40ef874907d0da0dab6137d68dfd691910392ec0397efe8369121c"
+          },
+          "origin": "CommonsBase_Win32",
+          "path": "CommonsBase_Win32-macos.package.cts.1.tracestore",
+          "size": 12845
+        },
+        {
+          "checksum": {
+            "blake2b256": "a958a41eec7e9b60fac74b1bd0bb89f036226144324dc2fa111a7c7006c9a9df"
+          },
+          "indexes": [
+            {
+              "type": "zip",
+              "zip": {
+                "local_offset": 0,
+                "central_offset": 426890186,
+                "central_size": 1673,
+                "checksum": {
+                  "blake2b256": "ba5cfc4e85ec88b476042c42ae69b93a3e87ed8fc48344da39ca9e5b87be077a"
+                }
+              }
+            }
+          ],
+          "origin": "CommonsBase_Win32",
+          "path": "CommonsBase_Win32-macos.package.valuestore.zip",
+          "size": 426891859
+        }
+      ],
+      "id": "CommonsBase_Win32.Distribution@0.1.20260711160809",
+      "listing": {
+        "origins": [
+          {
+            "name": "CommonsBase_Win32",
+            "mirrors": [
+              "https://github.com/dkpkg/CommonsBase_Win32/releases/download/0.1.20260711160809"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "distributions": [
+    {
+      "build": {
+        "attestation": {
+          "github_slsa_v1_l2": {
+            "docs": [
+              {"mediaType":"application/vnd.dev.sigstore.bundle.v0.3+json","verificationMaterial":{"certificate":{"rawBytes":"MIIHiDCCBw6gAwIBAgIUDbL0jYveGYHkv3npdD/i58vuhgYwCgYIKoZIzj0EAwMwNzEVMBMGA1UEChMMc2lnc3RvcmUuZGV2MR4wHAYDVQQDExVzaWdzdG9yZS1pbnRlcm1lZGlhdGUwHhcNMjYwNzExMTcwMDA1WhcNMjYwNzExMTcxMDA1WjAAMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyXIE0gFu/2cU2y0vwrsF4F/tb/ErYJueYCcHCigXA0meAY6lKUKD22RWwhRhg3dsB4tNshV2H4M2hsKUX0JTLqOCBi0wggYpMA4GA1UdDwEB/wQEAwIHgDATBgNVHSUEDDAKBggrBgEFBQcDAzAdBgNVHQ4EFgQUApabcUtCuR+F6jmdzBFa1PwLuFEwHwYDVR0jBBgwFoAU39Ppz1YkEZb5qNjpKFWixi4YZD8wegYDVR0RAQH/BHAwboZsaHR0cHM6Ly9naXRodWIuY29tL2RrcGtnL0NvbW1vbnNCYXNlX1dpbjMyLy5naXRodWIvd29ya2Zsb3dzL2Rpc3RyaWJ1dGUtMC4xLnltbEByZWZzL3RhZ3MvMC4xLjIwMjYwNzExMTYwODA5MDkGCisGAQQBg78wAQEEK2h0dHBzOi8vdG9rZW4uYWN0aW9ucy5naXRodWJ1c2VyY29udGVudC5jb20wEgYKKwYBBAGDvzABAgQEcHVzaDA2BgorBgEEAYO/MAEDBCg3NjdlZWEwYTk4ZGNiZGVkMDRjN2Q3YTI2NjkxY2RhYjc3OGNlMjU5MDIGCisGAQQBg78wAQQEJC5naXRodWIvd29ya2Zsb3dzL2Rpc3RyaWJ1dGUtMC4xLnltbDAlBgorBgEEAYO/MAEFBBdka3BrZy9Db21tb25zQmFzZV9XaW4zMjAqBgorBgEEAYO/MAEGBBxyZWZzL3RhZ3MvMC4xLjIwMjYwNzExMTYwODA5MDsGCisGAQQBg78wAQgELQwraHR0cHM6Ly90b2tlbi5hY3Rpb25zLmdpdGh1YnVzZXJjb250ZW50LmNvbTB8BgorBgEEAYO/MAEJBG4MbGh0dHBzOi8vZ2l0aHViLmNvbS9ka3BrZy9Db21tb25zQmFzZV9XaW4zMi8uZ2l0aHViL3dvcmtmbG93cy9kaXN0cmlidXRlLTAuMS55bWxAcmVmcy90YWdzLzAuMS4yMDI2MDcxMTE2MDgwOTA4BgorBgEEAYO/MAEKBCoMKDc2N2VlYTBhOThkY2JkZWQwNGM3ZDdhMjY2OTFjZGFiNzc4Y2UyNTkwHQYKKwYBBAGDvzABCwQPDA1naXRodWItaG9zdGVkMDoGCisGAQQBg78wAQwELAwqaHR0cHM6Ly9naXRodWIuY29tL2RrcGtnL0NvbW1vbnNCYXNlX1dpbjMyMDgGCisGAQQBg78wAQ0EKgwoNzY3ZWVhMGE5OGRjYmRlZDA0YzdkN2EyNjY5MWNkYWI3NzhjZTI1OTAsBgorBgEEAYO/MAEOBB4MHHJlZnMvdGFncy8wLjEuMjAyNjA3MTExNjA4MDkwGgYKKwYBBAGDvzABDwQMDAoxMjIyODc0MTQxMCgGCisGAQQBg78wARAEGgwYaHR0cHM6Ly9naXRodWIuY29tL2RrcGtnMBkGCisGAQQBg78wAREECwwJMjc4OTEzNTAwMHwGCisGAQQBg78wARIEbgxsaHR0cHM6Ly9naXRodWIuY29tL2RrcGtnL0NvbW1vbnNCYXNlX1dpbjMyLy5naXRodWIvd29ya2Zsb3dzL2Rpc3RyaWJ1dGUtMC4xLnltbEByZWZzL3RhZ3MvMC4xLjIwMjYwNzExMTYwODA5MDgGCisGAQQBg78wARMEKgwoNzY3ZWVhMGE5OGRjYmRlZDA0YzdkN2EyNjY5MWNkYWI3NzhjZTI1OTAUBgorBgEEAYO/MAEUBAYMBHB1c2gwXgYKKwYBBAGDvzABFQRQDE5odHRwczovL2dpdGh1Yi5jb20vZGtwa2cvQ29tbW9uc0Jhc2VfV2luMzIvYWN0aW9ucy9ydW5zLzI5MTU5MjIzOTg5L2F0dGVtcHRzLzEwFgYKKwYBBAGDvzABFgQIDAZwdWJsaWMwTQYKKwYBBAGDvzABGAQ/DD1yZXBvOmRrcGtnL0NvbW1vbnNCYXNlX1dpbjMyOnJlZjpyZWZzL3RhZ3MvMC4xLjIwMjYwNzExMTYwODA5MIGJBgorBgEEAdZ5AgQCBHsEeQB3AHUA3T0wasbHETJjGR4cmWc3AqJKXrjePK3/h4pygC8p7o4AAAGfUh85GgAABAMARjBEAiBCq+VAbUzuLSt3RvV8i43xfSUKhwWevJUMqxQd+PELAwIgOX9uRy2XuHdCoY28Oyb/iA3Nq4bf08Xx7driEcxhl2kwCgYIKoZIzj0EAwMDaAAwZQIxAP8hYwQoHVzqEJJw/e+REiSGlNsd/0UiM8sVS0aavkqJTny9HbgTf3uPbGWa+X/LIgIwXYZtaRWVbNU6fbfYA5UqB+uR14a0cVuClDv1A0v6mj+mcjMv+j8wTc6LOB26Cs+P"},"tlogEntries":[{"logIndex":"2145773380","logId":{"keyId":"wNI9atQGlz+VWfO6LRygH4QUfY/8W4RFwiT5i5WRgB0="},"kindVersion":{"kind":"dsse","version":"0.0.1"},"integratedTime":"1783789206","inclusionPromise":{"signedEntryTimestamp":"MEUCIDUqvujEacgofr4cDtaEQDUueESakZuW3E/9Bg335kxjAiEAqXU8Yjl3glueIgK1szLDsasfi0r5e+X6Lfmeyk/4QZI="},"inclusionProof":{"logIndex":"2023869118","rootHash":"IjJZaSnFDT8zMPXhnE3N6gDKThaDzeAGcCYqLsmlBII=","treeSize":"2023869121","hashes":["O51xn9vz9zETGWDEdFMwyHMU7tIjRmHuXT390G5qSz4=","0g/ihKdZk+vj0eCQZjZQHEe2MBHl33ilNRBL8z00+rc=","SV3QO+1MIKP4XiWc0DsyNthrd9ibnDeA5n+58rRZEpg=","hCZ94IsEqTiJlZ5lLzbUvvBrHN2JscBvAllkpfSFZEk=","F9qyCe+Hl36QM5fyiw+op1UVti10SYA7se99mnZdl1Q=","8ddQMvd2MC4lRo+/q9dDoyAMnX3Cdz9EzK8knbjJHL8=","awT9sY5MgiCll0F6h9rWIXm6y8TLrhlK1Er9HMWgq78=","8z0mHVfOVfKdTijlVKZxpXH/GGckE4Js2tnhRloeE0s=","u0CP+Yoi/zrlsLNEi8rVJmsAcriSZgdyE+zvKaIFdTQ=","N8hRJZW5+Bt5j7ZlXMdC49LkVrL+CERM2Q3zWuXq9E8=","Eo9cQXr1WnW6RIZ2hjMPz9xmsd10EdgXwbMrBND/+l0=","Lp6XYP4ilo+h1YLJkRXUyqMvtBTqniHRgPB/4SqtZqM=","jCPjGLZaTD2KyDnjZFWXi3dQgYEptS03ZtZ8IXUTH/c=","GyoiTawKnBv3XGzMbqzbTivGzbL5xBJ5DYGY8OFAO9A=","QugQVAxxkwxFzxXdLe4mTU1NCCjnCS/5kDMGs3doGmU=","Rq/A2aTC9e54ldNjcpsJ26rX/h8JlN6ZHxgw7yEa6C0=","+/VZ56MsIPxMiyLAodzKXo5TEWdQp36z89qLhpzloAo=","daxmZaajRpZV+JxHiOYZhJBiSKN5ucqjh2WnGbHhirw=","DOCeoSMovIvLExkhIvisow9AuNXgeWs4ECkyR6EcqYU="],"checkpoint":{"envelope":"rekor.sigstore.dev - 1193050959916656506\n2023869121\nIjJZaSnFDT8zMPXhnE3N6gDKThaDzeAGcCYqLsmlBII=\n\n— rekor.sigstore.dev wNI9ajBFAiBqjowGwrIKNOonRHvgmb4t1hrF5J6l//sTmq8SK1Yw/wIhANyCj0RjVIjU35chB5XI3dobEFdeW/7nSblx92OZHh+G\n"}},"canonicalizedBody":"eyJhcGlWZXJzaW9uIjoiMC4wLjEiLCJraW5kIjoiZHNzZSIsInNwZWMiOnsiZW52ZWxvcGVIYXNoIjp7ImFsZ29yaXRobSI6InNoYTI1NiIsInZhbHVlIjoiNzA4ZjVhMmRiODY4ZTg2ZGM5NGFmNDUzMWQ2ZDdlMzU4YmFhNDRmZWU1M2E3YzQ5ZDE4N2RlOTc5NTYyZmJkZCJ9LCJwYXlsb2FkSGFzaCI6eyJhbGdvcml0aG0iOiJzaGEyNTYiLCJ2YWx1ZSI6ImY2ZmIwMDg3YWI5OGZiZGIyODhiZTg2YjFhMmMwYTZhNzllZWViMWFhYWI0NGViZmNmYTE2MTAxYTg5ZjNkOWIifSwic2lnbmF0dXJlcyI6W3sic2lnbmF0dXJlIjoiTUVVQ0lRQ1FxSExqOStkd3Z1TDIvN2ZMeXdsNytoTWFMc0ExYXVRN3lUUjNCWUkwV2dJZ0VCL3FNd0NNYlVhTXgxZkozZlhXaW15WlNtbStsN1gydm9BTXJ0dlVsM1U9IiwidmVyaWZpZXIiOiJMUzB0TFMxQ1JVZEpUaUJEUlZKVVNVWkpRMEZVUlMwdExTMHRDazFKU1VocFJFTkRRbmMyWjBGM1NVSkJaMGxWUkdKTU1HcFpkbVZIV1VocmRqTnVjR1JFTDJrMU9IWjFhR2RaZDBObldVbExiMXBKZW1vd1JVRjNUWGNLVG5wRlZrMUNUVWRCTVZWRlEyaE5UV015Ykc1ak0xSjJZMjFWZFZwSFZqSk5ValIzU0VGWlJGWlJVVVJGZUZaNllWZGtlbVJIT1hsYVV6RndZbTVTYkFwamJURnNXa2RzYUdSSFZYZElhR05PVFdwWmQwNTZSWGhOVkdOM1RVUkJNVmRvWTA1TmFsbDNUbnBGZUUxVVkzaE5SRUV4VjJwQlFVMUdhM2RGZDFsSUNrdHZXa2w2YWpCRFFWRlpTVXR2V2tsNmFqQkVRVkZqUkZGblFVVjVXRWxGTUdkR2RTOHlZMVV5ZVRCMmQzSnpSalJHTDNSaUwwVnlXVXAxWlZsRFkwZ0tRMmxuV0VFd2JXVkJXVFpzUzFWTFJESXlVbGQzYUZKb1p6TmtjMEkwZEU1emFGWXlTRFJOTW1oelMxVllNRXBVVEhGUFEwSnBNSGRuWjFsd1RVRTBSd3BCTVZWa1JIZEZRaTkzVVVWQmQwbElaMFJCVkVKblRsWklVMVZGUkVSQlMwSm5aM0pDWjBWR1FsRmpSRUY2UVdSQ1owNVdTRkUwUlVablVWVkJjR0ZpQ21OVmRFTjFVaXRHTm1wdFpIcENSbUV4VUhkTWRVWkZkMGgzV1VSV1VqQnFRa0puZDBadlFWVXpPVkJ3ZWpGWmEwVmFZalZ4VG1wd1MwWlhhWGhwTkZrS1drUTRkMlZuV1VSV1VqQlNRVkZJTDBKSVFYZGliMXB6WVVoU01HTklUVFpNZVRsdVlWaFNiMlJYU1hWWk1qbDBUREpTY21OSGRHNU1NRTUyWWxjeGRncGliazVEV1ZoT2JGZ3haSEJpYWsxNVRIazFibUZZVW05a1YwbDJaREk1ZVdFeVduTmlNMlI2VERKU2NHTXpVbmxoVjBveFpFZFZkRTFETkhoTWJteDBDbUpGUW5sYVYxcDZURE5TYUZvelRYWk5RelI0VEdwSmQwMXFXWGRPZWtWNFRWUlpkMDlFUVRWTlJHdEhRMmx6UjBGUlVVSm5OemgzUVZGRlJVc3lhREFLWkVoQ2VrOXBPSFprUnpseVdsYzBkVmxYVGpCaFZ6bDFZM2sxYm1GWVVtOWtWMG94WXpKV2VWa3lPWFZrUjFaMVpFTTFhbUl5TUhkRloxbExTM2RaUWdwQ1FVZEVkbnBCUWtGblVVVmpTRlo2WVVSQk1rSm5iM0pDWjBWRlFWbFBMMDFCUlVSQ1EyY3pUbXBrYkZwWFJYZFpWR3MwV2tkT2FWcEhWbXROUkZKcUNrNHlVVE5aVkVreVRtcHJlRmt5VW1oWmFtTXpUMGRPYkUxcVZUVk5SRWxIUTJselIwRlJVVUpuTnpoM1FWRlJSVXBETlc1aFdGSnZaRmRKZG1ReU9Ya0tZVEphYzJJelpIcE1NbEp3WXpOU2VXRlhTakZrUjFWMFRVTTBlRXh1YkhSaVJFRnNRbWR2Y2tKblJVVkJXVTh2VFVGRlJrSkNaR3RoTTBKeVduazVSQXBpTWpGMFlqSTFlbEZ0Um5wYVZqbFlZVmMwZWsxcVFYRkNaMjl5UW1kRlJVRlpUeTlOUVVWSFFrSjRlVnBYV25wTU0xSm9Xak5OZGsxRE5IaE1ha2wzQ2sxcVdYZE9la1Y0VFZSWmQwOUVRVFZOUkhOSFEybHpSMEZSVVVKbk56aDNRVkZuUlV4UmQzSmhTRkl3WTBoTk5reDVPVEJpTW5Sc1ltazFhRmt6VW5BS1lqSTFla3h0WkhCa1IyZ3hXVzVXZWxwWVNtcGlNalV3V2xjMU1FeHRUblppVkVJNFFtZHZja0puUlVWQldVOHZUVUZGU2tKSE5FMWlSMmd3WkVoQ2VncFBhVGgyV2pKc01HRklWbWxNYlU1MllsTTVhMkV6UW5KYWVUbEVZakl4ZEdJeU5YcFJiVVo2V2xZNVdHRlhOSHBOYVRoMVdqSnNNR0ZJVm1sTU0yUjJDbU50ZEcxaVJ6a3pZM2s1YTJGWVRqQmpiV3hwWkZoU2JFeFVRWFZOVXpVMVlsZDRRV050Vm0xamVUa3dXVmRrZWt4NlFYVk5VelI1VFVSSk1rMUVZM2dLVFZSRk1rMUVaM2RQVkVFMFFtZHZja0puUlVWQldVOHZUVUZGUzBKRGIwMUxSR015VGpKV2JGbFVRbWhQVkdocldUSkthMXBYVVhkT1IwMHpXa1JrYUFwTmFsa3lUMVJHYWxwSFJtbE9lbU0wV1RKVmVVNVVhM2RJVVZsTFMzZFpRa0pCUjBSMmVrRkNRM2RSVUVSQk1XNWhXRkp2WkZkSmRHRkhPWHBrUjFackNrMUViMGREYVhOSFFWRlJRbWMzT0hkQlVYZEZURUYzY1dGSVVqQmpTRTAyVEhrNWJtRllVbTlrVjBsMVdUSTVkRXd5VW5KalIzUnVUREJPZG1KWE1YWUtZbTVPUTFsWVRteFlNV1J3WW1wTmVVMUVaMGREYVhOSFFWRlJRbWMzT0hkQlVUQkZTMmQzYjA1NldUTmFWMVpvVFVkRk5VOUhVbXBaYlZKc1drUkJNQXBaZW1SclRqSkZlVTVxV1RWTlYwNXJXVmRKTTA1NmFHcGFWRWt4VDFSQmMwSm5iM0pDWjBWRlFWbFBMMDFCUlU5Q1FqUk5TRWhLYkZwdVRYWmtSMFp1Q21ONU9IZE1ha1YxVFdwQmVVNXFRVE5OVkVWNFRtcEJORTFFYTNkSFoxbExTM2RaUWtKQlIwUjJla0ZDUkhkUlRVUkJiM2hOYWtsNVQwUmpNRTFVVVhnS1RVTm5SME5wYzBkQlVWRkNaemM0ZDBGU1FVVkhaM2RaWVVoU01HTklUVFpNZVRsdVlWaFNiMlJYU1hWWk1qbDBUREpTY21OSGRHNU5RbXRIUTJselJ3cEJVVkZDWnpjNGQwRlNSVVZEZDNkS1RXcGpORTlVUlhwT1ZFRjNUVWgzUjBOcGMwZEJVVkZDWnpjNGQwRlNTVVZpWjNoellVaFNNR05JVFRaTWVUbHVDbUZZVW05a1YwbDFXVEk1ZEV3eVVuSmpSM1J1VERCT2RtSlhNWFppYms1RFdWaE9iRmd4WkhCaWFrMTVUSGsxYm1GWVVtOWtWMGwyWkRJNWVXRXlXbk1LWWpOa2Vrd3lVbkJqTTFKNVlWZEtNV1JIVlhSTlF6UjRURzVzZEdKRlFubGFWMXA2VEROU2FGb3pUWFpOUXpSNFRHcEpkMDFxV1hkT2VrVjRUVlJaZHdwUFJFRTFUVVJuUjBOcGMwZEJVVkZDWnpjNGQwRlNUVVZMWjNkdlRucFpNMXBYVm1oTlIwVTFUMGRTYWxsdFVteGFSRUV3V1hwa2EwNHlSWGxPYWxrMUNrMVhUbXRaVjBrelRucG9hbHBVU1RGUFZFRlZRbWR2Y2tKblJVVkJXVTh2VFVGRlZVSkJXVTFDU0VJeFl6Sm5kMWhuV1V0TGQxbENRa0ZIUkhaNlFVSUtSbEZTVVVSRk5XOWtTRkozWTNwdmRrd3laSEJrUjJneFdXazFhbUl5TUhaYVIzUjNZVEpqZGxFeU9YUmlWemwxWXpCS2FHTXlWbVpXTW14MVRYcEpkZ3BaVjA0d1lWYzVkV041T1hsa1Z6VjZUSHBKTlUxVVZUVk5ha2w2VDFSbk5Vd3lSakJrUjFaMFkwaFNla3g2UlhkR1oxbExTM2RaUWtKQlIwUjJla0ZDQ2tablVVbEVRVnAzWkZkS2MyRlhUWGRVVVZsTFMzZFpRa0pCUjBSMmVrRkNSMEZSTDBSRU1YbGFXRUoyVDIxU2NtTkhkRzVNTUU1MllsY3hkbUp1VGtNS1dWaE9iRmd4WkhCaWFrMTVUMjVLYkZwcWNIbGFWMXA2VEROU2FGb3pUWFpOUXpSNFRHcEpkMDFxV1hkT2VrVjRUVlJaZDA5RVFUVk5TVWRLUW1kdmNncENaMFZGUVdSYU5VRm5VVU5DU0hORlpWRkNNMEZJVlVFelZEQjNZWE5pU0VWVVNtcEhValJqYlZkak0wRnhTa3RZY21wbFVFc3pMMmcwY0hsblF6aHdDamR2TkVGQlFVZG1WV2c0TlVkblFVRkNRVTFCVW1wQ1JVRnBRa054SzFaQllsVjZkVXhUZEROU2RsWTRhVFF6ZUdaVFZVdG9kMWRsZGtwVlRYRjRVV1FLSzFCRlRFRjNTV2RQV0RsMVVua3lXSFZJWkVOdldUSTRUM2xpTDJsQk0wNXhOR0ptTURoWWVEZGtjbWxGWTNob2JESnJkME5uV1VsTGIxcEplbW93UlFwQmQwMUVZVUZCZDFwUlNYaEJVRGhvV1hkUmIwaFdlbkZGU2twM0wyVXJVa1ZwVTBkc1RuTmtMekJWYVUwNGMxWlRNR0ZoZG10eFNsUnVlVGxJWW1kVUNtWXpkVkJpUjFkaEsxZ3ZURWxuU1hkWVdWcDBZVkpYVm1KT1ZUWm1ZbVpaUVRWVmNVSXJkVkl4TkdFd1kxWjFRMnhFZGpGQk1IWTJiV29yYldOcVRYWUtLMm80ZDFSak5reFBRakkyUTNNclVBb3RMUzB0TFVWT1JDQkRSVkpVU1VaSlEwRlVSUzB0TFMwdENnPT0ifV19fQ=="}],"timestampVerificationData":{}},"dsseEnvelope":{"payload":"eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJzdWJqZWN0IjpbeyJuYW1lIjoiQ29tbW9uc0Jhc2VfV2luMzItbWFjb3MuZGlzdG1ldGEuY3RzLjEudHJhY2VzdG9yZSIsImRpZ2VzdCI6eyJzaGEyNTYiOiIzNjg3ODk3NDM5YzkzNjc1MWY4MWM4MTJmOGU4NDgxZjQ0N2IxNTVlODJlMDBmNDEyYTQ1NWVkYzBiYTYyZDExIn19LHsibmFtZSI6IkNvbW1vbnNCYXNlX1dpbjMyLW1hY29zLmRpc3RtZXRhLnZhbHVlc3RvcmUuaW5kZXgiLCJkaWdlc3QiOnsic2hhMjU2IjoiMDcxZDgzM2ZmMzRkNzU0MTAwMzBlM2RmNzJjNDcyYjBiZDgxNmIyZDdmZjgyYzI3Y2Q2YmJlNDA3MzczMGZjNiJ9fSx7Im5hbWUiOiJDb21tb25zQmFzZV9XaW4zMi1tYWNvcy5kaXN0bWV0YS52YWx1ZXN0b3JlLnppcCIsImRpZ2VzdCI6eyJzaGEyNTYiOiIwNGRiZjAyNGI2MjA2ZjUwMGE3MWRjOGY0YzhkOTQxNmI3NTc3ZDBmYWZmZWY5MjgwNTRmZDQyZjdhY2M5YzdiIn19LHsibmFtZSI6IkNvbW1vbnNCYXNlX1dpbjMyLW1hY29zLnBhY2thZ2UuY3RzLjEudHJhY2VzdG9yZSIsImRpZ2VzdCI6eyJzaGEyNTYiOiJlOTU1OGNhYzBhZGM4NjQ2MjQwNDAyMTIzYjc0OWM2OGJkZDQ4ZjMyZjg0NGUzYTYxNzlkZjBiMTRiNzhhNTJlIn19LHsibmFtZSI6IkNvbW1vbnNCYXNlX1dpbjMyLW1hY29zLnBhY2thZ2UudmFsdWVzdG9yZS5pbmRleCIsImRpZ2VzdCI6eyJzaGEyNTYiOiIxODZjNjQwZWMyNDQwN2U3MTM0MDFmMGJiMTA5OWUxMjllNzI1NzA0ODQ3Yjc5ODRjNTlhYmYxZGM2M2IxY2RmIn19LHsibmFtZSI6IkNvbW1vbnNCYXNlX1dpbjMyLW1hY29zLnBhY2thZ2UudmFsdWVzdG9yZS56aXAiLCJkaWdlc3QiOnsic2hhMjU2IjoiZjYzZWJmZjMyNjM4YjNlYWFmYzRhZjc2NTc3MWMyNDc4OTBiNTMyYTBlNWY1N2Q2ODM3NWY3ZGUyNGRmMTBmZSJ9fSx7Im5hbWUiOiJDb21tb25zQmFzZV9XaW4zMi1tYWNvcy52YWx1ZXMuanNvbiIsImRpZ2VzdCI6eyJzaGEyNTYiOiJkMmM3YmI0NzUwOTdhNTBlZGMxNzBmNGVkMDQ3OTk1MjAxMjMzY2E1YTkxNDEzNzJhODcwNzMzODkzNmRhMDlkIn19LHsibmFtZSI6InZhbHVlcy5qc29uIiwiZGlnZXN0Ijp7InNoYTI1NiI6ImM4ZDRhYWJiMzhhNGY2ZTFhODk1NjUwMjBjMjVjYTkzNzI3NTVkMmJhNDlkMWU5NGIyZTJkNWUxMzVjZGNlY2UifX1dLCJwcmVkaWNhdGVUeXBlIjoiaHR0cHM6Ly9zbHNhLmRldi9wcm92ZW5hbmNlL3YxIiwicHJlZGljYXRlIjp7ImJ1aWxkRGVmaW5pdGlvbiI6eyJidWlsZFR5cGUiOiJodHRwczovL2FjdGlvbnMuZ2l0aHViLmlvL2J1aWxkdHlwZXMvd29ya2Zsb3cvdjEiLCJleHRlcm5hbFBhcmFtZXRlcnMiOnsid29ya2Zsb3ciOnsicmVmIjoicmVmcy90YWdzLzAuMS4yMDI2MDcxMTE2MDgwOSIsInJlcG9zaXRvcnkiOiJodHRwczovL2dpdGh1Yi5jb20vZGtwa2cvQ29tbW9uc0Jhc2VfV2luMzIiLCJwYXRoIjoiLmdpdGh1Yi93b3JrZmxvd3MvZGlzdHJpYnV0ZS0wLjEueW1sIn19LCJpbnRlcm5hbFBhcmFtZXRlcnMiOnsiZ2l0aHViIjp7ImV2ZW50X25hbWUiOiJwdXNoIiwicmVwb3NpdG9yeV9pZCI6IjEyMjI4NzQxNDEiLCJyZXBvc2l0b3J5X293bmVyX2lkIjoiMjc4OTEzNTAwIiwicnVubmVyX2Vudmlyb25tZW50IjoiZ2l0aHViLWhvc3RlZCJ9fSwicmVzb2x2ZWREZXBlbmRlbmNpZXMiOlt7InVyaSI6ImdpdCtodHRwczovL2dpdGh1Yi5jb20vZGtwa2cvQ29tbW9uc0Jhc2VfV2luMzJAcmVmcy90YWdzLzAuMS4yMDI2MDcxMTE2MDgwOSIsImRpZ2VzdCI6eyJnaXRDb21taXQiOiI3NjdlZWEwYTk4ZGNiZGVkMDRjN2Q3YTI2NjkxY2RhYjc3OGNlMjU5In19XX0sInJ1bkRldGFpbHMiOnsiYnVpbGRlciI6eyJpZCI6Imh0dHBzOi8vZ2l0aHViLmNvbS9ka3BrZy9Db21tb25zQmFzZV9XaW4zMi8uZ2l0aHViL3dvcmtmbG93cy9kaXN0cmlidXRlLTAuMS55bWxAcmVmcy90YWdzLzAuMS4yMDI2MDcxMTE2MDgwOSJ9LCJtZXRhZGF0YSI6eyJpbnZvY2F0aW9uSWQiOiJodHRwczovL2dpdGh1Yi5jb20vZGtwa2cvQ29tbW9uc0Jhc2VfV2luMzIvYWN0aW9ucy9ydW5zLzI5MTU5MjIzOTg5L2F0dGVtcHRzLzEifX19fQ==","payloadType":"application/vnd.in-toto+json","signatures":[{"sig":"MEUCIQCQqHLj9+dwvuL2/7fLywl7+hMaLsA1auQ7yTR3BYI0WgIgEB/qMwCMbUaMx1fJ3fXWimyZSmm+l7X2voAMrtvUl3U="}]}}
+            ] },
+          "github_slsa_v1_l3": {},
+          "openbsd_signify": {}
+        },
+        "build_to_sign": {
+          "bundle_canonical": "cbe0be1529eeb358c528028d475c4ff4c33366926a9f7e894f5e7b756f47e296",
+          "bundle_modver": "CommonsBase_Win32.Distribution@0.1.20260711160809",
+          "modules": [
+            "CommonsBase_Win32.Distribution@0.1.20260711160809",
+            "CommonsBase_Win32.Wine@11.2.0",
+            "CommonsBase_Win32.Apparatus.Scripts@1.0.0",
+            "CommonsBase_Win32.Apparatus.WineRunLibSlotTable@1.0.0",
+            "CommonsBase_Win32.Apparatus.WineSlotTable@1.0.0",
+            "CommonsBase_Win32.Wenv.Create@0.1.0",
+            "CommonsBase_Win32.Wine.Bundle@11.2.0",
+            "CommonsBase_Win32.Wine.Zip@11.2.0"
+          ],
+          "producer_accepts": [],
+          "distmeta": {
+            "traces": [
+              {
+                "tag": "cts.1",
+                "path": "CommonsBase_Win32-macos.distmeta.cts.1.tracestore"
+              }
+            ],
+            "values": [
+              { "path": "CommonsBase_Win32-macos.distmeta.valuestore.zip" }
+            ]
+          },
+          "package": {
+            "traces": [
+              {
+                "tag": "cts.1",
+                "path": "CommonsBase_Win32-macos.package.cts.1.tracestore"
+              }
+            ],
+            "values": [
+              { "path": "CommonsBase_Win32-macos.package.valuestore.zip" }
+            ]
+          }
+        }
+      },
+      "continuations": {
+        "attestation": {
+          "openbsd_signify": {
+            "signature": "untrusted comment: signed by key 9054b16f0f808491\nRWSQVLFvD4CEkRv39Ve84ob1nkzeMKEZQ8sQ/q1lhbLayqbYovQglJusjkiFG9mSjOLP2PedMZ6fcNlpS1big8TPkWIKaRiEmQw=\n"
+          }
+        },
+        "continuations_to_sign": {
+          "0.2": {
+            "application": { "name": "dk0", "version": "2.4.2+rev-245" },
+            "openbsd_signify": {
+              "public_key": "untrusted comment: CommonsBase_Win32-0.2\nRWSU5lkOzV6VqDa7NVsxOlbsGBrKYAyyU1rSHIO5yIeQSQqplyah1raX\n"
+            }
+          },
+          "1.0": {
+            "application": { "name": "dk0", "version": "2.4.2+rev-245" },
+            "openbsd_signify": {
+              "public_key": "untrusted comment: CommonsBase_Win32-1.0\nRWS0JXlZjAsALKtpLo5svBJJfH3fZw/liRy/1Mdwu44S/Et25FKNhRye\n"
+            }
+          }
+        }
+      },
+      "id": "CommonsBase_Win32@0.1.20260711160809",
+      "license": { "spdx": "Apache-2.0" },
+      "producer": {
+        "application": { "name": "dk0", "version": "2.4.2+rev-254" },
+        "github_slsa_v1_l2": { "repository": "dkpkg/CommonsBase_Win32" },
+        "openbsd_signify": {
+          "public_key": "untrusted comment: CommonsBase_Win32-0.1\nRWSQVLFvD4CEkfNpwNy8LGGtGl2LvFAsbf0iCHY9A4CPPyy4hZk7VVjj\n"
+        }
+      },
+      "min_dk_version": "2.4.2.212"
+    }
+  ],
+  "forms": [],
+  "schema_version": { "major": 1, "minor": 0 }
+}
