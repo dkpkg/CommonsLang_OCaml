@@ -1135,4 +1135,54 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   }
 end
 
+-- No-op build rule that ships the scriptmodule. A CommonsLang_OCaml distribution
+-- exports a scriptmodule by running one of its rules ("running one rule brings in
+-- the entire script module"). This module otherwise has only F_BuildLockedPackage,
+-- which needs real per-package parameters a non-interactive distribution cannot
+-- supply, so this trivial function rule gives the distribution something to run,
+-- causing the whole OpamBuild scriptmodule (including F_BuildLockedPackage) to
+-- ship and be runnable from an import. Its output is an empty marker; it does
+-- nothing else.
+function rules.Export(command, request)
+  local slots = {
+    "Release.Windows_x86_64", "Release.Windows_x86", "Release.Windows_arm64",
+    "Release.Darwin_x86_64", "Release.Darwin_arm64",
+    "Release.Linux_x86_64", "Release.Linux_arm64", "Release.Linux_x86"
+  }
+  if command == "declareoutput" then
+    return {
+      declareoutput = {
+        return_objects = {
+          id = "CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0",
+          slots = slots,
+          execution_slot = "Release.execution_abi"
+        }
+      }
+    }
+  elseif command == "submit" then
+    return {
+      submit = {
+        values = {
+          schema_version = { major = 1, minor = 0 },
+          forms = {
+            {
+              id = request.submit.outputid,
+              function_ = {
+                commands = {
+                  "$(get-object CommonsBase_Std.Coreutils@0.6.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                  "touch",
+                  "${SLOT.request}/opambuild-scriptmodule"
+                }
+              },
+              outputs = {
+                assets = { { slots = slots, paths = { "opambuild-scriptmodule" } } }
+              }
+            }
+          }
+        }
+      }
+    }
+  end
+end
+
 return M

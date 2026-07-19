@@ -57,3 +57,15 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
   \test(pass)
   \dk.object(abi: "Release.Linux_x86_64", value-id: "odx35phn7zbcsqd3u6oimt5ga4chrzhaimrl73snmj2dk6yxztvpq")\;
+
+
+## Dk.OpamBuild
+
+Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
+per-package build rule ships in this distribution. Running any rule of a
+scriptmodule brings in the whole scriptmodule; the marker output is otherwise
+unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
+  	est(pass)
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "REPLACE_WITH_HARVESTED_VALUE_ID_FROM_FIRST_CI_RUN")\;
