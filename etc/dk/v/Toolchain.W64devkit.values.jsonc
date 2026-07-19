@@ -50,7 +50,7 @@
                 "private": [
                     // --- ocaml-5.4.1.tar.gz ---
                     // convert the .tar.gz to .zip
-                    "post-object CommonsBase_Std.Extract.F_TarToZip@0.4.2 -f ignored.zip modver=CommonsLang_OCaml.OCaml.Zip@5.4.1 tarmodver=CommonsLang_OCaml.OCaml.Bundle@5.4.1 tarassetpath=ocaml-5.4.1.tar.gz",
+                    "post-object CommonsBase_Std.Extract.F_TarToZip@0.1.0 -f ignored.zip modver=CommonsLang_OCaml.OCaml.Zip@5.4.1 tarmodver=CommonsLang_OCaml.OCaml.Bundle@5.4.1 tarassetpath=ocaml-5.4.1.tar.gz",
                     // extract zip to 's' folder, stripping toplevel ocaml-5.4.1/ folder
                     "install-object CommonsLang_OCaml.OCaml.Zip@5.4.1 -s Release.Agnostic -m ./output.zip -n 1 -d s -e 'configure' -e 'runtime/*.sh' -e 'lambda/*.sh'",
 
