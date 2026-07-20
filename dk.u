@@ -21,6 +21,42 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
   'actual_version'
   '2.4.2.284'
 
+  %% import { type="github-l2", repo="dkpkg/CommonsBase_Dk" }
+  'import'
+  'github-l2'
+  { {
+      'CommonsBase_Dk', '0.1.20260718144345', {
+        'blake2b-256:2c0767496c2a70f331786a3179df52070fedacd14b97848a1ff2dce99c9c0291',
+        'sha256:0df700a70e810b21ab49e6147987fec95dd8ff3864fab75654f42fa40fd9e882',
+        'sha1:148e3fa191d5d70667bed438b2ca44816cc9099d'
+      } },
+    {
+      'CommonsBase_Std', '2.6.20260715034712', {
+        'blake2b-256:ce17873f88018da536a8ba479b9f6a5c1de18f6395a158436bb50589972a6eb7',
+        'sha256:fd84db09d22aebea9e579a9e42c63986e26a1ad28e2890e874e2b6784777a5f8',
+        'sha1:6ccd7db2cb64841af17f9c47fce5e346e9e65c10'
+      } } }
+  %% import { type="github-l2", repo="dkpkg/CommonsBase_FileMagic" }
+  'import'
+  'github-l2'
+  { {
+      'CommonsBase_FileMagic', '0.1.20260719031456', {
+        'blake2b-256:5fc9c1b7431555288fe31edcf94de1e2022c83b6010eacd9d261b6d0c806745a',
+        'sha256:06d9c857523253a0fa33e0ae72b4dba6e7ff608a37d11422d06b9f5c3df3f8db',
+        'sha1:9a593ba68f0e5742cf91068445ec4d2e964e94b5'
+      } },
+    {
+      'CommonsBase_LLVM', '0.1.20260719021059', {
+        'blake2b-256:ab9dd1f316d99aab1f17e02cc2ec2cb9b1f345eb3faf5f19829d1a6a93390ee3',
+        'sha256:862111ad69907bffb543015d237fe52670e026700e1502e855f23488afb0dc44',
+        'sha1:d2c2058826f9afe71749408731172e95369aae9b'
+      } },
+    {
+      'CommonsBase_Std', '2.6.20260718222208', {
+        'blake2b-256:d28c9e22c422e6c8ab4083eb1be597292dec46276de308106f0798633b82fc20',
+        'sha256:ec03493d6f73aa962b9df0be8ccf19be607c7cd28bb89aa2d1de3a882ad33024',
+        'sha1:c6eef19dd6c1fdd133c4e4ced6c545e08af628f4'
+      } } }
   %% import { type="github-l2", repo="dkpkg/CommonsBase_LLVM" }
   'import'
   'github-l2'
