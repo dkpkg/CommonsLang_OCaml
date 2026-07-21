@@ -33,6 +33,37 @@ author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
 
+How the lock is produced: the OpamLock.Solve uirule launches `opam` to SOLVE
+the dependency closure -- it runs `opam list --resolve` to compute the closure
+and `opam show` to read each package's version/source/deps/build commands, and
+never `opam install`s. opam has no switch-less solve (the solver needs a
+switch's repositories, pins, and os/arch variables), so Solve creates an EMPTY
+opam switch purely as a throwaway resolution context: it adds the pinned
+repositories, applies the version pins from dk-opam-pins.txt, path-pins the
+local packages, then resolves. By default that switch is an ephemeral LOCAL
+switch in the rule's sandbox -- unique per run (no cross-project or cross-run
+pin contamination, so the lock is reproducible) and removed once the solve
+finishes; nothing is ever installed into it.
+
+### Resolving ocaml 5.1.1 as the solve compiler
+
+ocaml is left unpinned so the solve resolves it from the pinned repository
+commit to 5.1.1, one of the first releases with the corrected ocaml-env,
+host-arch and conf-mingw-w64 selectors (pinning ocaml in the shared pin table
+would break the CI build's DkML toolchain). The pinned commit makes that
+resolution deterministic, and the version is a solve artifact only: the DkML
+4.14.3 toolchain ocaml replaces it at build time.
+
++ ocaml 5.1.1 carries the corrected ocaml-env, host-arch and conf-mingw-w64
+  selectors, so the solved closure resolves the right platform packages for
+  every slot.
++ The resolved ocaml version drives per-slot mingw selection: 5.1.1 resolves
+  the Windows_x86 slot to the 32-bit ocaml-env-mingw32 toolchain, where 4.14.2
+  resolves the wrong 64-bit one.
++ The DkML 4.14.3 toolchain ocaml replaces this solve compiler at build time,
+  so the lock's ocaml and ocaml-base-compiler entries are solve artifacts, not
+  build inputs.
+
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
   \test(pass)
   \dk.object(abi: "Release.Linux_x86_64", value-id: "odx35phn7zbcsqd3u6oimt5ga4chrzhaimrl73snmj2dk6yxztvpq")\;
