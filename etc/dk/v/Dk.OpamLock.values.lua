@@ -100,16 +100,20 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.words(s)
   return out
 end
 
+-- Join an ARRAY's elements in index order. Iterating with next() (as an earlier
+-- version did) walks lua-ml's arbitrary hash order, which silently scrambled the
+-- order of every joined array -- including the JSON encoder's `parts`, so a
+-- sorted key list still emitted unsorted. Walk 1..n instead.
 function CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(tbl, sep)
   local r = nil
-  local k, v = next(tbl)
-  while k do
+  local i = 1
+  while tbl[i] ~= nil do
     if r == nil then
-      r = tostring(v)
+      r = tostring(tbl[i])
     else
-      r = r .. sep .. tostring(v)
+      r = r .. sep .. tostring(tbl[i])
     end
-    k, v = next(tbl, k)
+    i = i + 1
   end
   if r == nil then return "" end
   return r
@@ -256,16 +260,19 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_show_chunk(request, opam, sw
   -- discard them; a genuinely failed spawn leaves stdout empty and yields none.
   if r.status ~= "exit" then return end
 
-  -- field membership set, the boundary field, and the alignment width W
+  -- field membership set, the boundary field, and the alignment width W. Walk by
+  -- index so firstfield is reqfields[1] (`name:`) -- opam emits fields in the
+  -- order passed to --field=, which is join(reqfields) in index order, so the
+  -- parser's package boundary must key off the same first field.
   local fset = {}
-  local firstfield = nil
+  local firstfield = reqfields[1]
   local W = 0
-  local fk, fv = next(reqfields)
-  while fk do
+  local fi = 1
+  while reqfields[fi] ~= nil do
+    local fv = reqfields[fi]
     fset[fv] = fv
-    if firstfield == nil then firstfield = fv end
     local l = string.len(fv); if l + 1 > W then W = l + 1 end
-    fk, fv = next(reqfields, fk)
+    fi = fi + 1
   end
 
   -- split stdout into raw lines (keep leading whitespace for the column-0 test
@@ -488,9 +495,54 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.json_str(s)
   return out .. "\""
 end
 
+-- Byte-wise lexicographic `a < b` for strings (lua-ml's string `<` operator is
+-- not relied upon). Returns 1 (true) or nil (false), the module's truth style.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.str_lt(a, b)
+  local la = string.len(a); local lb = string.len(b)
+  local n = la; if lb < n then n = lb end
+  local i = 1
+  while i <= n do
+    -- string.byte(s, i) (two-arg, byte at index) is unreliable in lua-ml; take a
+    -- one-character slice and byte it, the pattern the rest of the module uses.
+    local ca = string.byte(string.sub(a, i, i)); local cb = string.byte(string.sub(b, i, i))
+    if ca < cb then return 1 end
+    if ca > cb then return nil end
+    i = i + 1
+  end
+  if la < lb then return 1 end
+  return nil
+end
+
+-- In-place insertion sort of a string array (small arrays; keeps the lock's
+-- package/solution ordering canonical and reproducible regardless of the order
+-- opam happens to emit -- version-pins and the constraints repo resolve the same
+-- closure but list it differently).
+-- Returns the sorted array. In-place mutation of a table argument does not
+-- reliably propagate back to the caller in lua-ml, so callers must use the
+-- RETURN value (`a = sort_str_array(a)`), not rely on `a` being sorted in place.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.sort_str_array(a)
+  local n = 0; local c = next(a); while c do n = n + 1; c = next(a, c) end
+  local i = 2
+  while i <= n do
+    local key = a[i]; local j = i - 1
+    while j >= 1 and CommonsLang_OCaml__Dk_OpamLock__1_0_0.str_lt(key, a[j]) do a[j + 1] = a[j]; j = j - 1 end
+    a[j + 1] = key; i = i + 1
+  end
+  return a
+end
+
+-- The keys of a map as a lexicographically sorted array.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.sorted_keys(m)
+  local ks = {}
+  local k = next(m)
+  while k do table.insert(ks, tostring(k)); k = next(m, k) end
+  return CommonsLang_OCaml__Dk_OpamLock__1_0_0.sort_str_array(ks)
+end
+
 -- Recursive JSON encoder. A table is an array when empty or when it has a [1]
--- element; otherwise it is an object. That matches this module's data (objects
--- always have string keys and are never empty).
+-- element; otherwise it is an object with keys emitted in sorted order (so the
+-- lock is byte-stable). That matches this module's data (objects always have
+-- string keys and are never empty).
 function CommonsLang_OCaml__Dk_OpamLock__1_0_0.json_encode(v, indent)
   indent = indent or ""
   local child = indent .. "  "
@@ -511,10 +563,12 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.json_encode(v, indent)
       return "[\n" .. CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(parts, ",\n") .. "\n" .. indent .. "]"
     end
     local parts = {}
-    local k, val = next(v)
-    while k do
-      table.insert(parts, child .. CommonsLang_OCaml__Dk_OpamLock__1_0_0.json_str(tostring(k)) .. ": " .. CommonsLang_OCaml__Dk_OpamLock__1_0_0.json_encode(val, child))
-      k, val = next(v, k)
+    local ks = CommonsLang_OCaml__Dk_OpamLock__1_0_0.sorted_keys(v)
+    local ki = 1
+    while ks[ki] do
+      local k = ks[ki]
+      table.insert(parts, child .. CommonsLang_OCaml__Dk_OpamLock__1_0_0.json_str(k) .. ": " .. CommonsLang_OCaml__Dk_OpamLock__1_0_0.json_encode(v[k], child))
+      ki = ki + 1
     end
     return "{\n" .. CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(parts, ",\n") .. "\n" .. indent .. "}"
   end
@@ -545,6 +599,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
   local reponames = {}
   local pins = {}
   local floats = {}
+  local archexcludes = {}
   local plines = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(content)
   local lk, lv = next(plines)
   while lk do
@@ -556,9 +611,86 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
         table.insert(pins, { name = w[2], ver = w[3] })
       elseif w[1] == "float" and w[2] then
         table.insert(floats, w[2])
+      elseif w[1] == "archexclude" and w[2] and w[3] then
+        -- `archexclude PKG ARCH` conflicts PKG on slots whose arch = ARCH,
+        -- disambiguating an opam disjunction the upstream package leaves
+        -- arch-agnostic (e.g. system-mingw's `ocaml-env-mingw32|64`). Ignored by
+        -- ci/build-all.sh (its case falls through), so it is safe in the shared
+        -- table.
+        table.insert(archexcludes, { name = w[2], arch = w[3] })
       end
     end
     lk, lv = next(plines, lk)
+  end
+
+  -- Emit a single-package custom opam repository whose meta-package locks every
+  -- pinned version, replacing the 193 individual `opam pin add -k version` calls
+  -- that dominated the solve wall-clock. The versions live in CONFLICTS
+  -- (`"pkg" {!= "ver"}`), not depends: a conflict constrains a package's version
+  -- only when the roots' closure already pulls it in -- exactly a version pin --
+  -- whereas depends would force all 193 (a superset of any slot's ~94-package
+  -- closure) into the lock. Floated packages are absent from the pin list, so
+  -- they stay unconstrained.
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_0_0
+  local constraints_pkg = nil
+  local archpkgs = {}
+  local csrepo_url = nil
+  if pins[1] ~= nil then
+    constraints_pkg = "dk-solve-constraints"
+    local rf = assert(request.io.open("csrepo/repo", "w"), "could not open csrepo/repo")
+    request.io.write(rf, "opam-version: \"2.0\"\n")
+    request.io.flush(rf)
+    local rfabs = H.trim(request.io.realpath(rf))
+    csrepo_url = H.dirname(rfabs)
+    request.io.close(rf)
+    local cspath = "csrepo/packages/dk-solve-constraints/dk-solve-constraints.1/opam"
+    local cf = assert(request.io.open(cspath, "w"), "could not open the constraints meta-package")
+    request.io.write(cf, "opam-version: \"2.0\"\n")
+    request.io.write(cf, "synopsis: \"Generated version lock for the dk opam solve\"\n")
+    request.io.write(cf, "conflicts: [\n")
+    local xk, xv = next(pins)
+    while xk do
+      request.io.write(cf, "  \"" .. xv.name .. "\" {!= \"" .. xv.ver .. "\"}\n")
+      xk, xv = next(pins, xk)
+    end
+    request.io.write(cf, "]\n")
+    request.io.flush(cf)
+    request.io.close(cf)
+
+    -- Per-arch exclusion packages (see the `archexclude` directive). opam does
+    -- NOT honour a FILTER inside a conflict (`"pkg" {arch = "x"}` is ignored),
+    -- but an UNCONDITIONAL conflict does force an otherwise arch-agnostic
+    -- disjunction (e.g. system-mingw's `ocaml-env-mingw32|64`). So group the
+    -- exclusions by arch and emit one package per arch whose conflicts are
+    -- unconditional; the caller adds `dk-solve-arch-<arch>` only to the resolve
+    -- of a slot whose arch matches, and a package absent from that slot's closure
+    -- makes its conflict a harmless no-op.
+    local archmap = {}
+    local ek, ev = next(archexcludes)
+    while ek do
+      if archmap[ev.arch] == nil then archmap[ev.arch] = {} end
+      table.insert(archmap[ev.arch], ev.name)
+      ek, ev = next(archexcludes, ek)
+    end
+    local mk, mv = next(archmap)
+    while mk do
+      local apkg = "dk-solve-arch-" .. mk
+      local apath = "csrepo/packages/" .. apkg .. "/" .. apkg .. ".1/opam"
+      local af = assert(request.io.open(apath, "w"), "could not open arch exclusion package " .. apkg)
+      request.io.write(af, "opam-version: \"2.0\"\n")
+      request.io.write(af, "synopsis: \"Generated arch exclusions for the dk opam solve\"\n")
+      request.io.write(af, "conflicts: [\n")
+      local ck = next(mv)
+      while ck do
+        request.io.write(af, "  \"" .. mv[ck] .. "\"\n")
+        ck = next(mv, ck)
+      end
+      request.io.write(af, "]\n")
+      request.io.flush(af)
+      request.io.close(af)
+      archpkgs[mk] = apkg
+      mk, mv = next(archmap, mk)
+    end
   end
 
   -- initialise the opam root if needed. The hermetic module-opam path
@@ -645,6 +777,17 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
     CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "repository", "add", rv.name, rv.url, "--dont-select", "--yes" }, nil, 1)
     rk, rv = next(repos, rk)
   end
+  -- add the generated constraints repository and bind it to the switch too. The
+  -- repo name persists in a reused OPAMROOT but its sandbox path (and contents)
+  -- change every run, and `opam repository add` will NOT refresh an existing
+  -- name -- it keeps serving the previous run's cached (now-deleted) copy, so a
+  -- freshly generated package reads back as "unknown package". Remove any stale
+  -- registration from all scopes first, then add the current path.
+  if csrepo_url then
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "repository", "remove", "dk-solve-constraints-repo", "--all", "--yes" }, nil, 1)
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "repository", "add", "dk-solve-constraints-repo", csrepo_url, "--dont-select", "--yes" }, nil, 1)
+    table.insert(reponames, "dk-solve-constraints-repo")
+  end
 
   -- create the empty switch bound to those repositories if it does not exist
   local swres = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "switch", "list", "--short" }, nil, 1)
@@ -666,12 +809,11 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
     end
   end
 
-  -- apply version pins
-  print("[opam-lock] applying version pins to switch " .. switch)
-  local pk, pv = next(pins)
-  while pk do
-    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "add", "--switch=" .. switch, "-n", "-y", "-k", "version", pv.name, pv.ver }, nil, false)
-    pk, pv = next(pins, pk)
+  -- Version pins are enforced by the generated constraints repository (added
+  -- above), so the closure resolves against dk-solve-constraints instead of 193
+  -- per-package `opam pin add` calls.
+  if constraints_pkg then
+    print("[opam-lock] version locks supplied by the " .. constraints_pkg .. " constraints repository")
   end
 
   -- remove pins for floated packages (may not be pinned; ignore failure). An
@@ -693,6 +835,11 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
   if local_opam_dir then
     CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "add", "--switch=" .. switch, "-n", "-y", local_opam_dir }, nil, false)
   end
+
+  -- The constraints package (or nil), the per-arch exclusion packages
+  -- (arch -> package name) to add to the resolve, and the declared dependency
+  -- repositories (name/url from the pin table) to record in the lock.
+  return constraints_pkg, archpkgs, repos
 end
 
 -- Discover the switch's local packages: the ones pinned to a local directory
@@ -939,10 +1086,12 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
   local switchargs = { "--switch=" .. switch }
 
   -- Set up the switch from the pin table before solving (idempotent): add the
-  -- pinned repositories, apply the version pins, and -- when local_opam_dir is
-  -- given -- path-pin every local package opam finds there. `ephemeral` skips the
-  -- float pass, which only un-pins packages on a reused persistent switch.
-  H.setup_switch(request, opam, switch, pins, request.user.local_opam_dir, winlocs, ephemeral)
+  -- pinned repositories and the generated constraints repository, and -- when
+  -- local_opam_dir is given -- path-pin every local package opam finds there.
+  -- `ephemeral` skips the float pass, which only un-pins packages on a reused
+  -- persistent switch. Returns the constraints meta-package plus the per-arch
+  -- exclusion packages (arch -> name) to co-resolve.
+  local constraints_pkg, archpkgs, repos_decl = H.setup_switch(request, opam, switch, pins, request.user.local_opam_dir, winlocs, ephemeral)
 
   -- Local package names: explicit override, else auto-discover the switch's path
   -- pins (packages pinned to a local dir, vs the version-pinned externals). Used
@@ -954,7 +1103,10 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
     "please provide 'roots[]=PKG1' 'roots[]=PKG2' ... (the executable packages to lock)")
   assert(type(roots) == "table", "roots must be a table: 'roots[]=PKG1' 'roots[]=PKG2' ...")
 
+  -- Co-resolve the constraints meta-package so its version conflicts apply to
+  -- the closure; it is dropped from the solution below.
   local rootscsv = H.join(roots, ",")
+  if constraints_pkg then rootscsv = rootscsv .. "," .. constraints_pkg end
 
   -- opam version, for non-authoritative provenance.
   local verres = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "--version" }, nil, 1)
@@ -971,12 +1123,32 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
     local vk, vv = next(vars)
     while vk do table.insert(envmods, "+OPAMVAR_" .. vk .. "=" .. vv); vk, vv = next(vars, vk) end
 
-    local args = { "list", "--resolve=" .. rootscsv, "--columns=package", "--short" }
+    -- Add this slot's arch-exclusion package (if any) so the arch-agnostic
+    -- disjunctions resolve to the arch-matching side.
+    local slotresolve = rootscsv
+    local archpkg = archpkgs[vars.arch]
+    if archpkg then slotresolve = slotresolve .. "," .. archpkg end
+
+    local args = { "list", "--resolve=" .. slotresolve, "--columns=package", "--short" }
     local sk, sv = next(switchargs)
     while sk do table.insert(args, sv); sk, sv = next(switchargs, sk) end
 
     local r = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, args, envmods, false)
-    local keys = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(r.stdout)
+    -- Drop the synthetic constraints/arch packages from the solution -- they
+    -- carry only the conflicts and are not part of the locked closure.
+    local keys = {}
+    local rawkeys = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(r.stdout)
+    local rik, rikey = next(rawkeys)
+    while rik do
+      local dot = CommonsLang_OCaml__Dk_OpamLock__1_0_0.first_dot(rikey)
+      local nm = rikey; if dot then nm = string.sub(rikey, 1, dot - 1) end
+      if string.sub(nm, 1, 9) ~= "dk-solve-" then table.insert(keys, rikey) end
+      rik, rikey = next(rawkeys, rik)
+    end
+    -- Canonicalise: opam lists the solution in resolution order, which differs
+    -- between the version-pin and constraints-repo solves though the closure is
+    -- the same. Sort so the lock is byte-stable across solve methods.
+    keys = CommonsLang_OCaml__Dk_OpamLock__1_0_0.sort_str_array(keys)
     slot_solutions[slot] = { opam_vars = vars, solution = keys }
     local ik, ikey = next(keys)
     while ik do all_keys[ikey] = ikey; ik, ikey = next(keys, ik) end
@@ -1118,21 +1290,20 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
     ak = next(all_keys, ak)
   end
 
-  -- 3. Record opam repositories (url + pinned commit for reproducibility).
-  -- `opam repository list --all` prints a `#`-prefixed header then rows of
-  -- "name  url  switches(rank)..."; take the first two whitespace tokens.
+  -- 3. Record opam repositories for reproducibility from the pin table's `repo`
+  -- declarations (not by parsing `opam repository list`): those are exactly the
+  -- pinned dependency sources the solve resolved against, with the commit already
+  -- in the url. Reading them from the pin table avoids capturing the developer's
+  -- global repos (`default`, stray test repos) and the generated constraints
+  -- repository (whose sandbox url changes every run and would break reproducibility).
   local repos = {}
-  local rr = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "repository", "list", "--all" }, nil, 1)
-  local rlines = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(rr.stdout)
-  local rlk, rline = next(rlines)
-  while rlk do
-    if string.sub(rline, 1, 1) ~= "#" then
-      local w = CommonsLang_OCaml__Dk_OpamLock__1_0_0.words(rline)
-      if w[1] and w[2] then
-        table.insert(repos, { name = w[1], url = w[2], commit = request.user.repo_commit or CommonsLang_OCaml__Dk_OpamLock__1_0_0.NULL })
-      end
+  if repos_decl then
+    local di = 1
+    while repos_decl[di] ~= nil do
+      local dv2 = repos_decl[di]
+      table.insert(repos, { name = dv2.name, url = dv2.url, commit = request.user.repo_commit or CommonsLang_OCaml__Dk_OpamLock__1_0_0.NULL })
+      di = di + 1
     end
-    rlk, rline = next(rlines, rlk)
   end
   if next(repos) == nil then
     table.insert(repos, { url = (request.user.repo_url or "unknown"), commit = request.user.repo_commit or CommonsLang_OCaml__Dk_OpamLock__1_0_0.NULL })
