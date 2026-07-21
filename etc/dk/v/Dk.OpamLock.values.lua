@@ -125,6 +125,19 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.set_from_list(tbl)
   return set
 end
 
+-- Directory part of a path (everything before the last '/' or '\'), or "." if
+-- the path has no separator. Byte-based (47='/', 92='\\') so it is correct for
+-- both the POSIX and Windows realpath forms request.io.realpath can return.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.dirname(p)
+  local i = string.len(p)
+  while i >= 1 do
+    local b = string.byte(p, i)
+    if b == 47 or b == 92 then return string.sub(p, 1, i - 1) end
+    i = i - 1
+  end
+  return "."
+end
+
 -- Run a program and return its captured result table {status,code,stdout,stderr}.
 -- Asserts on spawn failure or (unless allowfailure) non-zero exit.
 function CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, program, args, envmods, allowfailure)
@@ -158,6 +171,151 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_field(request, opam, switcha
   local r = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, args, nil, 1)
   if r.status ~= "exit" or r.code ~= 0 then return "" end
   return CommonsLang_OCaml__Dk_OpamLock__1_0_0.trim(r.stdout)
+end
+
+-- Capture the requested `--field`s for MANY packages, batching them across as
+-- few `opam show` invocations as fit safely in one command line. opam accepts
+-- multiple package keys and prints each package's fields in the requested order,
+-- so this replaces (#packages * #fields) separate `opam show` runs -- the
+-- dominant cost of the solve. Returns pkgkey -> { [field] = value } where each
+-- value equals what a single-field `opam show --field=X <pkg>` returns.
+--
+-- Chunking: a command line naming every key could exceed a platform limit and be
+-- silently truncated (Windows CreateProcess ~32 KB, the stricter cmd.exe/legacy
+-- paths ~8 KB, Unix ARG_MAX is larger). So the keys are split into chunks whose
+-- joined length stays well under the smallest limit; one `opam show` runs per
+-- chunk and the per-package results merge into one table.
+--
+-- A chunk also never names the same package at two versions: `opam show`
+-- collapses repeated same-name atoms into one impossible version constraint and
+-- prints NO block for either (ex. the closure holds ppx_inline_test at both
+-- v0.16.0 and v0.16.1). A dropped block would shift every field after it in a
+-- position-based parse, so split same-name keys into separate chunks; the parser
+-- keys each block by its own name.version and merges across chunks.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_show_all(request, opam, switchargs, fields, keylist)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_0_0
+  local by_key = {}
+  -- Budget only the key-list portion of the command line. 6000 leaves ample
+  -- headroom for the program path, "show", --field and --switch and still clears
+  -- the ~8 KB cmd.exe/legacy cap; a chunk boundary never splits a key.
+  local MAXKEYS = 6000
+  local total = 0; local tk = next(keylist); while tk do total = total + 1; tk = next(keylist, tk) end
+  local chunk = {}
+  local chunknames = {}
+  local chunklen = 0
+  local ci = 1
+  while ci <= total do
+    local key = keylist[ci]
+    local klen = string.len(key) + 1
+    local dot = H.first_dot(key)
+    local nm = key; if dot then nm = string.sub(key, 1, dot - 1) end
+    if chunk[1] ~= nil and (chunklen + klen > MAXKEYS or chunknames[nm] ~= nil) then
+      H.opam_show_chunk(request, opam, switchargs, fields, chunk, by_key)
+      chunk = {}; chunknames = {}; chunklen = 0
+    end
+    table.insert(chunk, key); chunknames[nm] = nm; chunklen = chunklen + klen
+    ci = ci + 1
+  end
+  if chunk[1] ~= nil then H.opam_show_chunk(request, opam, switchargs, fields, chunk, by_key) end
+  return by_key
+end
+
+-- Parse ONE `opam show` over a chunk of package keys, merging into by_key.
+-- Output shape (multi package, multi field): each field prints "<field>:" at
+-- column 0, its value aligned to column (longest field name + 1), and any
+-- continuation lines indented to that column; an empty field prints "<field>:".
+--
+-- `name:`/`version:` are prepended to the requested fields so every package
+-- block opens with `name:` (opam always emits both, even for virtual/base
+-- packages that have no url) and each block is keyed by its OWN `name.version`
+-- rather than by position. Position-based matching silently corrupted the lock
+-- whenever opam emitted fewer blocks than keys requested -- a dropped block (see
+-- opam_show_all's same-name note) shifted every later package's fields onto the
+-- wrong key.
+--
+-- De-indenting every line by the alignment width W = (longest requested field
+-- name + 1) strips the "<field>:"/padding column and recovers the single-field
+-- text; splitting on "\n" only (not "\r\n") keeps the CRLF that a Windows opam
+-- emits inside multi-line values, so the captured text is byte-identical to a
+-- per-field `opam show`.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_show_chunk(request, opam, switchargs, fields, keylist, by_key)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_0_0
+  -- request fields = name:, version: (identity), then the caller's data fields
+  local reqfields = { "name:", "version:" }
+  local rf, rv = next(fields)
+  while rf do table.insert(reqfields, rv); rf, rv = next(fields, rf) end
+
+  local args = { "show", "--field=" .. H.join(reqfields, ",") }
+  local sk, sv = next(switchargs)
+  while sk do table.insert(args, sv); sk, sv = next(switchargs, sk) end
+  local kk, kv = next(keylist)
+  while kk do table.insert(args, kv); kk, kv = next(keylist, kk) end
+  local r = H.run(request, opam, args, nil, 1)
+  -- Parse whatever ran: opam warns on stderr and still exits 0 for a missing
+  -- key, but even a non-zero exit leaves the good blocks on stdout, so do not
+  -- discard them; a genuinely failed spawn leaves stdout empty and yields none.
+  if r.status ~= "exit" then return end
+
+  -- field membership set, the boundary field, and the alignment width W
+  local fset = {}
+  local firstfield = nil
+  local W = 0
+  local fk, fv = next(reqfields)
+  while fk do
+    fset[fv] = fv
+    if firstfield == nil then firstfield = fv end
+    local l = string.len(fv); if l + 1 > W then W = l + 1 end
+    fk, fv = next(reqfields, fk)
+  end
+
+  -- split stdout into raw lines (keep leading whitespace for the column-0 test
+  -- and the trailing CR so multi-line values keep their CRLF)
+  local rl = {}
+  local raw = r.stdout or ""
+  local i, n = 1, string.len(raw)
+  while i <= n do
+    local j = string.find(raw, "\n", i)
+    if j then table.insert(rl, string.sub(raw, i, j - 1)); i = j + 1
+    else table.insert(rl, string.sub(raw, i)); i = n + 1 end
+  end
+  local nlines = 0; local ck = next(rl); while ck do nlines = nlines + 1; ck = next(rl, ck) end
+
+  -- lua-ml: iterate by numeric index (next() order is not guaranteed); use
+  -- nil/non-nil, not boolean, for the "have a current field/package" test.
+  -- Each `name:` boundary finalizes the previous package (key = its own
+  -- name.version) before starting the next; the tail is finalized after the loop.
+  local cur = nil          -- field table for the package currently being parsed
+  local curfield = nil
+  local buf = ""
+  local idx = 1
+  while idx <= nlines do
+    local line = rl[idx]
+    local p, ll = 1, string.len(line)
+    while p <= ll and not H.iswhite(string.sub(line, p, p)) do p = p + 1 end
+    local token = string.sub(line, 1, p - 1)   -- leading non-space token
+    if fset[token] ~= nil then
+      if cur ~= nil and curfield ~= nil then cur[curfield] = H.trim(buf) end
+      if token == firstfield then
+        if cur ~= nil then
+          local nm = H.unquote(cur["name:"] or "")
+          local vr = H.unquote(cur["version:"] or "")
+          if nm ~= "" and vr ~= "" then by_key[nm .. "." .. vr] = cur end
+        end
+        cur = {}
+      end
+      curfield = token
+      buf = string.sub(line, W + 1)
+    else
+      if curfield ~= nil then buf = buf .. "\n" .. string.sub(line, W + 1) end
+    end
+    idx = idx + 1
+  end
+  if cur ~= nil and curfield ~= nil then cur[curfield] = H.trim(buf) end
+  if cur ~= nil then
+    local nm = H.unquote(cur["name:"] or "")
+    local vr = H.unquote(cur["version:"] or "")
+    if nm ~= "" and vr ~= "" then by_key[nm .. "." .. vr] = cur end
+  end
 end
 
 -- Parse the top-level (brace-depth 0) quoted tokens out of an opam field such as
@@ -370,7 +528,13 @@ end
 -- for floated packages, and (when local_opam_dir is given) path-pins each local
 -- project package. This is generic to any opam project, so it lives in the rule
 -- rather than in per-OS wrapper scripts.
-function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switch, pinsfile, local_opam_dir, locals, winlocs)
+--
+-- `fresh` (an ephemeral switch created empty this run) skips the float pass: a
+-- `float` un-pins a package the pin table shares with a persistent build switch,
+-- but an empty switch has nothing pinned, so every `opam pin remove` is a slow
+-- no-op. Floats still run for a reused persistent switch, where a prior run may
+-- have left the package pinned.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switch, pinsfile, local_opam_dir, winlocs, fresh)
   -- Read the pin table from the real project tree. request.io reads the UI
   -- sandbox, not the project, so use request.ui.readfile (the read counterpart
   -- of request.ui.writefile).
@@ -503,27 +667,61 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
   end
 
   -- apply version pins
+  print("[opam-lock] applying version pins to switch " .. switch)
   local pk, pv = next(pins)
   while pk do
     CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "add", "--switch=" .. switch, "-n", "-y", "-k", "version", pv.name, pv.ver }, nil, false)
     pk, pv = next(pins, pk)
   end
 
-  -- remove pins for floated packages (may not be pinned; ignore failure)
-  local fk, fv = next(floats)
-  while fk do
-    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "remove", "--switch=" .. switch, "--no-action", "-y", fv }, nil, 1)
-    fk, fv = next(floats, fk)
-  end
-
-  -- path-pin the local project packages (versionless: opam reads <name>.opam)
-  if local_opam_dir and locals then
-    local ck, cv = next(locals)
-    while ck do
-      CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "add", "--switch=" .. switch, "-n", "-y", cv, local_opam_dir }, nil, false)
-      ck, cv = next(locals, ck)
+  -- remove pins for floated packages (may not be pinned; ignore failure). An
+  -- ephemeral switch starts empty, so nothing is pinned to float -- skip the pass
+  -- entirely rather than spend one opam call per float removing nothing.
+  if fresh then
+    print("[opam-lock] skipping float removals: the ephemeral switch has no pins to remove")
+  else
+    local fk, fv = next(floats)
+    while fk do
+      CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "remove", "--switch=" .. switch, "--no-action", "-y", fv }, nil, 1)
+      fk, fv = next(floats, fk)
     end
   end
+
+  -- Path-pin every local package opam finds in local_opam_dir. `opam pin add
+  -- <dir>` (no package name) scans that directory's *.opam files and pins them
+  -- all, so callers never enumerate the local packages by hand.
+  if local_opam_dir then
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "add", "--switch=" .. switch, "-n", "-y", local_opam_dir }, nil, false)
+  end
+end
+
+-- Discover the switch's local packages: the ones pinned to a local directory
+-- (opam pin kind "rsync"/"path"), as opposed to the version-pinned externals
+-- from the pin table. `opam pin list` prints "<name>.<ver>  (state)  <kind>
+-- <target>" per line; a package is local iff its kind is rsync/path. Returns a
+-- list of bare package names.
+function CommonsLang_OCaml__Dk_OpamLock__1_0_0.discover_locals(request, opam, switch)
+  local r = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "list", "--switch=" .. switch }, nil, 1)
+  local out = {}
+  local ls = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(r.stdout)
+  local lk, line = next(ls)
+  while lk do
+    local w = CommonsLang_OCaml__Dk_OpamLock__1_0_0.words(line)
+    -- lua-ml (Lua 2.5) has no boolean type, so `true`/`false` are undefined
+    -- (they read as nil). Use nil/1 as the false/true flag.
+    local is_local = nil
+    local wk, wv = next(w)
+    while wk do
+      if wv == "rsync" or wv == "path" then is_local = 1 end
+      wk, wv = next(w, wk)
+    end
+    if is_local ~= nil and w[1] then
+      local dot = CommonsLang_OCaml__Dk_OpamLock__1_0_0.first_dot(w[1])
+      if dot then table.insert(out, string.sub(w[1], 1, dot - 1)) end
+    end
+    lk, line = next(ls, lk)
+  end
+  return out
 end
 
 -- No-op build rule. A CommonsLang_OCaml distribution script exports a
@@ -694,24 +892,69 @@ end
 -- (PATH-opam mode and non-Windows hosts) or the Windows Unix-infrastructure
 -- roots { msys2 = DIR, git = DIR } for the hermetic init bootstrap.
 function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
-  -- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.Solve@1.0.0 key=val ...)
-  local out = assert(request.user.out, "please provide 'out=PROJECT_RELATIVE_LOCK_PATH'")
-  local roots = assert(request.user.roots, "please provide 'roots[]=PKG1' 'roots[]=PKG2' ...")
-  assert(type(roots) == "table", "roots must be a table: 'roots[]=PKG1' 'roots[]=PKG2' ...")
-  local slots = assert(request.user.slots, "please provide 'slots[]=Release.Linux_x86_64' ...")
-  assert(type(slots) == "table", "slots must be a table: 'slots[]=SLOT1' 'slots[]=SLOT2' ...")
-  local locals_set = CommonsLang_OCaml__Dk_OpamLock__1_0_0.set_from_list(request.user.locals)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_0_0
+  -- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.Solve@1.0.0 key=val ...).
+  -- Normally only roots[] and (on a fresh switch) local_opam_dir are given; the
+  -- rest default for the single-project case:
+  --   out=PATH            lock output           (default dk.opam-lock.jsonc)
+  --   switch=NAME         opam switch to REUSE  (default: an ephemeral local
+  --                       switch created empty in the sandbox and removed after
+  --                       the solve; pass a name only for fast iterative re-solves)
+  --   pins=PATH           pin table             (default dk-opam-pins.txt)
+  --   local_opam_dir=DIR  dir of local *.opam   (pins the locals; omit only to
+  --                       reuse a switch whose locals are already pinned)
+  --   slots[]=SLOT ...    output slots          (default: the 7 DkML slots)
+  --   locals[]=PKG ...    local package names   (default: auto-discovered as the
+  --                       switch's path pins, i.e. every *.opam in local_opam_dir)
+  --   roots[]=PKG ...     REQUIRED: the executable packages whose closures to
+  --                       lock. Deliberately NOT defaulted to all locals: some
+  --                       locals (DkZero_Web, MlFront_Codept) drag in large,
+  --                       unrelated closures (js_of_ocaml, codept-lib, tezt).
+  local out = request.user.out or "dk.opam-lock.jsonc"
+  local pins = request.user.pins or "dk-opam-pins.txt"
 
-  local switchargs = {}
-  if request.user.switch then table.insert(switchargs, "--switch=" .. request.user.switch) end
-
-  -- When a pin table is supplied, set up the switch from it before solving.
-  if request.user.pins then
-    assert(request.user.switch, "pins= requires switch=<name> (the switch to set up)")
-    CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, request.user.switch, request.user.pins, request.user.local_opam_dir, request.user.locals, winlocs)
+  -- The opam switch is a THROWAWAY resolution context, never an install target:
+  -- this rule only ever runs `opam list --resolve` (solve) + `opam show` (read
+  -- metadata) against an EMPTY switch of pins, never `opam install`. opam has no
+  -- switch-less solve -- the solver needs a switch's repositories, pins, and
+  -- os/arch variables -- so one is created just for the solve. By default it is
+  -- an ephemeral LOCAL switch inside the rule's sandbox: unique per run (no
+  -- cross-project or cross-run pin contamination -> reproducible) and removed
+  -- after the solve. A `switch=` override reuses a persistent NAMED switch for
+  -- fast iterative re-solves, at the cost of pins accumulated across runs.
+  local switch = request.user.switch
+  local ephemeral = (switch == nil)
+  if ephemeral then
+    local anchor = assert(request.io.open("opam-solve.anchor", "w"),
+      "could not open a sandbox anchor for the ephemeral opam switch")
+    request.io.flush(anchor)
+    -- Short name ("solve", not "opam-solve-switch"): the switch dir prefixes
+    -- every path inside it, and Windows MAX_PATH is unforgiving in a deep sandbox.
+    switch = H.dirname(H.trim(request.io.realpath(anchor))) .. "/solve"
+    request.io.close(anchor)
   end
+  local slots = request.user.slots or H.DKML_SLOTS
+  assert(type(slots) == "table", "slots must be a table: 'slots[]=SLOT1' 'slots[]=SLOT2' ...")
 
-  local rootscsv = CommonsLang_OCaml__Dk_OpamLock__1_0_0.join(roots, ",")
+  local switchargs = { "--switch=" .. switch }
+
+  -- Set up the switch from the pin table before solving (idempotent): add the
+  -- pinned repositories, apply the version pins, and -- when local_opam_dir is
+  -- given -- path-pin every local package opam finds there. `ephemeral` skips the
+  -- float pass, which only un-pins packages on a reused persistent switch.
+  H.setup_switch(request, opam, switch, pins, request.user.local_opam_dir, winlocs, ephemeral)
+
+  -- Local package names: explicit override, else auto-discover the switch's path
+  -- pins (packages pinned to a local dir, vs the version-pinned externals). Used
+  -- to mark the lock's in-tree entries "local":"t".
+  local locals_list = request.user.locals or H.discover_locals(request, opam, switch)
+  local locals_set = H.set_from_list(locals_list)
+
+  local roots = assert(request.user.roots,
+    "please provide 'roots[]=PKG1' 'roots[]=PKG2' ... (the executable packages to lock)")
+  assert(type(roots) == "table", "roots must be a table: 'roots[]=PKG1' 'roots[]=PKG2' ...")
+
+  local rootscsv = H.join(roots, ",")
 
   -- opam version, for non-authoritative provenance.
   local verres = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "--version" }, nil, 1)
@@ -722,6 +965,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
   local all_keys = {}         -- key -> true (union across slots)
   local k, slot = next(slots)
   while k do
+    print("[opam-lock] solving slot " .. slot)
     local vars = assert(CommonsLang_OCaml__Dk_OpamLock__1_0_0.SLOT_VARS[slot], "unknown slot `" .. slot .. "` (no OPAMVAR mapping)")
     local envmods = {}
     local vk, vv = next(vars)
@@ -752,18 +996,30 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
 
   -- 2. Capture per-package metadata once per unique key (slot-independent: opam
   --    filters live inside the fields and are resolved per-slot at build time).
+  -- opam_show_all batches all keys into as few `opam show` calls as the
+  -- command-line-length and same-name-per-chunk limits allow (usually one or
+  -- two), replacing the ~6-calls-per-package sweep that dominated the solve.
+  local capture_total = 0
+  local ck2 = next(all_keys); while ck2 do capture_total = capture_total + 1; ck2 = next(all_keys, ck2) end
+  print("[opam-lock] reading opam metadata for " .. capture_total .. " packages (batched opam show)")
+  local keylist = {}
+  local akl = next(all_keys)
+  while akl do table.insert(keylist, akl); akl = next(all_keys, akl) end
+  local meta = CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_show_all(request, opam, switchargs,
+    { "url.src:", "url.checksum:", "depends:", "build:", "install:", "depopts:" }, keylist)
   local packages = {}
   ak = next(all_keys)
   while ak do
     local dot = CommonsLang_OCaml__Dk_OpamLock__1_0_0.first_dot(ak)
     local name = string.sub(ak, 1, dot - 1)
     local version = string.sub(ak, dot + 1)
+    local m = meta[ak]; if m == nil then m = {} end
 
-    local url = CommonsLang_OCaml__Dk_OpamLock__1_0_0.unquote(CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_field(request, opam, switchargs, "url.src:", ak))
-    local sums = CommonsLang_OCaml__Dk_OpamLock__1_0_0.checksums(CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_field(request, opam, switchargs, "url.checksum:", ak))
-    local depends_raw = CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_field(request, opam, switchargs, "depends:", ak)
-    local build_raw = CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_field(request, opam, switchargs, "build:", ak)
-    local install_raw = CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_field(request, opam, switchargs, "install:", ak)
+    local url = CommonsLang_OCaml__Dk_OpamLock__1_0_0.unquote(m["url.src:"] or "")
+    local sums = CommonsLang_OCaml__Dk_OpamLock__1_0_0.checksums(m["url.checksum:"] or "")
+    local depends_raw = m["depends:"] or ""
+    local build_raw = m["build:"] or ""
+    local install_raw = m["install:"] or ""
 
     -- direct dep names that are in the closure
     local depends = {}
@@ -784,7 +1040,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
     local depset = {}
     local si, sn = next(depends)
     while si do depset[sn] = true; si, sn = next(depends, si) end
-    local depopts_raw = CommonsLang_OCaml__Dk_OpamLock__1_0_0.opam_field(request, opam, switchargs, "depopts:", ak)
+    local depopts_raw = m["depopts:"] or ""
     local optnames = CommonsLang_OCaml__Dk_OpamLock__1_0_0.top_level_quoted(depopts_raw)
     local ok2, oname = next(optnames)
     while ok2 do
@@ -892,6 +1148,13 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
   }
   -- "$schema" is not a valid constructor identifier key; assign it.
   lock["$schema"] = "https://diskuv.com/dk/schema/dk-opam-lock-1.0.json"
+
+  -- Tear down the ephemeral solve switch now that every package's metadata has
+  -- been captured (nothing was installed; it only ever held pins as the
+  -- resolution context). Best-effort so a teardown hiccup never loses the lock.
+  if ephemeral then
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "switch", "remove", switch, "--yes" }, nil, 1)
+  end
 
   -- Publish the lock into the checked-in project tree with a compare-and-swap
   -- guard: the file must be absent (first generation) or unchanged since the
