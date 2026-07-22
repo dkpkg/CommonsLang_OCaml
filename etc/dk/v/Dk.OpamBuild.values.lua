@@ -646,10 +646,10 @@ end
 -- The rule
 -- ---------------------------------------------------------------------------
 -- Parameters:
---   modver=MODULE@VERSION        the output object (ex.
---                                CommonsBase_Dk.Dk0.Pkg.Csexp@2.4.2); sibling
---                                dependency objects derive from its module
---                                path and version
+--   modver=MODULE@VERSION        the output object (ex. the module
+--                                CommonsBase_Dk.Dk0.Pkg.Csexp at version 2.4.2);
+--                                sibling dependency objects derive from its
+--                                module path and version
 --   pkg=NAME                     the opam package name in the lock
 --   localsrc=MODULE@VERSION      the shared localized-source object: it
 --                                carries BOTH the lock (read from

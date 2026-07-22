@@ -1445,7 +1445,8 @@ end
 --   out=PATH           project-relative driver values file to write
 --   root=PKG           opam package whose closure is chained (built last,
 --                      into the `built` directory)
---   formid=ID@VER      the driver form id (ex. CommonsBase_Dk.Dk0@2.4.2)
+--   formid=ID@VER      the driver form id (ex. the module CommonsBase_Dk.Dk0
+--                      at version 2.4.2)
 --   pkgpath=MODPATH    module path under which Pkg objects live
 --                      (ex. pkgpath=CommonsBase_Dk.Dk0 places csexp at
 --                      CommonsBase_Dk.Dk0.Pkg.Csexp)
