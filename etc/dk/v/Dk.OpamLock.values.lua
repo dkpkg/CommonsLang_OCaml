@@ -1451,12 +1451,13 @@ end
 --                      CommonsBase_Dk.Dk0.Pkg.Csexp)
 --   version=VER        version of the Pkg objects
 --   rulefn=ID@VER      the per-package build rule
---                      (ex. CommonsBase_Dk.Dk0Build.F_BuildLockedPackage@2.4.2)
---   lockmodver=ID@VER  bundle holding the lock asset at build time
---   lockassetpath=PATH asset path of the lock within that bundle
---   localsrc=ID@VER    optional shared localized-source object, threaded onto
---                      every precommand (the build rule uses it only for lock
---                      entries marked "local":"t"); omit for opam-only projects
+--                      (ex. CommonsLang_OCaml.Dk.OpamBuild.F_BuildLockedPackage@1.0.0)
+--   localsrc=ID@VER    the shared localized-source object, threaded onto every
+--                      precommand: it carries both the lock (read from
+--                      locksrcpath= inside it) and, for a package marked
+--                      "local":"t", the in-tree source
+--   locksrcpath=PATH   top-level member path of the lock in localsrc
+--                      (ex. "./dk-opam-lock.jsonc")
 --   'prelude[]=...'    optional raw precommand lines inserted before the
 --                      chain (ex. the localize run-function that produces a
 --                      shared local-package source object)
@@ -1478,14 +1479,9 @@ function uirules.GenerateDriver(command, request)
   local pkgpath = assert(request.user.pkgpath, "please provide 'pkgpath=MODULE_PATH' (ex. CommonsBase_Dk.Dk0)")
   local version = assert(request.user.version, "please provide 'version=VER' (ex. 2.4.2)")
   local rulefn = assert(request.user.rulefn, "please provide 'rulefn=MODULE.FN@VERSION'")
-  local lockmodver = assert(request.user.lockmodver, "please provide 'lockmodver=MODULE@VERSION'")
-  local lockassetpath = assert(request.user.lockassetpath, "please provide 'lockassetpath=PATH'")
+  local localsrc = assert(request.user.localsrc, "please provide 'localsrc=MODULE@VERSION'")
+  local locksrcpath = assert(request.user.locksrcpath, "please provide 'locksrcpath=PATH' (the lock's path inside localsrc)")
   local prelude = request.user.prelude
-  -- Optional: the shared localized-source object for in-tree "local" packages.
-  -- Threaded verbatim onto every emitted precommand (the build rule uses it only
-  -- for packages the lock marks "local":"t"); omitted when the project builds
-  -- purely from opam archives.
-  local localsrc = request.user.localsrc
   local provided = H.set_from_list(request.user.provided)
   if next(provided) == nil then provided = H.set_from_list(H.DKML_PROVIDED) end
   local slots = request.user.slots
@@ -1544,9 +1540,8 @@ function uirules.GenerateDriver(command, request)
     local rf = "          \"run-function " .. rulefn .. " -d " .. dir
       .. " modver=" .. pkgpath .. ".Pkg." .. H.modsegment(name) .. "@" .. version
       .. " pkg=" .. name
-      .. " lockmodver=" .. lockmodver
-      .. " lockassetpath=" .. lockassetpath
-    if localsrc ~= nil then rf = rf .. " localsrc=" .. localsrc end
+      .. " localsrc=" .. localsrc
+      .. " locksrcpath=" .. locksrcpath
     table.insert(lines, rf .. "\"")
     oi = oi + 1
   end

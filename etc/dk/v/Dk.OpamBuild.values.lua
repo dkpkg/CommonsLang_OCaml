@@ -35,12 +35,14 @@ local M = {
 --
 -- HOW ONE LOCK NODE BECOMES A DYNAMIC BUILD FORM (three phases)
 --   1. `declareoutput` - declares the 7-slot return objects
---      `<Parent>.Pkg.<Segment>@<version>` and the lock as an input asset.
+--      `<Parent>.Pkg.<Segment>@<version>`.
 --   2. `submit` with continue_ ~= "build" - returns a files-expression
---      `$(get-asset <lock> ...)` that dk0 materialises, then re-invokes with
---      continue_ = "build". The lock is read this way (not via a $(...)
---      subshell) to dodge the 1024-byte subshell cap and to make the lock a
---      real declared input.
+--      `$(get-object <localsrc> -m <locksrcpath> ...)` that fetches the lock,
+--      emitted as a top-level member of the shared localized-source object
+--      (consume-from-archive: the lock ships in the project's source archive,
+--      not a separate checked-in copy), then re-invokes with continue_ =
+--      "build". The lock is read this way (not via a $(...) subshell) to dodge
+--      the 1024-byte subshell cap and to make it a real materialised file.
 --   3. `submit` with continue_ == "build" - decodes the lock, finds this
 --      package's entry, and RETURNS a dynamically synthesised `submit.values`:
 --      a `.Src` bundle (the package source, fetched from the opam cache) plus a
@@ -649,19 +651,23 @@ end
 --                                dependency objects derive from its module
 --                                path and version
 --   pkg=NAME                     the opam package name in the lock
---   lockmodver=MODULE@VERSION    bundle holding the lock asset
---   lockassetpath=PATH           asset path of the dk-opam-lock JSONC
---   localsrc=MODULE@VERSION      (optional) the shared localized-source object
---                                for the project's in-tree "local" packages;
---                                required only if the lock marks any package
---                                "local":"t" (projects that build purely from
---                                opam archives never pass it)
+--   localsrc=MODULE@VERSION      the shared localized-source object: it
+--                                carries BOTH the lock (read from
+--                                a top-level `locksrcpath=` member) and, for a package
+--                                the lock marks "local":"t", the in-tree
+--                                source. The lock ships as an ordinary member
+--                                of the project's source archive (consume-
+--                                from-archive: no separate checked-in lock
+--                                copy/bundle to keep in sync).
+--   locksrcpath=PATH             top-level member path of the lock in
+--                                localsrc (ex. "./dk-opam-lock.jsonc", the
+--                                lock member MlFrontSource emits)
 function rules.F_BuildLockedPackage(command, request, continue_)
   local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_0
   if command == "declareoutput" then
     local modver = assert(request.user.modver, "please provide `modver=MODULE@VERSION`")
-    local lockmodver = assert(request.user.lockmodver, "please provide `lockmodver=MODULE@VERSION`")
-    local lockassetpath = assert(request.user.lockassetpath, "please provide `lockassetpath=PATH`")
+    assert(request.user.localsrc, "please provide `localsrc=MODULE@VERSION`")
+    assert(request.user.locksrcpath, "please provide `locksrcpath=PATH` (the lock's path inside localsrc)")
     assert(request.user.pkg, "please provide `pkg=OPAM_PACKAGE_NAME`")
     return {
       declareoutput = {
@@ -675,8 +681,8 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   end
   if command == "declareinput" then
     local modver = assert(request.user.modver, "please provide `modver=MODULE@VERSION`")
-    local lockmodver = assert(request.user.lockmodver, "please provide `lockmodver=MODULE@VERSION`")
-    local lockassetpath = assert(request.user.lockassetpath, "please provide `lockassetpath=PATH`")
+    assert(request.user.localsrc, "please provide `localsrc=MODULE@VERSION`")
+    assert(request.user.locksrcpath, "please provide `locksrcpath=PATH` (the lock's path inside localsrc)")
     -- Declare each direct dependency's Pkg object as an input_object edge, so the
     -- engine holds the true build DAG and can schedule independent packages
     -- concurrently when the driver submits the per-package run-functions
@@ -706,9 +712,6 @@ function rules.F_BuildLockedPackage(command, request, continue_)
     end
     return {
       declareinput = {
-        input_assets = {
-          { id = lockmodver, path = lockassetpath }
-        },
         input_objects = input_objects
       }
     }
@@ -716,13 +719,13 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   if command ~= "submit" then return end
 
   if continue_ ~= "build" then
-    local lockmodver = request.user.lockmodver
-    local lockassetpath = request.user.lockassetpath
+    local localsrc = request.user.localsrc
+    local locksrcpath = request.user.locksrcpath
     return {
       submit = {
         expressions = {
           files = {
-            lock = "$(get-asset " .. lockmodver .. " -p " .. lockassetpath .. " -f dk-opam-lock.jsonc)"
+            lock = "$(get-object " .. localsrc .. " -s ${SLOTNAME.request} -m " .. locksrcpath .. " -f dk-opam-lock.jsonc)"
           }
         },
         andthen = { continue_ = { state = "build" } }
