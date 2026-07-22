@@ -71,11 +71,16 @@ jobs:
           pubkey: ${{ secrets.distribute_0_1_pubkey }}
           seckey: ${{ secrets.distribute_0_1_seckey }}
           options: ${{ matrix.options || '-nosysinc' }}
-          # TEMP: 'none' forces a clean, no-restore rebuild so the toolchain
-          # objects are rebuilt against the current fixed CommonsBase_Std,
-          # purging historical pre-fix CommonsBase_Std references from the
-          # published closure. Revert to 'release' after this release lands.
-          store: none
+          # Default 'release' does incremental builds off the previous release's
+          # stores. To force a clean, no-restore rebuild (e.g. to purge stale
+          # references baked into the restored cache) WITHOUT editing this file,
+          # set the repository variable DK_STORE=none before pushing the tag,
+          # then delete it afterward -- repo variables are readable on tag
+          # pushes, so no commit dance is needed:
+          #   gh variable set DK_STORE --body none
+          #   git tag 0.1.<ts> && git push origin 0.1.<ts>
+          #   gh variable delete DK_STORE   # restore incremental builds
+          store: ${{ vars.DK_STORE || 'release' }}
           distscript: ${{ matrix.distscript }}
           execution-abi: ${{ matrix.execution-abi }}
           target-abi: ${{ matrix.target-abi }}
