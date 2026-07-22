@@ -68,14 +68,3 @@ resolution deterministic, and the version is a solve artifact only: the DkML
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
   \test(pass)
-
-## Dk.OpamBuild
-
-Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
-per-package build rule ships in this distribution. Running any rule of a
-scriptmodule brings in the whole scriptmodule; the marker output is otherwise
-unused. The value-id is harvested from the first CI run (the DkML pattern).
-
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
-  \test(pass)
-  \dk.object(abi: "Release.Linux_arm64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;
