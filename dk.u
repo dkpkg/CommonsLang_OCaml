@@ -278,8 +278,8 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
 
   % unified.asset { name="Scripts", dir="assets/s" }
   'asset'
-  '9236'
-  { 'sha256:ebf6b3f14a5191ae8027d0d0c39ea768ca2c617fe99b3afc497907568bbe9050' }
+  '9284'
+  { 'sha256:0a07bd33be6697e1633f9884c6da5b0e27e1be2a15c6dadecfa985b99040b7d5' }
 
   % unified.asset { name="Tables", dir="assets/table" }
   'asset'
