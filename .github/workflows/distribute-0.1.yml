@@ -71,7 +71,11 @@ jobs:
           pubkey: ${{ secrets.distribute_0_1_pubkey }}
           seckey: ${{ secrets.distribute_0_1_seckey }}
           options: ${{ matrix.options || '-nosysinc' }}
-          store: release
+          # TEMP: 'none' forces a clean, no-restore rebuild so the toolchain
+          # objects are rebuilt against the current fixed CommonsBase_Std,
+          # purging historical pre-fix CommonsBase_Std references from the
+          # published closure. Revert to 'release' after this release lands.
+          store: none
           distscript: ${{ matrix.distscript }}
           execution-abi: ${{ matrix.execution-abi }}
           target-abi: ${{ matrix.target-abi }}
