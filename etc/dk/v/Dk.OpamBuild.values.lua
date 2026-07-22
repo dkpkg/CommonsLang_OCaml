@@ -725,7 +725,14 @@ function rules.F_BuildLockedPackage(command, request, continue_)
       submit = {
         expressions = {
           files = {
-            lock = "$(get-object " .. localsrc .. " -s ${SLOTNAME.request} -m " .. locksrcpath .. " -f dk-opam-lock.jsonc)"
+            -- The lock is fetched in the submit "state" phase (before the build
+            -- form), where the request slot is not yet bound, so ${SLOTNAME.request}
+            -- is unavailable at this toplevel expression. The localized source
+            -- emits an identical lock member in every slot (it is copied verbatim
+            -- from the source archive, slot-independent), so fetch it at the host
+            -- execution ABI -- always resolvable -- and read the slot-specific data
+            -- from within the one file during the build phase below.
+            lock = "$(get-object " .. localsrc .. " -s Release.execution_abi -m " .. locksrcpath .. " -f dk-opam-lock.jsonc)"
           }
         },
         andthen = { continue_ = { state = "build" } }
