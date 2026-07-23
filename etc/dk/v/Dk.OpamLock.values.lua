@@ -768,7 +768,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
       request.io.close(rcfile)
       table.insert(initargs, "--config=" .. rcpath)
     end
-    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, initargs, nil, false)
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, initargs, nil)
   end
 
   -- add repositories globally (ignore "already exists")
@@ -792,9 +792,9 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
   -- create the empty switch bound to those repositories if it does not exist
   local swres = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "switch", "list", "--short" }, nil, 1)
   local swlines = CommonsLang_OCaml__Dk_OpamLock__1_0_0.lines(swres.stdout)
-  local have = false
+  local have = nil
   local sk, sv = next(swlines)
-  while sk do if sv == switch then have = true end; sk, sv = next(swlines, sk) end
+  while sk do if sv == switch then have = 1 end; sk, sv = next(swlines, sk) end
   if not have then
     -- Tolerate an already-installed switch. The list-based detection above can
     -- miss a switch that is genuinely present (an idempotent re-run over a
@@ -833,7 +833,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.setup_switch(request, opam, switc
   -- <dir>` (no package name) scans that directory's *.opam files and pins them
   -- all, so callers never enumerate the local packages by hand.
   if local_opam_dir then
-    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "add", "--switch=" .. switch, "-n", "-y", local_opam_dir }, nil, false)
+    CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, { "pin", "add", "--switch=" .. switch, "-n", "-y", local_opam_dir }, nil)
   end
 
   -- The constraints package (or nil), the per-arch exclusion packages
@@ -945,13 +945,13 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.source_size(request, url)
       local digits = ""
       local i = 16
       local n = string.len(ln)
-      local stopped = false
+      local stopped = nil
       while i <= n and not stopped do
         local c = string.sub(ln, i, i)
         if c >= "0" and c <= "9" then
           digits = digits .. c
         elseif digits ~= "" then
-          stopped = true
+          stopped = 1
         end
         i = i + 1
       end
@@ -1114,7 +1114,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
 
   -- 1. Solve each requested slot. Package keys are '<name>.<version>'.
   local slot_solutions = {}   -- slot -> { opam_vars=..., solution={keys} }
-  local all_keys = {}         -- key -> true (union across slots)
+  local all_keys = {}         -- key -> key (union across slots)
   local k, slot = next(slots)
   while k do
     print("[opam-lock] solving slot " .. slot)
@@ -1133,7 +1133,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
     local sk, sv = next(switchargs)
     while sk do table.insert(args, sv); sk, sv = next(switchargs, sk) end
 
-    local r = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, args, envmods, false)
+    local r = CommonsLang_OCaml__Dk_OpamLock__1_0_0.run(request, opam, args, envmods)
     -- Drop the synthetic constraints/arch packages from the solution -- they
     -- carry only the conflicts and are not part of the locked closure.
     local keys = {}
@@ -1211,13 +1211,13 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
     -- logs -> fmt,cmdliner.) Everything downstream keys off `depends`.
     local depset = {}
     local si, sn = next(depends)
-    while si do depset[sn] = true; si, sn = next(depends, si) end
+    while si do depset[sn] = sn; si, sn = next(depends, si) end
     local depopts_raw = m["depopts:"] or ""
     local optnames = CommonsLang_OCaml__Dk_OpamLock__1_0_0.top_level_quoted(depopts_raw)
     local ok2, oname = next(optnames)
     while ok2 do
       if name_in_closure[oname] and oname ~= name and not depset[oname] then
-        table.insert(depends, oname); depset[oname] = true
+        table.insert(depends, oname); depset[oname] = oname
       end
       ok2, oname = next(optnames, ok2)
     end
