@@ -1062,6 +1062,16 @@ function rules.F_BuildLockedPackage(command, request, continue_)
     fenv.strings["os"] = H.abi_os(abi)
     local babi = H.field_to_argvs(entry.build, fenv, vars, pkg)
     local iabi = H.field_to_argvs(entry.install, fenv, vars, pkg)
+    -- A dune package whose build field translated to no runnable command (every
+    -- group filtered out, e.g. a build that is only `["dune" "subst"] {dev}` plus
+    -- a `dune build` group carrying an inline `{with-doc}`/`{with-test}` token
+    -- filter) still needs its canonical build to generate the <pkg>.install that
+    -- the install step consumes. Synthesise `dune build -p <pkg> @install`, the
+    -- release-mode build every dune package reduces to, mirroring the install
+    -- fallback below.
+    if babi[1] == nil and uses_dune == 1 then
+      babi = { { "dune", "build", "-p", pkg, "@install" } }
+    end
     -- No explicit install field: the package relies on opam processing the
     -- <pkg>.install file its build generates. A dune package uses `dune install`;
     -- a non-dune one (topkg-based) is handled by the wrapper's @INSTALL@ step,
