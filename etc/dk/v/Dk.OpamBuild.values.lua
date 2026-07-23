@@ -189,8 +189,8 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.numstr(v)
   if v ~= v - (v % 1) then return tostring(v) end   -- non-integral: leave as-is
   if v == 0 then return "0" end
   local n = v
-  local neg = false
-  if n < 0 then neg = true; n = -n end
+  local neg = nil
+  if n < 0 then neg = 1; n = -n end
   local digits = ""
   while n >= 1 do
     local d = n % 10
@@ -239,7 +239,7 @@ end
 function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.endswith(s, suffix)
   local ls = string.len(s)
   local lf = string.len(suffix)
-  if lf > ls then return false end
+  if lf > ls then return nil end
   return string.sub(s, ls - lf + 1) == suffix
 end
 
@@ -308,14 +308,14 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.tokenize_field(raw)
     elseif c == "\"" then
       local out = ""
       local j = i + 1
-      local done = false
+      local done = nil
       while j <= n and not done do
         local d = string.sub(raw, j, j)
         if d == "\\" then
           out = out .. string.sub(raw, j + 1, j + 1)
           j = j + 2
         elseif d == "\"" then
-          done = true
+          done = 1
           j = j + 1
         else
           out = out .. d
@@ -330,11 +330,11 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.tokenize_field(raw)
     else
       local ident = ""
       local j = i
-      local stop = false
+      local stop = nil
       while j <= n and not stop do
         local d = string.sub(raw, j, j)
         if H.iswhite(d) or d == "[" or d == "]" or d == "{" or d == "}" or d == "\"" then
-          stop = true
+          stop = 1
         else
           ident = ident .. d
           j = j + 1
@@ -375,11 +375,11 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.version_ge(a, b)
   while pa[i] ~= nil or pb[i] ~= nil do
     local xa = pa[i] or 0
     local xb = pb[i] or 0
-    if xa > xb then return true end
-    if xa < xb then return false end
+    if xa > xb then return 1 end
+    if xa < xb then return nil end
     i = i + 1
   end
-  return true
+  return 1
 end
 
 -- Evaluate an opam filter expression. Supports the shapes in the MlFront
@@ -414,11 +414,11 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.eval_filter(ftext, fenv, pkg)
     else
       local j = i
       local ident = ""
-      local stop = false
+      local stop = nil
       while j <= n and not stop do
         local d = string.sub(ftext, j, j)
         if H.iswhite(d) or d == "!" or d == "&" or d == "|" or d == ">" or d == "<" or d == "=" or d == "\"" then
-          stop = true
+          stop = 1
         else
           ident = ident .. d
           j = j + 1
@@ -446,7 +446,7 @@ end
 -- has no nested named local functions, so the closed-over state is passed in.
 function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.filter_atom(words, st, fenv, pkg, ftext)
   local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_0
-  local negate = false
+  local negate = nil
   while words[st.idx] ~= nil and words[st.idx].k == "op" and words[st.idx].v == "!" do
     negate = not negate
     st.idx = st.idx + 1
@@ -533,7 +533,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.field_to_argvs(raw, fenv, vars, 
   local gi = 1
   while groups[gi] ~= nil do
     local g = groups[gi]
-    local keep = true
+    local keep = 1
     if g.filter ~= nil then keep = H.eval_filter(g.filter, fenv, pkg) end
     if keep then
       local argv = {}
@@ -541,7 +541,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.field_to_argvs(raw, fenv, vars, 
       local ti = 1
       while g.toks[ti] ~= nil do
         local tok = g.toks[ti]
-        local tkeep = true
+        local tkeep = 1
         if tok.filter ~= nil then tkeep = H.eval_filter(tok.filter, fenv, pkg) end
         if tkeep then
           if tok.kind ~= "str" and tok.v == "jobs" then
@@ -1062,16 +1062,6 @@ function rules.F_BuildLockedPackage(command, request, continue_)
     fenv.strings["os"] = H.abi_os(abi)
     local babi = H.field_to_argvs(entry.build, fenv, vars, pkg)
     local iabi = H.field_to_argvs(entry.install, fenv, vars, pkg)
-    -- A dune package whose build field translated to no runnable command (every
-    -- group filtered out, e.g. a build that is only `["dune" "subst"] {dev}` plus
-    -- a `dune build` group carrying an inline `{with-doc}`/`{with-test}` token
-    -- filter) still needs its canonical build to generate the <pkg>.install that
-    -- the install step consumes. Synthesise `dune build -p <pkg> @install`, the
-    -- release-mode build every dune package reduces to, mirroring the install
-    -- fallback below.
-    if babi[1] == nil and uses_dune == 1 then
-      babi = { { "dune", "build", "-p", pkg, "@install" } }
-    end
     -- No explicit install field: the package relies on opam processing the
     -- <pkg>.install file its build generates. A dune package uses `dune install`;
     -- a non-dune one (topkg-based) is handled by the wrapper's @INSTALL@ step,
