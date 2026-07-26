@@ -1195,10 +1195,17 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
 
     -- direct dep names that are in the closure
     local depends = {}
+    local depset = {}
     local depnames = CommonsLang_OCaml__Dk_OpamLock__1_0_0.top_level_quoted(depends_raw)
     local dk, dname = next(depnames)
     while dk do
-      if name_in_closure[dname] and dname ~= name then table.insert(depends, dname) end
+      -- Dedup the primary edges: opam can carry two `depends:` stanzas that name
+      -- the same package (e.g. ppxlib -> sexplib0 twice), which would otherwise
+      -- double the edge in the lock. depset (key-as-value; nil = absent) collapses
+      -- the repeat, and the depopts loop below reuses the same set.
+      if name_in_closure[dname] and dname ~= name and depset[dname] == nil then
+        table.insert(depends, dname); depset[dname] = dname
+      end
       dk, dname = next(depnames, dk)
     end
     -- Activated optional dependencies (depopts) become real build edges. A topkg
@@ -1209,9 +1216,6 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
     -- opam `depends:` formula, so add it here from `depopts:`. A real opam switch
     -- records this implicitly via install order. (e.g. fmt/uucp/uuidm -> cmdliner,
     -- logs -> fmt,cmdliner.) Everything downstream keys off `depends`.
-    local depset = {}
-    local si, sn = next(depends)
-    while si do depset[sn] = sn; si, sn = next(depends, si) end
     local depopts_raw = m["depopts:"] or ""
     local optnames = CommonsLang_OCaml__Dk_OpamLock__1_0_0.top_level_quoted(depopts_raw)
     local ok2, oname = next(optnames)
