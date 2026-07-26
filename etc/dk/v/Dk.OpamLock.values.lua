@@ -1469,6 +1469,8 @@ end
 --   'provided[]=...'   optional toolchain-provided package names to skip
 --                      (default: the DkML set)
 --   'slots[]=...'      optional output slots (default: the 7 DkML slots)
+--   'parallel=t'       optional: emit unordered precommands + per-package deps[]
+--                      edges for concurrent builds (default: a sequential chain)
 function uirules.GenerateDriver(command, request)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_0_0
   if command == "ui" then
@@ -1491,6 +1493,11 @@ function uirules.GenerateDriver(command, request)
   if next(provided) == nil then provided = H.set_from_list(H.DKML_PROVIDED) end
   local slots = request.user.slots
   if slots == nil then slots = H.DKML_SLOTS end
+  -- Parallel mode (parallel=t): emit unordered precommands with per-package
+  -- deps[] edges so the engine's two-pass dispatch schedules independent
+  -- packages concurrently. Absent, the driver stays a sequential chain that
+  -- needs no edges (the historical default), so existing regens are unchanged.
+  local parallel = request.user.parallel
 
   local content = assert(request.ui.readfile { path = lockpath },
     "could not read lock `" .. lockpath .. "`")
@@ -1512,6 +1519,15 @@ function uirules.GenerateDriver(command, request)
   H.driver_visit(byname, provided, root, seen, order)
   assert(order[1] ~= nil, "root `" .. root .. "` has no buildable closure in the lock")
 
+  -- Buildable-closure membership so parallel deps[] edges point only at real Pkg
+  -- objects; toolchain/provided and virtual no-source deps are excluded, exactly
+  -- as driver_visit excluded them from `order`.
+  local inorder = {}
+  local mi = 1
+  while order[mi] ~= nil do inorder[order[mi]] = order[mi]; mi = mi + 1 end
+  local seqflag = "true"
+  if parallel ~= nil then seqflag = "false" end
+
   -- Emit the driver as JSONC. Concatenate in index order (the module `join`
   -- iterates with next(), which scrambles array order).
   local nl = "\n"
@@ -1529,7 +1545,7 @@ function uirules.GenerateDriver(command, request)
     .. "    {" .. nl
     .. "      \"id\": \"" .. formid .. "\"," .. nl
     .. "      \"precommands\": {" .. nl
-    .. "        \"sequential\": true," .. nl
+    .. "        \"sequential\": " .. seqflag .. "," .. nl
     .. "        \"private\": [" .. nl
   local lines = {}
   local pi = 1
@@ -1547,6 +1563,17 @@ function uirules.GenerateDriver(command, request)
       .. " pkg=" .. name
       .. " localsrc=" .. localsrc
       .. " locksrcpath=" .. locksrcpath
+    if parallel ~= nil then
+      -- Direct build edges: pass each in-closure direct dependency so the rule's
+      -- declareinput turns them into input_objects (the true DAG).
+      local e = byname[name]
+      local ei = 1
+      while e ~= nil and e.depends ~= nil and e.depends[ei] ~= nil do
+        local d = e.depends[ei]
+        if inorder[d] ~= nil and d ~= name then rf = rf .. " deps[]=" .. d end
+        ei = ei + 1
+      end
+    end
     table.insert(lines, rf .. "\"")
     oi = oi + 1
   end
