@@ -1,0 +1,39 @@
+// Pinned musl.cc x86_64-linux-musl cross toolchain (gcc 11.2.1, musl libc)
+// used by the Release.Linux_x86_64_musl DkML slot. The toolchain binaries are
+// themselves musl-static, so they run on the glibc manylinux build container.
+// more.musl.cc keeps versioned directories; musl.cc serves only its current
+// build, so the sha256 pin is the guard against drift.
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.MuslCC.Bundle@11.2.1 -d target/muslcc-src
+{
+    "$schema": "https://diskuv.com/dk/schema/dk-value-1.0.json",
+    "schema_version": {
+        "major": 1,
+        "minor": 0
+    },
+    "bundles": [
+        {
+            "id": "CommonsLang_OCaml.MuslCC.Bundle@11.2.1",
+            "listing": {
+                "origins": [
+                    {
+                        "name": "musl-cc",
+                        "mirrors": [
+                            "https://more.musl.cc/11.2.1/x86_64-linux-musl",
+                            "https://musl.cc"
+                        ]
+                    }
+                ]
+            },
+            "assets": [
+                {
+                    "origin": "musl-cc",
+                    "path": "x86_64-linux-musl-cross.tgz",
+                    "checksum": {
+                        "sha256": "c6226824d6b7214ce974344b186179c9fa89be3c33dd7431c4b6585649ce840b"
+                    },
+                    "size": 112455710
+                }
+            ]
+        }
+    ]
+}

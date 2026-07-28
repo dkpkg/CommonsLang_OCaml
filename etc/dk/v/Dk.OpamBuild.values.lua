@@ -120,7 +120,8 @@ rules, _uirules = build.newrules(M)
 
 CommonsLang_OCaml__Dk_OpamBuild__1_0_0.SLOTS = {
   "Release.Windows_x86_64", "Release.Windows_x86",
-  "Release.Linux_x86_64", "Release.Linux_x86", "Release.Linux_arm64",
+  "Release.Linux_x86_64", "Release.Linux_x86_64_musl", "Release.Linux_x86",
+  "Release.Linux_arm64",
   "Release.Darwin_x86_64", "Release.Darwin_arm64"
 }
 
@@ -134,6 +135,10 @@ CommonsLang_OCaml__Dk_OpamBuild__1_0_0.ABIS = {
   { slot = "Release.Windows_x86_64", msvc = "x64" },
   { slot = "Release.Windows_x86",    msvc = "x86" },
   { slot = "Release.Linux_x86_64",   msvc = "-" },
+  -- staticgcc flips MlFront's static_flags.sexp to `-cclib -static`, belt and
+  -- braces on top of the musl DkML's baked LDFLAGS=-static mkexe default, so
+  -- this abi's executables are fully static.
+  { slot = "Release.Linux_x86_64_musl", msvc = "-", staticgcc = "t" },
   { slot = "Release.Linux_x86",      msvc = "-" },
   { slot = "Release.Linux_arm64",    msvc = "-" },
   { slot = "Release.Darwin_x86_64",  msvc = "-" },
@@ -627,6 +632,10 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
     -- hardcoded VS-Installer path) as $VSWHERE. Windows only; VSWhere has no Unix
     -- slice, so this get-object is never resolved on Unix slots.
     table.insert(cmd, "VSWHERE=$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe")
+  end
+  if abi.staticgcc ~= nil then
+    -- Fully static executables on this abi (see the ABIS table).
+    table.insert(cmd, "MLFRONT_STATIC_GCC_BINARIES=true")
   end
   table.insert(cmd, shell)
   table.insert(cmd, wrapperfetch)
@@ -1157,7 +1166,8 @@ function rules.Export(command, request)
   local slots = {
     "Release.Windows_x86_64", "Release.Windows_x86", "Release.Windows_arm64",
     "Release.Darwin_x86_64", "Release.Darwin_arm64",
-    "Release.Linux_x86_64", "Release.Linux_arm64", "Release.Linux_x86"
+    "Release.Linux_x86_64", "Release.Linux_x86_64_musl", "Release.Linux_arm64",
+    "Release.Linux_x86"
   }
   if command == "declareoutput" then
     return {

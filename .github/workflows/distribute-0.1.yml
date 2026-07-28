@@ -24,6 +24,13 @@ jobs:
             image: quay.io/pypa/manylinux_2_28_x86_64:2026.04.08-5
             distscript: dist/Linux_x86_64.u
             target-abi: Linux_x86_64
+          # The musl target builds on the same glibc manylinux container: the
+          # execution ABI stays Linux_x86_64 and the target slot's pinned
+          # x86_64-linux-musl cross toolchain (MuslCC.Bundle) does the rest.
+          - runs-on: ubuntu-latest
+            image: quay.io/pypa/manylinux_2_28_x86_64:2026.04.08-5
+            distscript: dist/Linux_x86_64_musl.u
+            target-abi: Linux_x86_64_musl
           - runs-on: ubuntu-latest
             image: quay.io/pypa/manylinux_2_28_x86_64:2026.04.08-5
             distscript: dist/Linux_x86.u

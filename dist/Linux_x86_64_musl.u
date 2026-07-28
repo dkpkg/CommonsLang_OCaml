@@ -1,0 +1,77 @@
+# Distribution for Linux x86_64 musl CommonsLang_OCaml
+
+The `Release.Linux_x86_64_musl` slot is the fully static musl variant of
+`Release.Linux_x86_64`: the DkML OCaml compiler is built with the pinned
+x86_64-linux-musl cross toolchain (`MuslCC.Bundle`) on the same glibc
+manylinux container, and every executable it links defaults to `-static`.
+Only DkML and Dune ship for this slot (the dk0/dk1 closure needs no Base or
+Opam musl slices).
+
+The value-ids below are harvested from the first CI run (the DkML pattern).
+
+## DkML
+
+  $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -d ${RUNTIME}/Linux_x86_64_musl-DkML-4.14.3
+  \test(pass)
+  \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "o5znfe2b6xc5oybd52laju2awhbi2abyc7pac6hbabw5xmybv7zkq")\;
+
+The musl ocamlopt must be fully static so it runs on any Linux host,
+glibc or musl.
+
+  $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
+  >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
+  \test(pass)
+  \dk.target(abi: "Linux_x86_64_musl")[ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked
+  ]\;
+
+  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -version
+  \test(pass)
+  \dk.target(abi: "Linux_x86_64_musl")[4.14.3+relocatable
+  ]\;
+
+The native_pack_linker must be a relocatable, PATH-resolved partial linker (a
+bare `ld -r -o`), never an absolute build-host path such as the ephemeral
+`.../src-ocaml/support/with-host-c-compiler.sh.ld64.sh` a stock build bakes;
+otherwise `ocamlopt -pack` fails off the build machine.
+
+  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -config-var native_pack_linker
+  \test(pass)
+  \dk.target(abi: "Linux_x86_64_musl")[ld -r -o ]\;
+
+The baked C compiler must be the bare musl cross driver, resolved through the
+bin/x86_64-linux-musl-* dispatch wrappers shipped in the same slot, so
+consumer machines link static musl executables wherever the slot's bin/ is on
+PATH.
+
+  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -config-var c_compiler
+  \test(pass)
+  \dk.target(abi: "Linux_x86_64_musl")[x86_64-linux-musl-gcc ]\;
+
+## Dune
+
+  $ run-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/dune.exe -- --version
+  \test(pass)
+  \dk.target(abi: "Linux_x86_64_musl")[3.23.1
+  ]\;
+
+## Dk.OpamLock
+
+Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
+author-time OpamLock uirule ships in this distribution. Running any rule of a
+scriptmodule brings in the whole scriptmodule; the marker output is otherwise
+unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
+  \test(pass)
+  \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "odx35phn7zbcsqd3u6oimt5ga4chrzhaimrl73snmj2dk6yxztvpq")\;
+
+## Dk.OpamBuild
+
+Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
+per-package build rule ships in this distribution. Running any rule of a
+scriptmodule brings in the whole scriptmodule; the marker output is otherwise
+unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
+  \test(pass)
+  \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "ofwoywfonzbccnnyo6uhzrxd5allydjh4mgiqjlzo37364avaonga")\;

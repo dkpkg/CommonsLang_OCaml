@@ -283,8 +283,8 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
 
   % unified.asset { name="Tables", dir="assets/table" }
   'asset'
-  '2521'
-  { 'sha256:4b19dfa02f7f09293bdd710330acaecd7fd69ca3d1aaa05c5adc28e62c13426c' }
+  '2937'
+  { 'sha256:9fe65ffeeac0a4eef73ad7c4ffaf9843bb987626874146c16631f24b16431dd9' }
 
   % unified.asset { name="WineHostShim", dir="assets/wine-hostshim" }
   'asset'
@@ -320,6 +320,16 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
   'asset'
   '629'
   'sha256:f75da7664ac5c78c5e712b4e92555f7031665b9be59c5d0f057d5a397bc0fa6d'
+
+  % unified.asset { name="DkMLMuslEnv", file="assets/dkml/musl-compiler-env-to-ocaml-configure-env.sh" }
+  'asset'
+  '2503'
+  'sha256:814d3a527b7d27f4586fc658e559ba5e50599011b5c994f1d78076373bfd5289'
+
+  % unified.asset { name="DkMLMuslWrap", file="assets/dkml/musl-tool-wrapper.sh" }
+  'asset'
+  '483'
+  'sha256:590cbc20e4413175bd4827ee7fd81096be3ae520ed2d9a6658ad7276780f65c2'
 
   % unified.asset { name="DuneBootstrapMsvc", file="assets/dune/bootstrap-msvc.bat" }
   'asset'

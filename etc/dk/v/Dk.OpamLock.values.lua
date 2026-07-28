@@ -26,6 +26,9 @@ CommonsLang_OCaml__Dk_OpamLock__1_0_0.SLOT_VARS = {}
 CommonsLang_OCaml__Dk_OpamLock__1_0_0.SLOT_VARS["Release.Windows_x86_64"] = { os = "win32", arch = "x86_64" }
 CommonsLang_OCaml__Dk_OpamLock__1_0_0.SLOT_VARS["Release.Windows_x86"]    = { os = "win32", arch = "x86_32" }
 CommonsLang_OCaml__Dk_OpamLock__1_0_0.SLOT_VARS["Release.Linux_x86_64"]   = { os = "linux", arch = "x86_64" }
+-- The musl slot solves like glibc Linux x86_64: opam has no libc variable, and
+-- the closure's package set does not differ by libc.
+CommonsLang_OCaml__Dk_OpamLock__1_0_0.SLOT_VARS["Release.Linux_x86_64_musl"] = { os = "linux", arch = "x86_64" }
 CommonsLang_OCaml__Dk_OpamLock__1_0_0.SLOT_VARS["Release.Linux_x86"]      = { os = "linux", arch = "x86_32" }
 CommonsLang_OCaml__Dk_OpamLock__1_0_0.SLOT_VARS["Release.Linux_arm64"]    = { os = "linux", arch = "arm64" }
 CommonsLang_OCaml__Dk_OpamLock__1_0_0.SLOT_VARS["Release.Darwin_x86_64"]  = { os = "macos", arch = "x86_64" }
@@ -882,7 +885,8 @@ function rules.Export(command, request)
   local slots = {
     "Release.Windows_x86_64", "Release.Windows_x86", "Release.Windows_arm64",
     "Release.Darwin_x86_64", "Release.Darwin_arm64",
-    "Release.Linux_x86_64", "Release.Linux_arm64", "Release.Linux_x86"
+    "Release.Linux_x86_64", "Release.Linux_x86_64_musl", "Release.Linux_arm64",
+    "Release.Linux_x86"
   }
   if command == "declareoutput" then
     return {
@@ -1410,10 +1414,11 @@ CommonsLang_OCaml__Dk_OpamLock__1_0_0.DKML_PROVIDED = {
   "host-arch-arm64", "host-system-mingw", "host-system-other"
 }
 
--- The 7 DkML slots; the default for GenerateDriver's slots[] parameter.
+-- The 8 DkML slots; the default for GenerateDriver's slots[] parameter.
 CommonsLang_OCaml__Dk_OpamLock__1_0_0.DKML_SLOTS = {
   "Release.Windows_x86_64", "Release.Windows_x86",
-  "Release.Linux_x86_64", "Release.Linux_x86", "Release.Linux_arm64",
+  "Release.Linux_x86_64", "Release.Linux_x86_64_musl", "Release.Linux_x86",
+  "Release.Linux_arm64",
   "Release.Darwin_x86_64", "Release.Darwin_arm64"
 }
 
