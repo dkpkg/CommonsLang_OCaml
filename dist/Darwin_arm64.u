@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Darwin_arm64 -d ${RUNTIME}/Darwin_arm64-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ok72aatgcjna7xaer25n3pprdz5vukuyf473npp3owowit4pjh5xa")\;
+  \dk.object(abi: "Release.Darwin_arm64", value-id: "ovojaufbibjbsz4hboqhybsccxojm4l4nys6okxq5hrfhfyce7wbq")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
@@ -78,7 +78,7 @@ resolution deterministic, and the version is a solve artifact only: the DkML
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
   \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "omunyiz2s3selct3nzsr76um7ey3t45jqwczkdu3igmpt6cs5gwwq")\;
+  \dk.object(abi: "Release.Darwin_arm64", value-id: "ow6itgcoxmhhcyhnh76cz576ptu3t6xpuyghxqtyki7ixhykaltka")\;
 
 
 ## Dk.OpamBuild
@@ -90,4 +90,4 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
 
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
   \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ov7jx7u7i4w6jev23jk2ycxhrapxr2xuer7j3swpqkyzs3szmc3ja")\;
+  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;

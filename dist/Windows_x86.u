@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Windows_x86 -d ${RUNTIME}/Windows_x86-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86", value-id: "ozfumyb3b2kxsxxyveijaa26wohbzhrf5skocasbegizmfwajmuia")\;
+  \dk.object(abi: "Release.Windows_x86", value-id: "orw5dmpsyqgp6zeh3w7j4nidpypip556dqyy2z5kf32nqgq345dja")\;
 
 Release.Windows_x86_64 will be used as Release.execution_abi on normal (64-bit) build + CI machines.
 
@@ -73,7 +73,7 @@ resolution deterministic, and the version is a solve artifact only: the DkML
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "odcu2mkosi2s67gnoe35lykezqrgpolallbrk7kncugajpziq5uba")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "o4z5z3zdrecgprn5m46h7hczhygs6tra4jc4tjxwtfdqxagnsik2a")\;
 
 
 ## Dk.OpamBuild
@@ -86,4 +86,4 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
   \test(pass)
   \dk.object(abi: "Release.Windows_x86", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "orlivsdhgqn6hmk3yq3gm35adggjgmx3bccn6nyluhahl4wl27cvq")\;
