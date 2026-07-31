@@ -752,6 +752,18 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- state "build": lock content is available
   local pkg = request.user.pkg
   local modver = request.user.modver
+  -- The ABI this package's OCaml artifacts must be built FOR (the target), as
+  -- opposed to the host ABI the build EXECUTES on. It is plumbed explicitly by the
+  -- driver (Dk.OpamLock emits `targetabi=Release.target_abi`) rather than taken from
+  -- ${SLOTNAME.request}: this rule declares `execution_slot = "Release.execution_abi"`,
+  -- so the opam-build form is materialized at the HOST object key and ${SLOTNAME.request}
+  -- there resolves to the host abi. Using that for the compiler silently cross-mis-built
+  -- every cross slot (target_abi != execution_abi) as host-arch. Only the compiler/Dune
+  -- move to the target; build TOOLS (coreutils, GNU make, s7z) and the output/dep slots
+  -- stay on Release.execution_abi so the value store stays consistent. Defaults to the
+  -- `Release.target_abi` wildcard, which resolves to the execution abi when no
+  -- --target-abi is set, so non-cross slots are unchanged.
+  local targetabi = request.user.targetabi or "Release.target_abi"
   local lockfile = request.continued.lock
   local lockjson = request.io.read(lockfile, "a")
   request.io.close(lockfile)
@@ -1105,8 +1117,8 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- for the non-dune packages (configure/make/make install), whose opam fields
   -- invoke `make` directly.
   local envmods = {
-    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML@4.14.3 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
-    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin"
+    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML@4.14.3 -s " .. targetabi .. " -d : -e 'bin/*')${/}bin",
+    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s " .. targetabi .. " -d : -e 'bin/*')${/}bin"
   }
   if uses_dune == 0 then
     table.insert(envmods, "<PATH=$(--path=absnative get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -d : -e 'bin/*')${/}bin")
