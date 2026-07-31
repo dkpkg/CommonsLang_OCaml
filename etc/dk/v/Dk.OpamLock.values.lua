@@ -1568,6 +1568,12 @@ function uirules.GenerateDriver(command, request)
       .. " pkg=" .. name
       .. " localsrc=" .. localsrc
       .. " locksrcpath=" .. locksrcpath
+      -- Plumb the target ABI so the per-package rule selects the target DkML
+      -- toolchain (not the host's) on a cross build. `Release.target_abi` resolves
+      -- to the execution abi when no --target-abi is set, so non-cross slots are
+      -- unchanged. The rule defaults to this same wildcard, so drivers generated
+      -- before this field still cross-compile correctly.
+      .. " targetabi=Release.target_abi"
     if parallel ~= nil then
       -- Direct build edges: pass each in-closure direct dependency so the rule's
       -- declareinput turns them into input_objects (the true DAG).
