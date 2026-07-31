@@ -46,11 +46,15 @@ autodetect_compiler_LD="$DKML_MUSL_BINDIR/x86_64-linux-musl-ld"
 # shellcheck disable=SC1091
 . "$DKMLDIR/vendor/dkml-compiler/env/standard-compiler-env-to-ocaml-configure-env.sh"
 
-# PATH for the configure/make launcher; bare names for the baked config.
+# PATH for the configure/make launcher; bare names for the baked config so
+# ocamlc -config stays relocatable (consumers resolve them through the slot's
+# bin/x86_64-linux-musl-* dispatch wrappers on PATH). These are exactly the
+# variable names autodetect_compiler_write_output emits into the launcher:
+# CC/CXX/AS/LD and autodetect_compiler_DIRECT_LD. OCaml's configure derives
+# ASPP from AS/CC, so it is not set here (the launcher does not carry ASPP).
 export_binding PATH "$DKML_MUSL_BINDIR:$PATH"
 autodetect_compiler_CC="x86_64-linux-musl-gcc"
 autodetect_compiler_CXX="x86_64-linux-musl-g++"
 autodetect_compiler_AS="x86_64-linux-musl-as"
-ASPP="x86_64-linux-musl-gcc -c"
 autodetect_compiler_LD="x86_64-linux-musl-ld"
-DIRECT_LD="x86_64-linux-musl-ld"
+autodetect_compiler_DIRECT_LD="x86_64-linux-musl-ld"

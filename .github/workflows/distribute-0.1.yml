@@ -74,6 +74,22 @@ jobs:
 
       - name: Distribute Modules
         uses: diskuv/dk-distribute@v3
+        env:
+            # PERMANENT explicit driver pin -- determinism over auto-updates.
+            # (Without it dk0 floats on the LATEST signed manifest, and the
+            # 2.4.2.296 driver's github-l2 import regression silently broke
+            # every build the moment its manifest became latest.) Bump the
+            # version deliberately, as a reviewed commit, when adopting a new
+            # driver release; the pinned manifest is signify-verified by the
+            # launcher exactly like the floating one. Kept in lockstep with
+            # CommonsBase_Dk's distribute workflow.
+            #
+            # 2.4.2.301 is the first shallow-import driver that can build this
+            # closure: it carries the import idempotency fix ("Reuse a finalized
+            # lazy value instead of re-downloading it") and the strict
+            # materialized-only trace import ("Import a distribution trace only
+            # when its value is materialized").
+            DK0_BASE_URL: https://gitlab.com/api/v4/projects/60486861/packages/generic/dk0-dist/2.4.2.301
         with:
           pubkey: ${{ secrets.distribute_0_1_pubkey }}
           seckey: ${{ secrets.distribute_0_1_seckey }}

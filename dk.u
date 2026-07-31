@@ -323,8 +323,8 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
 
   % unified.asset { name="DkMLMuslEnv", file="assets/dkml/musl-compiler-env-to-ocaml-configure-env.sh" }
   'asset'
-  '2503'
-  'sha256:814d3a527b7d27f4586fc658e559ba5e50599011b5c994f1d78076373bfd5289'
+  '2875'
+  'sha256:b678824c174829d79d0bb075415d091a6b3498f579ea0e2720a199392b3b3ca8'
 
   % unified.asset { name="DkMLMuslWrap", file="assets/dkml/musl-tool-wrapper.sh" }
   'asset'
