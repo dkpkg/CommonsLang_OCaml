@@ -9,6 +9,10 @@ jobs:
     # The secrets created by `./dk0 prepare-version --ci github VERSION`
     # are tied to this environment only.
     environment: dk-distribution
+    # RELEASE-BRANCH ONLY: the musl DkML-toolchain slot is a separate WIP; make it
+    # non-blocking so this fix release publishes the Darwin/Windows/Linux toolchains
+    # (all a consumer needs -- CommonsBase_Dk builds musl via MuslCC, not this slot).
+    continue-on-error: ${{ matrix.distscript == 'dist/Linux_x86_64_musl.u' }}
     strategy:
       fail-fast: false
       matrix:
