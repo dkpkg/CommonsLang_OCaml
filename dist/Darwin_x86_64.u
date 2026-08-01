@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Darwin_x86_64 -d ${RUNTIME}/Darwin_x86_64-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Darwin_x86_64", value-id: "o6e25h4jcizg3h47hsooq4aaa2n5distxostc2wfm5tpilil7tmya")\;
+  \dk.object(abi: "Release.Darwin_x86_64", value-id: "oaftselzqfnqpsym3e4bxyxszyo4worywq5sbp6dr6dmfdchdx6sq")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt

@@ -13,7 +13,7 @@ The value-ids below are harvested from the first CI run (the DkML pattern).
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -d ${RUNTIME}/Linux_x86_64_musl-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "o5znfe2b6xc5oybd52laju2awhbi2abyc7pac6hbabw5xmybv7zkq")\;
+  \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "ounhvq6pmc7fsih6j5iirtkgraf56gkk343xdvgvr3zsbemtrobma")\;
 
 The musl ocamlopt is a musl binary (ELF interpreter /lib/ld-musl-x86_64.so.1),
 so it runs wherever the musl loader is present: natively on musl hosts, and on
@@ -24,7 +24,7 @@ below is harvested from the first CI run.
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
   \test(pass)
-  \dk.target(abi: "Linux_x86_64_musl")[ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-musl-x86_64.so.1, with debug_info, not stripped
+  \dk.target(abi: "Linux_x86_64_musl")[ELF 64-bit LSB ${x?pie executable:shared object}, x86-64, version 1 (SYSV)
   ]\;
 
   $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -version
@@ -51,7 +51,7 @@ PATH.
 
   $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -config-var c_compiler
   \test(pass)
-  \dk.target(abi: "Linux_x86_64_musl")[x86_64-linux-musl-gcc ]\;
+  \dk.target(abi: "Linux_x86_64_musl")[x86_64-linux-musl-gcc]\;
 
 ## Dune
 
@@ -69,6 +69,7 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
   \test(pass)
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "o7mmvaocrhvy765tkdtsbp76eyj2423m3espmw34kthkdoqvl3cdq")
   \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "odx35phn7zbcsqd3u6oimt5ga4chrzhaimrl73snmj2dk6yxztvpq")\;
 
 ## Dk.OpamBuild
@@ -80,4 +81,5 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
 
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
   \test(pass)
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "ox2yguwbuo7ev3o5ovs5vcjgsljpqjev73hi6ze6isy6mmksrfasq")
   \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "ofwoywfonzbccnnyo6uhzrxd5allydjh4mgiqjlzo37364avaonga")\;
