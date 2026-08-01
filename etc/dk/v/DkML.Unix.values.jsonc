@@ -7879,7 +7879,21 @@
                             "x86_64-linux-musl-cross/x86_64-linux-musl/lib/libutil.a",
                             "x86_64-linux-musl-cross/x86_64-linux-musl/lib/libxnet.a",
                             "x86_64-linux-musl-cross/x86_64-linux-musl/lib/rcrt1.o",
-                            "x86_64-linux-musl-cross/x86_64-linux-musl/lib/Scrt1.o"
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/lib/Scrt1.o",
+                            "x86_64-linux-musl-cross/bin/x86_64-linux-musl-g++",
+                            "x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc",
+                            "x86_64-linux-musl-cross/bin/x86_64-linux-musl-ld.bfd",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/ar",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/as",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/ld",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/ld.bfd",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/ld.gold",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/nm",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/objcopy",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/objdump",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/ranlib",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/readelf",
+                            "x86_64-linux-musl-cross/x86_64-linux-musl/bin/strip"
                         ]
                     },
                     {
