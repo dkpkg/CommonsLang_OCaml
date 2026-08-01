@@ -1160,7 +1160,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- OCAMLFIND_CONF, OCAML_TOPLEVEL_PATH, OCAMLLIB) after these removals, so
   -- removal never disables the wrapper's own wiring.
   local envmods = {
-    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML@4.14.3 -s " .. targetabi .. " -d : -e 'bin/*')${/}bin",
+    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML@4.14.3 -s " .. targetabi .. " -d : -e 'bin/*' -e 'x86_64-linux-musl-cross/**')${/}bin",
     "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s " .. targetabi .. " -d : -e 'bin/*')${/}bin",
     -- OCaml compiler and runtime:
     "-OCAMLLIB", "-CAMLLIB",

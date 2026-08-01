@@ -122,7 +122,7 @@
             "id": "CommonsLang_OCaml.Dune.Unix@3.23.1",
             "function": {
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Unix@4.14.3 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin"
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Unix@4.14.3 -s ${SLOTNAME.request} -d : -e 'bin/*' -e 'x86_64-linux-musl-cross/**')${/}bin"
                 ],
                 "commands": [
                     [
