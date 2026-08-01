@@ -170,7 +170,7 @@
                         "env",
                         "--chdir",
                         "s",
-                        "\"DKML_HOST_OCAML_CONFIGURE=--disable-ocamltest --enable-runtime-search=always --enable-runtime-search-target=always LDFLAGS=-static\"",
+                        "\"DKML_HOST_OCAML_CONFIGURE=--disable-ocamltest --enable-runtime-search=always --enable-runtime-search-target=always LIBS=-static CFLAGS=-Os\"",
                         "DKML_MUSL_BINDIR=${SLOTABS.Release.Linux_x86_64_musl}/x86_64-linux-musl-cross/bin",
                         "/bin/sh",
                         "-x",
