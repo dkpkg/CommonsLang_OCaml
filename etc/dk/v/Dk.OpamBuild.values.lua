@@ -652,6 +652,36 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
 end
 
 -- ---------------------------------------------------------------------------
+-- Inject `-noinit` into every `ocaml` toplevel argv (topkg's
+-- `ocaml pkg/pkg.ml ...`). opam writes ~/.ocamlinit, which wires the HOST
+-- toplevel search path (for example an activated opam switch's topfind) into
+-- every `ocaml` script run, so without -noinit a topkg build could `#use
+-- "topfind"` from a foreign-version switch and load its findlib.cma into the
+-- DkML toplevel. topfind still resolves hermetically: the build wrapper
+-- exports OCAML_TOPLEVEL_PATH=p/lib/findlib, which the toplevel itself honors
+-- without any init file. Returns rebuilt argv tables (lua-ml: in-place order
+-- rewrites do not reliably propagate, so callers reassign).
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.hermeticize_argvs(argvs)
+  local out = {}
+  local i = 1
+  while argvs[i] ~= nil do
+    local argv = argvs[i]
+    if argv[1] == "ocaml" then
+      local rebuilt = { "ocaml", "-noinit" }
+      local j = 2
+      while argv[j] ~= nil do
+        table.insert(rebuilt, argv[j])
+        j = j + 1
+      end
+      out[i] = rebuilt
+    else
+      out[i] = argv
+    end
+    i = i + 1
+  end
+  return out
+end
+
 -- The rule
 -- ---------------------------------------------------------------------------
 -- Parameters:
@@ -1081,8 +1111,8 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   while H.ABIS[ai] ~= nil do
     local abi = H.ABIS[ai]
     fenv.strings["os"] = H.abi_os(abi)
-    local babi = H.field_to_argvs(entry.build, fenv, vars, pkg)
-    local iabi = H.field_to_argvs(entry.install, fenv, vars, pkg)
+    local babi = H.hermeticize_argvs(H.field_to_argvs(entry.build, fenv, vars, pkg))
+    local iabi = H.hermeticize_argvs(H.field_to_argvs(entry.install, fenv, vars, pkg))
     -- No explicit install field: the package relies on opam processing the
     -- <pkg>.install file its build generates. A dune package uses `dune install`;
     -- a non-dune one (topkg-based) is handled by the wrapper's @INSTALL@ step,
@@ -1116,9 +1146,39 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- Toolchain on PATH: the DkML compiler and Dune for every package; GNU make
   -- for the non-dune packages (configure/make/make install), whose opam fields
   -- invoke `make` directly.
+  --
+  -- Hermetic environment (modeled on CommonsLang_DotNet.SDK.envmods): remove
+  -- every OCaml/findlib/opam/dune/make variable through which the ambient
+  -- environment could steer this build to a foreign toolchain. The from-source
+  -- dk1 CI bootstrap runs the orchestrator under `opam exec`, so every spawned
+  -- package build inherited an activated OCaml 5.x switch: its
+  -- OCAML_TOPLEVEL_PATH made `#use "topfind"` load a 5.x findlib.cma into the
+  -- DkML 4.14 toplevel (`_opam/lib/findlib/findlib.cma is not a bytecode
+  -- object file`), and its PATH-resolved 5.x tools read DkML 4.14 trees
+  -- (`stdlib.cmi ... seems to be for an older version of OCaml`). The build
+  -- wrapper re-exports the hermetic values it needs (OCAMLPATH,
+  -- OCAMLFIND_CONF, OCAML_TOPLEVEL_PATH, OCAMLLIB) after these removals, so
+  -- removal never disables the wrapper's own wiring.
   local envmods = {
     "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML@4.14.3 -s " .. targetabi .. " -d : -e 'bin/*')${/}bin",
-    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s " .. targetabi .. " -d : -e 'bin/*')${/}bin"
+    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s " .. targetabi .. " -d : -e 'bin/*')${/}bin",
+    -- OCaml compiler and runtime:
+    "-OCAMLLIB", "-CAMLLIB",
+    "-OCAMLPARAM", "-OCAMLRUNPARAM", "-CAMLRUNPARAM",
+    "-CAML_LD_LIBRARY_PATH",
+    "-OCAML_TOPLEVEL_PATH", "-OCAMLTOP_INCLUDE_PATH",
+    -- findlib/ocamlfind:
+    "-OCAMLPATH", "-OCAMLFIND_CONF", "-OCAMLFIND_TOOLCHAIN",
+    "-OCAMLFIND_DESTDIR", "-OCAMLFIND_METADIR", "-OCAMLFIND_COMMANDS",
+    "-OCAMLFIND_LDCONF", "-OCAMLFIND_IGNORE_DUPS_IN",
+    -- opam switch activation (an activated host switch must not reach the
+    -- build; the lock is solved at author time and no opam runs here):
+    "-OPAM_SWITCH_PREFIX", "-OPAMSWITCH", "-OPAMROOT", "-OPAM_LAST_ENV",
+    -- dune (a shared/ambient dune cache would defeat content addressing):
+    "-DUNE_CACHE", "-DUNE_CACHE_ROOT", "-DUNE_BUILD_DIR", "-DUNE_PROFILE",
+    "-INSIDE_DUNE",
+    -- make flag inheritance from any outer make:
+    "-MAKEFLAGS", "-MFLAGS", "-MAKELEVEL"
   }
   if uses_dune == 0 then
     table.insert(envmods, "<PATH=$(--path=absnative get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -d : -e 'bin/*')${/}bin")
