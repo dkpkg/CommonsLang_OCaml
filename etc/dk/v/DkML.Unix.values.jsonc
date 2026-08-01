@@ -167,10 +167,17 @@
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "ln",
+                        "-sf",
+                        "${SLOTABS.Release.Linux_x86_64_musl}/x86_64-linux-musl-cross/x86_64-linux-musl/lib/libc.so",
+                        "/lib/ld-musl-x86_64.so.1"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
-                        "\"DKML_HOST_OCAML_CONFIGURE=--disable-ocamltest --enable-runtime-search=always --enable-runtime-search-target=always LIBS=-static CFLAGS=-Os\"",
+                        "\"DKML_HOST_OCAML_CONFIGURE=--disable-ocamltest --enable-runtime-search=always --enable-runtime-search-target=always LIBS=-static\"",
                         "DKML_MUSL_BINDIR=${SLOTABS.Release.Linux_x86_64_musl}/x86_64-linux-musl-cross/bin",
                         "/bin/sh",
                         "-x",
@@ -201,7 +208,9 @@
                         "--chdir",
                         "${SLOTABS.Release.Linux_x86_64_musl}",
                         "HOST_LIBDIR=../lib/ocaml",
-                        "\"PARTIALLD=ld -r\"",
+                        "\"PARTIALLD=x86_64-linux-musl-ld -r\"",
+                        "DK_UNIX_ESSENTIALS=${SLOTABS.Release.Linux_x86_64_musl}/x86_64-linux-musl-cross",
+                        "\"SAK_LINK=x86_64-linux-musl-gcc -static -o sak sak.o\"",
                         "DKML_MUSL_BINDIR=${SLOTABS.Release.Linux_x86_64_musl}/x86_64-linux-musl-cross/bin",
                         "/bin/sh",
                         "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"

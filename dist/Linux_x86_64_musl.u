@@ -15,13 +15,16 @@ The value-ids below are harvested from the first CI run (the DkML pattern).
   \test(pass)
   \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "o5znfe2b6xc5oybd52laju2awhbi2abyc7pac6hbabw5xmybv7zkq")\;
 
-The musl ocamlopt must be fully static so it runs on any Linux host,
-glibc or musl.
+The musl ocamlopt is a musl binary (ELF interpreter /lib/ld-musl-x86_64.so.1),
+so it runs wherever the musl loader is present: natively on musl hosts, and on
+the glibc manylinux build host because the build provisions the loader at that
+path (see the per-ABI dynamic linker in DK0-REFERENCE.md). The file(1) string
+below is harvested from the first CI run.
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
   \test(pass)
-  \dk.target(abi: "Linux_x86_64_musl")[ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked
+  \dk.target(abi: "Linux_x86_64_musl")[ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-musl-x86_64.so.1, with debug_info, not stripped
   ]\;
 
   $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -version
@@ -30,13 +33,16 @@ glibc or musl.
   ]\;
 
 The native_pack_linker must be a relocatable, PATH-resolved partial linker (a
-bare `ld -r -o`), never an absolute build-host path such as the ephemeral
-`.../src-ocaml/support/with-host-c-compiler.sh.ld64.sh` a stock build bakes;
-otherwise `ocamlopt -pack` fails off the build machine.
+bare `x86_64-linux-musl-ld -r -o`, resolved through the slot's
+bin/x86_64-linux-musl-* dispatch wrappers), never an absolute build-host path
+such as the ephemeral `.../src-ocaml/support/with-host-c-compiler.sh.ld64.sh` a
+stock build bakes; otherwise `ocamlopt -pack` fails off the build machine. The
+musl partial linker is required because the host `ld` cannot read the musl
+toolchain's compressed debug sections.
 
   $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -config-var native_pack_linker
   \test(pass)
-  \dk.target(abi: "Linux_x86_64_musl")[ld -r -o ]\;
+  \dk.target(abi: "Linux_x86_64_musl")[x86_64-linux-musl-ld -r -o ]\;
 
 The baked C compiler must be the bare musl cross driver, resolved through the
 bin/x86_64-linux-musl-* dispatch wrappers shipped in the same slot, so

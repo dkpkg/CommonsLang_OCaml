@@ -15,22 +15,20 @@
 # limitations under the License.
 # ----------------------------
 #
-# Musl variant of standard-compiler-env-to-ocaml-configure-env.sh used by the
-# Release.Linux_x86_64_musl DkML slot: force the pinned x86_64-linux-musl
-# cross toolchain, then delegate to the standard post-transform.
+# --post-transform (-k HOSTABISCRIPT) script for the Release.Linux_x86_64_musl
+# DkML slot. r-c-ocaml-1-setup requires the -k script to be SELF-CONTAINED,
+# because it installs ONLY this file into the reproducible build tree
+# (share/dkml/repro/100co/...); it cannot source
+# standard-compiler-env-to-ocaml-configure-env.sh (that file is not packaged
+# there, so sourcing it fails at r-c-ocaml-2-build_host time). This ABI only
+# ever uses the pinned x86_64-linux-musl cross toolchain -- a plain GCC-family
+# compiler -- so the standard script's MSVC/Xcode/Android/CMake autodetection
+# is irrelevant and the few GCC-family adjustments it makes are inlined here.
 #
-# DKML_MUSL_BINDIR is the absolute bin directory of the extracted
-# x86_64-linux-musl-cross toolchain; the DkML.Unix musl slot commands pass it
-# to both the setup and build_host invocations.
-#
-# The compiler variables enter the standard script as ABSOLUTE paths because
-# its Mitigation GCC_EXE runs `realpath` on CC under `set -euf` (a bare name
-# that is not a file aborts the transform). After the standard transforms they
-# reduce to bare PATH-resolved names so the baked `ocamlc -config` stays
-# relocatable, and the launcher gets DKML_MUSL_BINDIR on PATH so configure and
-# make can resolve those bare names during the build itself. Consumers resolve
-# them through the bin/x86_64-linux-musl-* dispatch wrappers shipped in the
-# same slot.
+# On entry autodetect_compiler() has populated autodetect_compiler_* and the
+# helper `export_binding NAME VALUE` (adds NAME=VALUE to the launcher env).
+# DKML_MUSL_BINDIR is the absolute bin/ of the extracted cross toolchain,
+# passed by the DkML.Unix musl build commands.
 set -euf
 
 if [ -z "${DKML_MUSL_BINDIR:-}" ]; then
@@ -38,23 +36,34 @@ if [ -z "${DKML_MUSL_BINDIR:-}" ]; then
   exit 107
 fi
 
-autodetect_compiler_CC="$DKML_MUSL_BINDIR/x86_64-linux-musl-gcc"
-autodetect_compiler_CXX="$DKML_MUSL_BINDIR/x86_64-linux-musl-g++"
-autodetect_compiler_AS="$DKML_MUSL_BINDIR/x86_64-linux-musl-as"
-autodetect_compiler_LD="$DKML_MUSL_BINDIR/x86_64-linux-musl-ld"
-
-# shellcheck disable=SC1091
-. "$DKMLDIR/vendor/dkml-compiler/env/standard-compiler-env-to-ocaml-configure-env.sh"
-
-# PATH for the configure/make launcher; bare names for the baked config so
-# ocamlc -config stays relocatable (consumers resolve them through the slot's
-# bin/x86_64-linux-musl-* dispatch wrappers on PATH). These are exactly the
-# variable names autodetect_compiler_write_output emits into the launcher:
-# CC/CXX/AS/LD and autodetect_compiler_DIRECT_LD. OCaml's configure derives
-# ASPP from AS/CC, so it is not set here (the launcher does not carry ASPP).
+# Put the cross toolchain on PATH for configure/make (and for the baked bare
+# tool names to resolve during this build). Consumers of the built compiler
+# resolve the same bare names through the slot's bin/x86_64-linux-musl-*
+# dispatch wrappers, so ocamlc -config stays relocatable.
 export_binding PATH "$DKML_MUSL_BINDIR:$PATH"
+
+# Bare GCC-family cross tools. Bare (not absolute) so the values baked into
+# ocamlc -config are relocatable. -Wno-format matches the standard script's
+# GCC handling; -Os matches the ocaml-option-static musl recipe. LIBS=-static
+# (executable links only, never the -shared stublibs) is supplied as a
+# ./configure arg via DKML_HOST_OCAML_CONFIGURE, not here.
+# -static in CFLAGS (not just LIBS) so it reaches the executable links that
+# OCaml's mkexe does not cover -- notably the host bootstrap tool `sak`, which
+# is linked with `$(CC) $(CFLAGS) -o sak sak.o` and, built dynamic, cannot find
+# the musl loader on the glibc build host. Paired with --disable-shared so there
+# are no `gcc -shared` stublib links for -static to conflict with.
 autodetect_compiler_CC="x86_64-linux-musl-gcc"
 autodetect_compiler_CXX="x86_64-linux-musl-g++"
+autodetect_compiler_CFLAGS="-Wno-format -Os -static"
+autodetect_compiler_CXXFLAGS="-Wno-format -Os -static"
+# ASPP (assembler-with-preprocessor) is the C compiler for a GCC toolchain;
+# AS is the plain assembler. Both x86_64, libc-agnostic.
 autodetect_compiler_AS="x86_64-linux-musl-as"
+autodetect_compiler_ASFLAGS=""
+ASPP="x86_64-linux-musl-gcc -c"
+# OCaml links executables through $CC; LD/DIRECT_LD are the plain linker used
+# for partial links. PARTIALLD (ld -r) is set by the build command's env.
 autodetect_compiler_LD="x86_64-linux-musl-ld"
+autodetect_compiler_LDFLAGS=""
+autodetect_compiler_LDLIBS=""
 autodetect_compiler_DIRECT_LD="x86_64-linux-musl-ld"
