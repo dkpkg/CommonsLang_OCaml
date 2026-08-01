@@ -323,13 +323,18 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
 
   % unified.asset { name="DkMLMuslEnv", file="assets/dkml/musl-compiler-env-to-ocaml-configure-env.sh" }
   'asset'
-  '3561'
-  'sha256:9b5f8ae9ff6f307b625d7dd4b083502b12f7f5ecb7d9e552cc05c6c9fda70ed5'
+  '3813'
+  'sha256:1e1bdba7cc8f84e04f86828d7f9e56b4ec014a3f4d2891ad06e0cdeace5a6a97'
 
   % unified.asset { name="DkMLMuslWrap", file="assets/dkml/musl-tool-wrapper.sh" }
   'asset'
   '483'
   'sha256:590cbc20e4413175bd4827ee7fd81096be3ae520ed2d9a6658ad7276780f65c2'
+
+  % unified.asset { name="DkMLMuslBuildHost", file="assets/dkml/run-musl-build-host.sh" }
+  'asset'
+  '3305'
+  'sha256:f1d0a17eb8f31dcbfb9f2aa73b2709097eee653b122590755267e69811e5f200'
 
   % unified.asset { name="DuneBootstrapMsvc", file="assets/dune/bootstrap-msvc.bat" }
   'asset'

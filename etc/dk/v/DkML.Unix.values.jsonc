@@ -213,7 +213,7 @@
                         "\"SAK_LINK=x86_64-linux-musl-gcc -static -o sak sak.o\"",
                         "DKML_MUSL_BINDIR=${SLOTABS.Release.Linux_x86_64_musl}/x86_64-linux-musl-cross/bin",
                         "/bin/sh",
-                        "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslBuildHost@1.0.0 -p assets/dkml/run-musl-build-host.sh -f run-musl-build-host.sh)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",

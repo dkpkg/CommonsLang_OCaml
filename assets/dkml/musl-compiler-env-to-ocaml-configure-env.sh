@@ -39,7 +39,10 @@ fi
 # Put the cross toolchain on PATH for configure/make (and for the baked bare
 # tool names to resolve during this build). Consumers of the built compiler
 # resolve the same bare names through the slot's bin/x86_64-linux-musl-*
-# dispatch wrappers, so ocamlc -config stays relocatable.
+# dispatch wrappers, so ocamlc -config stays relocatable. NOTE: this binding
+# alone does not reach OCaml's ./configure -- the DkML.Unix musl build command
+# runs r-c-ocaml-2-build_host through run-musl-build-host.sh, which prepends the
+# cross bin to the *process* PATH so autoconf resolves the bare CC name.
 export_binding PATH "$DKML_MUSL_BINDIR:$PATH"
 
 # Bare GCC-family cross tools. Bare (not absolute) so the values baked into
