@@ -632,6 +632,22 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
     -- hardcoded VS-Installer path) as $VSWHERE. Windows only; VSWhere has no Unix
     -- slice, so this get-object is never resolved on Unix slots.
     table.insert(cmd, "VSWHERE=$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe")
+    -- Hermetic PATH replacement (Windows commands only): the hermetic envmods
+    -- can remove environment variables but cannot delete PATH entries, so a
+    -- leaked entry such as an activated opam switch's _opam\bin still shadowed
+    -- tools DkML does not ship (an OCaml 5.x ocamlc.opt.exe hijacked
+    -- ocamlbuild's `ocamlc.opt` while OCAMLLIB pointed at the DkML 4.14
+    -- stdlib). Rebuild PATH from this command's own abi slot of the DkML
+    -- compiler plus the Windows system directories; the build wrapper then
+    -- prepends MSVC (vcvars), MSYS2 /usr/bin and p/bin on top. Using the
+    -- command's abi, not the form's target abi, also pairs each gated command
+    -- with its matching vcvars arch: the x64-gated commands of a Windows_x86
+    -- target previously got the x86 cross compiler on PATH, whose ml.exe
+    -- assembler the x64 MSVC activation does not provide.
+    table.insert(cmd,
+      "PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML@4.14.3 -s " ..
+      abi.slot ..
+      " -d : -e 'bin/*')${/}bin;C:/Windows/System32;C:/Windows;C:/Windows/System32/Wbem")
   end
   if abi.staticgcc ~= nil then
     -- Fully static executables on this abi (see the ABIS table).
@@ -644,7 +660,20 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
   local ai = 1
   while argv[ai] ~= nil do
     local a = argv[ai]
-    if ai == 1 and a == "dune" then a = "dune.exe" end
+    if ai == 1 and a == "dune" then
+      if abi.msvc ~= "-" then
+        -- The replaced Windows PATH carries only DkML and the system
+        -- directories, so resolve Dune by absolute path for this command's
+        -- abi rather than by PATH search.
+        a = "$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s " ..
+            abi.slot .. " -d : -e 'bin/*')${/}bin${/}dune.exe"
+      else
+        a = "dune.exe"
+      end
+    elseif ai == 1 and a == "make" and abi.msvc ~= "-" then
+      -- Same reasoning as dune: GNU make by absolute path on Windows.
+      a = "$(--path=absnative get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -d : -e 'bin/*')${/}bin${/}make.exe"
+    end
     table.insert(cmd, a)
     ai = ai + 1
   end
