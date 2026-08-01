@@ -664,15 +664,19 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
       if abi.msvc ~= "-" then
         -- The replaced Windows PATH carries only DkML and the system
         -- directories, so resolve Dune by absolute path for this command's
-        -- abi rather than by PATH search.
-        a = "$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s " ..
-            abi.slot .. " -d : -e 'bin/*')${/}bin${/}dune.exe"
+        -- abi rather than by PATH search. Default (forward-slash) path form
+        -- with a literal `/` join, exactly like the MSYS2 dash.exe element:
+        -- the wrapper execs this through dash, and a backslash-only Windows
+        -- path has no `/`, so POSIX shells PATH-search it as a bare command
+        -- name instead of executing it.
+        a = "$(get-object CommonsLang_OCaml.Dune@3.23.1 -s " ..
+            abi.slot .. " -d : -e 'bin/*')/bin/dune.exe"
       else
         a = "dune.exe"
       end
     elseif ai == 1 and a == "make" and abi.msvc ~= "-" then
-      -- Same reasoning as dune: GNU make by absolute path on Windows.
-      a = "$(--path=absnative get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -d : -e 'bin/*')${/}bin${/}make.exe"
+      -- Same reasoning as dune: GNU make by absolute forward-slash path.
+      a = "$(get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -d : -e 'bin/*')/bin/make.exe"
     end
     table.insert(cmd, a)
     ai = ai + 1
