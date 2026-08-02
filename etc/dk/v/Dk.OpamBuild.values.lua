@@ -644,10 +644,36 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
     -- with its matching vcvars arch: the x64-gated commands of a Windows_x86
     -- target previously got the x86 cross compiler on PATH, whose ml.exe
     -- assembler the x64 MSVC activation does not provide.
+    --
+    -- Rebuilding PATH from scratch also drops execution-abi tools that the
+    -- consumer dk0/dk1 opam closure needs but CLO's own closure does not, so it
+    -- surfaced only downstream. Each element below is on PATH for a specific
+    -- reason; the two added tools are named by the opam package that requires
+    -- them:
+    --   * DkML (bin/) -- the relocatable OCaml 4.14 compiler + toolchain;
+    --     required by every package in the closure. This command's own abi
+    --     slot, not the form's target abi (see the vcvars-arch note above).
+    --   * CommonsBase_GNU.Make (bin/) -- required by `ocamlfind`, whose
+    --     `./configure` invokes `make` from PATH (a configure+make opam build),
+    --     not the explicit make argv resolved below. Absent it, ocamlfind's
+    --     configure aborts: "configure: make not in PATH; this is required".
+    --   * CommonsBase_Build.Git.MinGit (cmd/, which holds git.exe with no bash
+    --     beside it) -- required by `spawn`, whose `dune build -p spawn` runs
+    --     `dune subst` for version watermarking, which needs git. Absent it,
+    --     dune aborts: "Program git not found ... required for dune subst".
+    --     Any other dune `-p` package with watermarking needs it too.
+    --   * The Windows system directories -- for the OS tools (cmd, where, etc.).
+    -- Make and MinGit are the same execution-abi objects OpamLock already
+    -- fetches; MSYS2 /usr/bin, which the wrapper prepends, ships neither.
     table.insert(cmd,
       "PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML@4.14.3 -s " ..
       abi.slot ..
-      " -d : -e 'bin/*')${/}bin;C:/Windows/System32;C:/Windows;C:/Windows/System32/Wbem")
+      " -d : -e 'bin/*')${/}bin" ..
+      -- make, required by ocamlfind's ./configure
+      ";$(--path=absnative get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -d : -e 'bin/*')${/}bin" ..
+      -- git (MinGit cmd/), required by spawn's dune subst
+      ";$(--path=absnative get-object CommonsBase_Build.Git.MinGit@2.55.0 -s Release.execution_abi -d : -e 'cmd/*')${/}cmd" ..
+      ";C:/Windows/System32;C:/Windows;C:/Windows/System32/Wbem")
   end
   if abi.staticgcc ~= nil then
     -- Fully static executables on this abi (see the ABIS table).
