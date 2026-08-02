@@ -622,7 +622,11 @@ end
 -- os-conditional fields make the argv differ per abi, the caller interprets the
 -- field once per abi and calls this for each; the ${SLOTABS.<abi>} gate scopes
 -- the command to that abi. A leading `dune` becomes the Dune object's dune.exe.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrapperfetch, msys2dash, argv, abi)
+-- `targetabi` is the slot the built ARTIFACTS must target (usually the
+-- `Release.target_abi` wildcard): closure package builds materialize at the
+-- HOST key, so `abi` is the executing host's record while the compiler and the
+-- vcvars arch must follow the target (see the PATH note below).
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrapperfetch, msys2dash, argv, abi, targetabi)
   local shell = "/bin/sh"
   local cmd = { coreutils, "env" }
   if abi.msvc ~= "-" then
@@ -637,13 +641,18 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
     -- leaked entry such as an activated opam switch's _opam\bin still shadowed
     -- tools DkML does not ship (an OCaml 5.x ocamlc.opt.exe hijacked
     -- ocamlbuild's `ocamlc.opt` while OCAMLLIB pointed at the DkML 4.14
-    -- stdlib). Rebuild PATH from this command's own abi slot of the DkML
-    -- compiler plus the Windows system directories; the build wrapper then
-    -- prepends MSVC (vcvars), MSYS2 /usr/bin and p/bin on top. Using the
-    -- command's abi, not the form's target abi, also pairs each gated command
-    -- with its matching vcvars arch: the x64-gated commands of a Windows_x86
-    -- target previously got the x86 cross compiler on PATH, whose ml.exe
-    -- assembler the x64 MSVC activation does not provide.
+    -- stdlib). Rebuild PATH from the TARGET abi's DkML compiler plus the
+    -- Windows system directories; the build wrapper then prepends MSVC
+    -- (vcvars), MSYS2 /usr/bin and p/bin on top. The compiler and the vcvars
+    -- arch must BOTH follow the form's target abi, not the command's abi:
+    -- closure builds materialize at the HOST key, so a Windows_x86 target's
+    -- commands are gated Windows_x86_64, and pairing them with the x64 DkML
+    -- and x64 vcvars produced a PE32+ x64 dk0 shipped under the x86 label
+    -- (the combine arch guard catches exactly this). The earlier mixed
+    -- pairing (target-abi PATH from the form envmods + command-abi vcvars)
+    -- broke differently: the x86 DkML's ml.exe assembler is not provided by
+    -- an x64 MSVC activation. Target-abi for both is the consistent pairing;
+    -- the 32-bit-targeting MSVC tools run fine on the x64 host.
     --
     -- Rebuilding PATH from scratch also drops execution-abi tools that the
     -- consumer dk0/dk1 opam closure needs but CLO's own closure does not, so it
@@ -651,8 +660,8 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
     -- reason; the two added tools are named by the opam package that requires
     -- them:
     --   * DkML (bin/) -- the relocatable OCaml 4.14 compiler + toolchain;
-    --     required by every package in the closure. This command's own abi
-    --     slot, not the form's target abi (see the vcvars-arch note above).
+    --     required by every package in the closure. The form's TARGET abi
+    --     slot (see the pairing note above).
     --   * CommonsBase_GNU.Make (bin/) -- required by `ocamlfind`, whose
     --     `./configure` invokes `make` from PATH (a configure+make opam build),
     --     not the explicit make argv resolved below. Absent it, ocamlfind's
@@ -667,7 +676,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
     -- fetches; MSYS2 /usr/bin, which the wrapper prepends, ships neither.
     table.insert(cmd,
       "PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML@4.14.3 -s " ..
-      abi.slot ..
+      targetabi ..
       " -d : -e 'bin/*')${/}bin" ..
       -- make, required by ocamlfind's ./configure
       ";$(--path=absnative get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -d : -e 'bin/*')${/}bin" ..
@@ -682,7 +691,16 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
   table.insert(cmd, shell)
   table.insert(cmd, wrapperfetch)
   table.insert(cmd, "${SLOTABS." .. abi.slot .. "}")
-  table.insert(cmd, abi.msvc)
+  if abi.msvc ~= "-" then
+    -- The vcvars arch follows the TARGET abi (msvc-arch table; see the pairing
+    -- note above): a Windows_x86 target needs the x86-targeting cl/ml even
+    -- though its closure commands are gated at the x64 host abi.
+    table.insert(cmd,
+      "$(get-asset CommonsLang_OCaml.Apparatus.Tables@1.0.0 -p assets/table -m ./msvc-arch/${SLOTNAME." ..
+      targetabi .. "})")
+  else
+    table.insert(cmd, abi.msvc)
+  end
   local ai = 1
   while argv[ai] ~= nil do
     local a = argv[ai]
@@ -1190,12 +1208,12 @@ function rules.F_BuildLockedPackage(command, request, continue_)
     end
     local bi = 1
     while babi[bi] ~= nil do
-      table.insert(commands, H.percommand_abi(coreutils, wrapperfetch, msys2dash, babi[bi], abi))
+      table.insert(commands, H.percommand_abi(coreutils, wrapperfetch, msys2dash, babi[bi], abi, targetabi))
       bi = bi + 1
     end
     local ii = 1
     while iabi[ii] ~= nil do
-      table.insert(commands, H.percommand_abi(coreutils, wrapperfetch, msys2dash, iabi[ii], abi))
+      table.insert(commands, H.percommand_abi(coreutils, wrapperfetch, msys2dash, iabi[ii], abi, targetabi))
       ii = ii + 1
     end
     ai = ai + 1
@@ -1222,6 +1240,15 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   local envmods = {
     "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML@4.14.3 -s " .. targetabi .. " -d : -e 'bin/*' -e 'x86_64-linux-musl-cross/**')${/}bin",
     "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s " .. targetabi .. " -d : -e 'bin/*')${/}bin",
+    -- Fully static executables when the TARGET abi calls for them (the
+    -- mlfront-static-gcc table: `true` only for Release.Linux_x86_64_musl).
+    -- MlFront's src/dune flips static_flags.sexp to `-cclib -static` on
+    -- `true`, so the dk0/dk1 links are static. This must key off the TARGET
+    -- abi: closure package builds materialize at the HOST key (commands are
+    -- gated at the execution abi), so the per-command abi.staticgcc branch in
+    -- percommand_abi never fires for a cross target such as musl-on-glibc --
+    -- that branch only serves a build whose HOST abi is the static one.
+    "+MLFRONT_STATIC_GCC_BINARIES=$(get-asset CommonsLang_OCaml.Apparatus.Tables@1.0.0 -p assets/table -m ./mlfront-static-gcc/${SLOTNAME." .. targetabi .. "})",
     -- OCaml compiler and runtime:
     "-OCAMLLIB", "-CAMLLIB",
     "-OCAMLPARAM", "-OCAMLRUNPARAM", "-CAMLRUNPARAM",
