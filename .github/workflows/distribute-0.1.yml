@@ -84,21 +84,22 @@ jobs:
             # launcher exactly like the floating one. Kept in lockstep with
             # CommonsBase_Dk's distribute workflow.
             #
-            # 2.4.2.301 is the first shallow-import driver that can build this
-            # closure: it carries the import idempotency fix ("Reuse a finalized
-            # lazy value instead of re-downloading it") and the strict
-            # materialized-only trace import ("Import a distribution trace only
-            # when its value is materialized").
-            DK0_BASE_URL: https://gitlab.com/api/v4/projects/60486861/packages/generic/dk0-dist/2.4.2.301
+            # 2.4.2.308 is the first driver manifest that carries a
+            # dk0_linux_x86_64_musl build, so a musl-detecting launcher can
+            # resolve every ABI from it. It succeeds 2.4.2.301, the first
+            # shallow-import driver that could build this closure (import
+            # idempotency fix + strict materialized-only trace import).
+            DK0_BASE_URL: https://gitlab.com/api/v4/projects/60486861/packages/generic/dk0-dist/2.4.2.308
             # The musl job's DkML.Unix build provisions /lib/ld-musl-x86_64.so.1
             # (the loader for the musl-dynamic ocamlopt), and the dksrc launcher
             # synced from MlFront ci/dist probes that file to detect a musl
             # host. Every dk0 invocation AFTER the DkML build then misdetects
-            # this glibc container as musl and fails: the pinned 2.4.2.301
-            # manifest carries no musl dk0 build. The host genuinely is glibc,
-            # so pin the launcher's host identity for the musl job; the
-            # launcher treats an empty value as unset (normal autodetection),
-            # leaving every other matrix job untouched.
+            # this glibc container as musl. The host genuinely is glibc, so pin
+            # the launcher's host identity for the musl job; under the musl-less
+            # 2.4.2.301 pin this was load-bearing (FATAL: no musl dk0 build),
+            # under 2.4.2.308 it keeps the driver download the honest glibc
+            # one. The launcher treats an empty value as unset (normal
+            # autodetection), leaving every other matrix job untouched.
             DKML_HOST_ABI: ${{ matrix.distscript == 'dist/Linux_x86_64_musl.u' && 'linux_x86_64' || '' }}
         with:
           pubkey: ${{ secrets.distribute_0_1_pubkey }}
