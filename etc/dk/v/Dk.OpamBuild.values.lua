@@ -631,6 +631,11 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.percommand_abi(coreutils, wrappe
   local cmd = { coreutils, "env" }
   if abi.msvc ~= "-" then
     shell = msys2dash
+    -- MSYS2 dash, not w64devkit BusyBox-w32: BusyBox-w32 mangles the % in
+    -- cmd.exe's `for %I ... %~sfI` 8.3-path loop, so vcvarsall.bat's path comes
+    -- back empty and cl.exe/ml64.exe never reach PATH; and it searches only a
+    -- :-separated /c/... PATH, not the native ;-Windows PATH this rule builds.
+    -- MSYS2's cygwin-style PATH handles both.
     -- Windows MSVC activation: the wrapper self-activates vcvarsall via vswhere.
     -- Pass the managed CommonsBase_Build.VSWhere object's vswhere.exe (not a
     -- hardcoded VS-Installer path) as $VSWHERE. Windows only; VSWhere has no Unix
