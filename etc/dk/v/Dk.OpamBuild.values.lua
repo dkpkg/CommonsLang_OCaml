@@ -435,21 +435,34 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.eval_filter(ftext, fenv, pkg)
   end
 
   local st = { idx = 1 }
-  local acc = H.filter_atom(words, st, fenv, pkg, ftext)
+  local acc = H.filter_atom(words, st, fenv, pkg, ftext, nil)
   while words[st.idx] ~= nil do
     local op = words[st.idx]
     assert(op.k == "op" and (op.v == "&" or op.v == "|"),
       "unsupported filter connective in `" .. ftext .. "` for package " .. pkg)
     st.idx = st.idx + 1
-    local rhs = H.filter_atom(words, st, fenv, pkg, ftext)
-    if op.v == "&" then acc = acc and rhs else acc = acc or rhs end
+    -- Short-circuit: a false `&` (or a true `|`) already fixes the result, so
+    -- PARSE the right-hand atom (to advance st.idx) but do NOT evaluate it. opam
+    -- packages gate commands on filter variables this rule does not model -- e.g.
+    -- tezt's own `dune runtest` is `{with-test & arch = "x86_64" &
+    -- os-distribution = "debian"}`; with `with-test` false the branch is dead, and
+    -- evaluating `arch` there would abort the build for a command that is skipped
+    -- anyway. Left-to-right flat eval, so `false & X` / `true | X` are stable.
+    local skip = (op.v == "&" and not acc) or (op.v == "|" and acc)
+    local rhs = H.filter_atom(words, st, fenv, pkg, ftext, skip)
+    if not skip then
+      if op.v == "&" then acc = acc and rhs else acc = acc or rhs end
+    end
   end
   return acc
 end
 
 -- Evaluate one filter atom ([!]* IDENT [OP "str"]) advancing st.idx. lua-ml
 -- has no nested named local functions, so the closed-over state is passed in.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.filter_atom(words, st, fenv, pkg, ftext)
+-- `skipeval` (set by eval_filter's short-circuit): still PARSE the atom to advance
+-- st.idx, but return without the fenv lookup -- the atom is in a dead branch, so
+-- an unmodeled variable there must not abort the build.
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.filter_atom(words, st, fenv, pkg, ftext, skipeval)
   local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_0
   local negate = nil
   while words[st.idx] ~= nil and words[st.idx].k == "op" and words[st.idx].v == "!" do
@@ -480,6 +493,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.filter_atom(words, st, fenv, pkg
     assert(rhs ~= nil and rhs.k == "str",
       "unsupported comparison in filter `" .. ftext .. "` for package " .. pkg)
     st.idx = st.idx + 1
+    if skipeval then return false end
     local lhs = fenv.strings[wtok.v]
     assert(lhs ~= nil, "unknown filter variable `" .. wtok.v .. "` in `" .. ftext .. "` for package " .. pkg)
     if op == ">=" then value = H.version_ge(lhs, rhs.v)
@@ -488,6 +502,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.filter_atom(words, st, fenv, pkg
     elseif op == "!=" then value = (lhs ~= rhs.v)
     else assert(false, "unsupported operator `" .. op .. "` in filter `" .. ftext .. "` for package " .. pkg) end
   else
+    if skipeval then return false end
     local b = fenv.bools[wtok.v]
     assert(b ~= nil, "unknown filter variable `" .. wtok.v .. "` in `" .. ftext .. "` for package " .. pkg)
     value = (b == "true")
@@ -615,6 +630,16 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.abi_os(abi)
   if abi.msvc ~= "-" then return "win32" end
   if string.find(abi.slot, "Darwin") ~= nil then return "macos" end
   return "linux"
+end
+
+-- The opam `arch` filter variable for a slot (opam's canonical spelling). Derived
+-- from the slot name, like abi_os. x86_64 is checked before x86 (the former
+-- contains the latter).
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_0.abi_arch(abi)
+  if string.find(abi.slot, "x86_64") ~= nil then return "x86_64" end
+  if string.find(abi.slot, "arm64") ~= nil then return "arm64" end
+  if string.find(abi.slot, "x86") ~= nil then return "x86_32" end
+  return "x86_64"
 end
 
 -- Emit ONE gated command for a single abi, wrapping the opam argv per the
@@ -1194,6 +1219,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   while H.ABIS[ai] ~= nil do
     local abi = H.ABIS[ai]
     fenv.strings["os"] = H.abi_os(abi)
+    fenv.strings["arch"] = H.abi_arch(abi)
     local babi = H.hermeticize_argvs(H.field_to_argvs(entry.build, fenv, vars, pkg))
     local iabi = H.hermeticize_argvs(H.field_to_argvs(entry.install, fenv, vars, pkg))
     -- No explicit install field: the package relies on opam processing the
