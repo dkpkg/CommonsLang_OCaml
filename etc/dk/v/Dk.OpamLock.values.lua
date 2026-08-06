@@ -1107,6 +1107,12 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
     "please provide 'roots[]=PKG1' 'roots[]=PKG2' ... (the executable packages to lock)")
   assert(type(roots) == "table", "roots must be a table: 'roots[]=PKG1' 'roots[]=PKG2' ...")
 
+  -- wtest=t also locks the roots' test-only dependencies (the MlFront test gate
+  -- locks with --with-test so tezt/afl-persistent/... become their own dk
+  -- objects). Presence-truthy, like slots/parallel elsewhere; absent leaves the
+  -- runtime-only solve byte-unchanged.
+  local wtest = request.user.wtest
+
   -- Co-resolve the constraints meta-package so its version conflicts apply to
   -- the closure; it is dropped from the solution below.
   local rootscsv = H.join(roots, ",")
@@ -1134,6 +1140,10 @@ function CommonsLang_OCaml__Dk_OpamLock__1_0_0.do_solve(request, opam, winlocs)
     if archpkg then slotresolve = slotresolve .. "," .. archpkg end
 
     local args = { "list", "--resolve=" .. slotresolve, "--columns=package", "--short" }
+    -- --with-test resolves each root's test dependencies into the closure. opam
+    -- applies it to the requested roots, so the externals' own (non-test) depends
+    -- are captured normally by the later `opam show` metadata pass.
+    if wtest ~= nil then table.insert(args, "--with-test") end
     local sk, sv = next(switchargs)
     while sk do table.insert(args, sv); sk, sv = next(switchargs, sk) end
 
