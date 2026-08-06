@@ -1463,7 +1463,18 @@ end
 --   lock=PATH          project-relative lock file (the Solve output)
 --   out=PATH           project-relative driver values file to write
 --   root=PKG           opam package whose closure is chained (built last,
---                      into the `built` directory)
+--                      into the `built` directory). Provide root= OR roots[]=.
+--   'roots[]=PKG ...'  multiple root packages whose combined closure is built
+--                      (the union walked in topological order). Use for a
+--                      test-dependency closure with no single executable root;
+--                      pair with mergedprefix=t (there is no `built` root).
+--   'skiplocal=t'      omit packages marked "local":"t" from the emitted chain
+--                      (they are built in-tree by the consumer, e.g. MlFront's
+--                      own dune build), building only their external closure.
+--   'mergedprefix=t'   the final function merges EVERY built package's
+--                      install.zip into one prefix `p/` (+ the seq META stub)
+--                      and outputs prefix.zip, instead of copying a single
+--                      root's install.zip. All packages build into p<i> dirs.
 --   formid=ID@VER      the driver form id (ex. the module CommonsBase_Dk.Dk0
 --                      at version 2.4.2)
 --   pkgpath=MODPATH    module path under which Pkg objects live
@@ -1496,7 +1507,25 @@ function uirules.GenerateDriver(command, request)
 
   local lockpath = assert(request.user.lock, "please provide 'lock=PROJECT_RELATIVE_LOCK_PATH'")
   local out = assert(request.user.out, "please provide 'out=PROJECT_RELATIVE_DRIVER_PATH'")
-  local root = assert(request.user.root, "please provide 'root=PKG'")
+  -- Roots: a single root=PKG (chained, built last into `built`) or roots[]=PKG
+  -- ... (the union closure). At least one is required; root= stays the
+  -- backward-compatible single-root spelling.
+  local root = request.user.root
+  local roots = request.user.roots
+  if roots == nil and root ~= nil then roots = { root } end
+  assert(roots ~= nil and roots[1] ~= nil,
+    "please provide 'root=PKG' or 'roots[]=PKG1' 'roots[]=PKG2' ...")
+  assert(type(roots) == "table", "roots must be a table: 'roots[]=PKG1' 'roots[]=PKG2' ...")
+  -- skiplocal=t drops "local":"t" packages from emission; mergedprefix=t merges
+  -- every built install.zip into one prefix.zip. Both presence-truthy, additive:
+  -- an existing single-root regen passes neither and is byte-unchanged.
+  local skiplocal = request.user.skiplocal
+  local mergedprefix = request.user.mergedprefix
+  -- The single-root model copies one `built/install.zip`, so it cannot express
+  -- more than one root; multiple roots require the mergedprefix merge.
+  if mergedprefix == nil and roots[2] ~= nil then
+    assert(false, "roots[] with more than one package requires mergedprefix=t (the single-root model chains into `built`)")
+  end
   local formid = assert(request.user.formid, "please provide 'formid=MODULE@VERSION'")
   local pkgpath = assert(request.user.pkgpath, "please provide 'pkgpath=MODULE_PATH' (ex. CommonsBase_Dk.Dk0)")
   local version = assert(request.user.version, "please provide 'version=VER' (ex. 2.4.2)")
@@ -1529,24 +1558,46 @@ function uirules.GenerateDriver(command, request)
     k = next(lock.packages, k)
   end
 
+  -- Union the topological closure of every root through the shared seen/order
+  -- (driver_visit dedups and post-orders, so multiple roots compose correctly).
   local order = {}
   local seen = {}
-  H.driver_visit(byname, provided, root, seen, order)
-  assert(order[1] ~= nil, "root `" .. root .. "` has no buildable closure in the lock")
+  local ri = 1
+  while roots[ri] ~= nil do
+    H.driver_visit(byname, provided, roots[ri], seen, order)
+    ri = ri + 1
+  end
+  assert(order[1] ~= nil, "the requested root(s) have no buildable closure in the lock")
 
-  -- Buildable-closure membership so parallel deps[] edges point only at real Pkg
-  -- objects; toolchain/provided and virtual no-source deps are excluded, exactly
-  -- as driver_visit excluded them from `order`.
+  -- The packages actually EMITTED as Pkg objects: the whole closure, minus the
+  -- "local":"t" packages when skiplocal=t (their external deps stay -- they are
+  -- earlier in the post-order -- only the locals themselves are dropped). A local
+  -- root is still walked above (to reach its deps); skiplocal only elides its own
+  -- run-function line.
+  local emit = {}
+  local eo = 1
+  while order[eo] ~= nil do
+    local nm = order[eo]
+    local is_local = byname[nm] ~= nil and byname[nm]["local"] == "t"
+    if not (skiplocal ~= nil and is_local) then table.insert(emit, nm) end
+    eo = eo + 1
+  end
+  assert(emit[1] ~= nil, "nothing to build after skiplocal dropped the local packages")
+
+  -- Buildable-closure membership so parallel deps[] edges point only at emitted
+  -- Pkg objects; provided/virtual (and skiplocal-dropped) deps are excluded.
   local inorder = {}
   local mi = 1
-  while order[mi] ~= nil do inorder[order[mi]] = order[mi]; mi = mi + 1 end
+  while emit[mi] ~= nil do inorder[emit[mi]] = emit[mi]; mi = mi + 1 end
   local seqflag = "true"
   if parallel ~= nil then seqflag = "false" end
 
   -- Emit the driver as JSONC. Concatenate in index order (the module `join`
   -- iterates with next(), which scrambles array order).
   local nl = "\n"
-  local body = "// Driver for the per-package opam build of `" .. root .. "`: run-functions the" .. nl
+  -- Header label works for a single root= or multiple roots[]= (root may be nil).
+  local rootlabel = root or H.join(roots, ", ")
+  local body = "// Driver for the per-package opam build of `" .. rootlabel .. "`: run-functions the" .. nl
     .. "// per-package build rule for every package in the root's dependency closure in" .. nl
     .. "// topological order, so each package is its own content-addressed dk object" .. nl
     .. "// and an interrupted build resumes from the completed objects." .. nl
@@ -1568,11 +1619,16 @@ function uirules.GenerateDriver(command, request)
     table.insert(lines, "          \"" .. prelude[pi] .. "\"")
     pi = pi + 1
   end
+  -- In the single-root/`built` model the root builds into `built` (the function
+  -- copies built/install.zip). In mergedprefix mode there is no `built`: every
+  -- package builds into a p<i> dir and the function merges them all.
+  local built_root = nil
+  if mergedprefix == nil then built_root = root or roots[1] end
   local oi = 1
-  while order[oi] ~= nil do
-    local name = order[oi]
+  while emit[oi] ~= nil do
+    local name = emit[oi]
     local dir = "p" .. H.numstr(oi - 1)
-    if name == root then dir = "built" end
+    if built_root ~= nil and name == built_root then dir = "built" end
     local rf = "          \"run-function " .. rulefn .. " -d " .. dir
       .. " modver=" .. pkgpath .. ".Pkg." .. H.modsegment(name) .. "@" .. version
       .. " pkg=" .. name
@@ -1612,18 +1668,46 @@ function uirules.GenerateDriver(command, request)
     slotlist = slotlist .. "\"" .. slots[si] .. "\""
     si = si + 1
   end
+  -- Function + outputs. Default (single root): copy built/install.zip out as
+  -- install.zip. mergedprefix: extract every built package's install.zip into
+  -- one prefix p/ (mirrors F_BuildLockedPackage's dep staging), seed the seq
+  -- META stub, and zip p/ as prefix.zip -- the whole external dependency prefix
+  -- in one object for a consumer to stage on OCAMLPATH.
+  local co = "\"$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')\""
+  local outname = "install.zip"
+  local fcmds = {}
+  if mergedprefix ~= nil then
+    outname = "prefix.zip"
+    local zz = "\"$(get-object CommonsBase_Std.S7z@25.1.0 -s Release.execution_abi -e '*' -d :)/7zz.exe\""
+    local sq = "\"$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildSeqMeta@1.0.0 -p assets/opam/seq-META -f seq-meta-src)\""
+    table.insert(fcmds, "          [" .. nl .. "            " .. co .. ", \"mkdir\", \"-p\", \"p/lib/seq\"" .. nl .. "          ]")
+    table.insert(fcmds, "          [" .. nl .. "            " .. co .. ", \"cp\", " .. sq .. ", \"p/lib/seq/META\"" .. nl .. "          ]")
+    local pj = 1
+    while emit[pj] ~= nil do
+      table.insert(fcmds, "          [" .. nl .. "            " .. zz .. ", \"x\", \"-y\", \"-op\", \"p" .. H.numstr(pj - 1) .. "/install.zip\"" .. nl .. "          ]")
+      pj = pj + 1
+    end
+    table.insert(fcmds, "          [" .. nl .. "            " .. zz .. ", \"a\", \"-tzip\", \"${SLOT.request}/prefix.zip\", \"./p/*\"" .. nl .. "          ]")
+  else
+    table.insert(fcmds, "          [" .. nl .. "            " .. co .. "," .. nl .. "            \"cp\", \"built/install.zip\", \"${SLOT.request}/install.zip\"" .. nl .. "          ]")
+  end
+  local fnjoined = ""
+  local fj = 1
+  while fcmds[fj] ~= nil do
+    fnjoined = fnjoined .. fcmds[fj]
+    if fcmds[fj + 1] ~= nil then fnjoined = fnjoined .. "," end
+    fnjoined = fnjoined .. nl
+    fj = fj + 1
+  end
   body = body
     .. "        ]" .. nl
     .. "      }," .. nl
     .. "      \"function\": {" .. nl
     .. "        \"commands\": [" .. nl
-    .. "          [" .. nl
-    .. "            \"$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')\"," .. nl
-    .. "            \"cp\", \"built/install.zip\", \"${SLOT.request}/install.zip\"" .. nl
-    .. "          ]" .. nl
+    .. fnjoined
     .. "        ]" .. nl
     .. "      }," .. nl
-    .. "      \"outputs\": { \"assets\": [ { \"slots\": [" .. slotlist .. "], \"paths\": [\"install.zip\"] } ] }" .. nl
+    .. "      \"outputs\": { \"assets\": [ { \"slots\": [" .. slotlist .. "], \"paths\": [\"" .. outname .. "\"] } ] }" .. nl
     .. "    }" .. nl
     .. "  ]" .. nl
     .. "}" .. nl
