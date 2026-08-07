@@ -69,6 +69,15 @@ resolution deterministic, and the version is a solve artifact only: the DkML
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
   \test(pass)
 
+The @1.1.0 revision ships alongside @1.0.0: its Solve rule delegates the lock
+logic to a compiled OCaml helper (dk_opam_lock.ml + a vendored opam-file-format
+amalgam), fixing the lua-ml depends-order scramble and the dropped
+Linux_x86_64_musl slot. @1.1.0 is a fresh id; as with @1.0.0 on this arm64 slot
+its marker output is unused (no object value-id is recorded).
+
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.0 -f ${RUNTIME}/OpamLock.Export-1.1.0.zip
+  \test(pass)
+
 ## Dk.OpamBuild
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
