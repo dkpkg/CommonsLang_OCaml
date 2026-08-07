@@ -114,7 +114,14 @@ jobs:
           #   gh variable set DK_STORE --body none
           #   git tag 0.1.<ts> && git push origin 0.1.<ts>
           #   gh variable delete DK_STORE   # restore incremental builds
-          store: ${{ vars.DK_STORE || 'release' }}
+          #
+          # The Linux_x86_64_musl slot is pinned to store: none: its
+          # store: release restore from 0.1.20260806025427 came back missing
+          # bin/ocamlopt + bin/dune.exe (run 31156747482 failed the DkML/Dune
+          # run-object version assertions with `command not found`), so it
+          # rebuilds clean until the musl restore integrity is fixed. The other
+          # six slots restore incrementally as before.
+          store: ${{ matrix.distscript == 'dist/Linux_x86_64_musl.u' && 'none' || vars.DK_STORE || 'release' }}
           distscript: ${{ matrix.distscript }}
           execution-abi: ${{ matrix.execution-abi }}
           target-abi: ${{ matrix.target-abi }}
