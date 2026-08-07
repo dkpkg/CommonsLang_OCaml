@@ -62,11 +62,6 @@ PATH.
 
 ## Dk.OpamLock
 
-Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
-author-time OpamLock uirule ships in this distribution. Running any rule of a
-scriptmodule brings in the whole scriptmodule; the marker output is otherwise
-unused. The value-id is harvested from the first CI run (the DkML pattern).
-
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
   \test(pass)
   \dk.object(abi: "Release.Linux_x86_64", value-id: "o7mmvaocrhvy765tkdtsbp76eyj2423m3espmw34kthkdoqvl3cdq")
@@ -83,19 +78,10 @@ Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean.
 
 ## Dk.OpamBuild
 
-Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
-per-package build rule ships in this distribution. Running any rule of a
-scriptmodule brings in the whole scriptmodule; the marker output is otherwise
-unused. The value-id is harvested from the first CI run (the DkML pattern).
-
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
   \test(pass)
   \dk.object(abi: "Release.Linux_x86_64", value-id: "ox2yguwbuo7ev3o5ovs5vcjgsljpqjev73hi6ze6isy6mmksrfasq")
   \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "ofwoywfonzbccnnyo6uhzrxd5allydjh4mgiqjlzo37364avaonga")\;
-
-The @1.0.1 revision ships alongside @1.0.0 for the MlFront with-test closure
-(short-circuit filter eval, an arch fenv, and the dune-install --prefix
-repair); its per-slot value-id is likewise harvested from the first CI run.
 
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.1 -f ${RUNTIME}/OpamBuild.Export-1.0.1.zip
   \test(pass)
