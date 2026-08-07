@@ -98,111 +98,67 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
 ### CommonsLang_OCaml.Apparatus@1.0.0
 
   % unified.asset { name="Patches", dir="assets/p" }
-  'asset'
-  '1789'
-  { 'sha256:e918c820b854d3e19c252870d2dc36a851c2933a451c25af240287a9061dc516' }
+  \dk.asset(byteSize: "1789", checksum: (sha256: "e918c820b854d3e19c252870d2dc36a851c2933a451c25af240287a9061dc516"))\;
 
   % unified.asset { name="Scripts", dir="assets/s" }
-  'asset'
-  '9284'
-  { 'sha256:0a07bd33be6697e1633f9884c6da5b0e27e1be2a15c6dadecfa985b99040b7d5' }
+  \dk.asset(byteSize: "9284", checksum: (sha256: "0a07bd33be6697e1633f9884c6da5b0e27e1be2a15c6dadecfa985b99040b7d5"))\;
 
   % unified.asset { name="Tables", dir="assets/table" }
-  'asset'
-  '5602'
-  { 'sha256:c0e869b612ac338e6946604f0c9ff2d1e72a3a69f6af35c3a0ae0d416005c0a0' }
+  \dk.asset(byteSize: "5602", checksum: (sha256: "c0e869b612ac338e6946604f0c9ff2d1e72a3a69f6af35c3a0ae0d416005c0a0"))\;
 
   % unified.asset { name="WineHostShim", dir="assets/wine-hostshim" }
-  'asset'
-  '710'
-  { 'sha256:32e4de10e6ffdbba35c59daeeb7c77313a695e72201fbba92d522f9fe646838c' }
+  \dk.asset(byteSize: "710", checksum: (sha256: "32e4de10e6ffdbba35c59daeeb7c77313a695e72201fbba92d522f9fe646838c"))\;
 
   % unified.asset { name="DkMLRoot", file="assets/dkml/dkmlroot.2.4.2-29.txt" }
-  'asset'
-  '27'
-  'sha256:0fa97ec8a4b1888468392a1c1b8d6abf0f67dc11281b0dc35dfb75ab0adb5663'
+  \dk.asset(byteSize: "27", checksum: (sha256: "0fa97ec8a4b1888468392a1c1b8d6abf0f67dc11281b0dc35dfb75ab0adb5663"))\;
 
   % unified.asset { name="DkMLPatchRelocatableVersion", file="assets/dkml/patch-r-c-ocaml-1-setup-relocatable-version.sh" }
-  'asset'
-  '1987'
-  'sha256:741306e16101152f5aca9a1ec073166d5e92126953c3a27413c9176a4c4d56b7'
+  \dk.asset(byteSize: "1987", checksum: (sha256: "741306e16101152f5aca9a1ec073166d5e92126953c3a27413c9176a4c4d56b7"))\;
 
   % unified.asset { name="DkMLRunBuildHost", file="assets/dkml/run-build-host.sh" }
-  'asset'
-  '11901'
-  'sha256:a669842d3a978b43ef8fddb31629e8092351086705ef2f6594162160c6c7e70b'
+  \dk.asset(byteSize: "11901", checksum: (sha256: "a669842d3a978b43ef8fddb31629e8092351086705ef2f6594162160c6c7e70b"))\;
 
   % unified.asset { name="DkMLDetectVsEnvBat", file="assets/dkml/detect-vsenv.bat" }
-  'asset'
-  '4845'
-  'sha256:71ad1b60c3b21822e078f7c92d5d7dadbb470445a685ba835c1153cbcedf50df'
+  \dk.asset(byteSize: "4845", checksum: (sha256: "71ad1b60c3b21822e078f7c92d5d7dadbb470445a685ba835c1153cbcedf50df"))\;
 
   % unified.asset { name="DkMLCleanupSlot", file="assets/dkml/cleanup-dkml-slot.sh" }
-  'asset'
-  '1289'
-  'sha256:0f862df6e11de42352d49e2c61f276d433bcb8541aff3f6b5fa0e56ae30e33a2'
+  \dk.asset(byteSize: "1289", checksum: (sha256: "0f862df6e11de42352d49e2c61f276d433bcb8541aff3f6b5fa0e56ae30e33a2"))\;
 
   % unified.asset { name="DkMLPatchStandardCompilerEnvWv18", file="assets/dkml/patch-standard-compiler-env-wv18.sh" }
-  'asset'
-  '629'
-  'sha256:f75da7664ac5c78c5e712b4e92555f7031665b9be59c5d0f057d5a397bc0fa6d'
+  \dk.asset(byteSize: "629", checksum: (sha256: "f75da7664ac5c78c5e712b4e92555f7031665b9be59c5d0f057d5a397bc0fa6d"))\;
 
   % unified.asset { name="DkMLMuslEnv", file="assets/dkml/musl-compiler-env-to-ocaml-configure-env.sh" }
-  'asset'
-  '3813'
-  'sha256:1e1bdba7cc8f84e04f86828d7f9e56b4ec014a3f4d2891ad06e0cdeace5a6a97'
+  \dk.asset(byteSize: "3813", checksum: (sha256: "1e1bdba7cc8f84e04f86828d7f9e56b4ec014a3f4d2891ad06e0cdeace5a6a97"))\;
 
   % unified.asset { name="DkMLMuslWrap", file="assets/dkml/musl-tool-wrapper.sh" }
-  'asset'
-  '483'
-  'sha256:590cbc20e4413175bd4827ee7fd81096be3ae520ed2d9a6658ad7276780f65c2'
+  \dk.asset(byteSize: "483", checksum: (sha256: "590cbc20e4413175bd4827ee7fd81096be3ae520ed2d9a6658ad7276780f65c2"))\;
 
   % unified.asset { name="DkMLMuslBuildHost", file="assets/dkml/run-musl-build-host.sh" }
-  'asset'
-  '3305'
-  'sha256:f1d0a17eb8f31dcbfb9f2aa73b2709097eee653b122590755267e69811e5f200'
+  \dk.asset(byteSize: "3305", checksum: (sha256: "f1d0a17eb8f31dcbfb9f2aa73b2709097eee653b122590755267e69811e5f200"))\;
 
   % unified.asset { name="DuneBootstrapMsvc", file="assets/dune/bootstrap-msvc.bat" }
-  'asset'
-  '1334'
-  'sha256:4bd81311d1983157f77ba3cd342624fd3d18995c0731a3d84ed8b465dcf733c2'
+  \dk.asset(byteSize: "1334", checksum: (sha256: "4bd81311d1983157f77ba3cd342624fd3d18995c0731a3d84ed8b465dcf733c2"))\;
 
   % unified.asset { name="OpamBuildWin", file="assets/opam/opam-build-win.sh" }
-  'asset'
-  '2470'
-  'sha256:03f5ee45d42552b30571412efc52df25b53f10b027304fcdf30a5dad7ef64042'
+  \dk.asset(byteSize: "2470", checksum: (sha256: "03f5ee45d42552b30571412efc52df25b53f10b027304fcdf30a5dad7ef64042"))\;
 
   % unified.asset { name="OpamBuildWinVcvars", file="assets/opam/opam-build-win-vcvars.bat" }
-  'asset'
-  '731'
-  'sha256:21e5965cd9626ebd8c4b5aa204c63b3f8ecff8f548449054ad38dac55340eb46'
+  \dk.asset(byteSize: "731", checksum: (sha256: "21e5965cd9626ebd8c4b5aa204c63b3f8ecff8f548449054ad38dac55340eb46"))\;
 
   % unified.asset { name="OpamMsvsDetectStub", file="assets/opam/msvs-detect-stub.sh" }
-  'asset'
-  '1016'
-  'sha256:050acd529a1bc35608239c390d2da6a94a1dde49d343813ab230fc31439ea651'
+  \dk.asset(byteSize: "1016", checksum: (sha256: "050acd529a1bc35608239c390d2da6a94a1dde49d343813ab230fc31439ea651"))\;
 
   % unified.asset { name="OpamMccsGlpkStub", file="assets/opam/mccs-glpk-wrmip-stub.c" }
-  'asset'
-  '726'
-  'sha256:ce730a5008fd4f856e01ea02a62c9e17a8adcb272ca91679ecc413a2e17672a9'
+  \dk.asset(byteSize: "726", checksum: (sha256: "ce730a5008fd4f856e01ea02a62c9e17a8adcb272ca91679ecc413a2e17672a9"))\;
 
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
-  'asset'
-  '12945'
-  'sha256:34fc2da6ac8d38d433edb9c7451de4cb9dc04abf8743af019edad725d67af1f2'
+  \dk.asset(byteSize: "12945", checksum: (sha256: "34fc2da6ac8d38d433edb9c7451de4cb9dc04abf8743af019edad725d67af1f2"))\;
 
   % unified.asset { name="OpamBuildSeqMeta", file="assets/opam/seq-META" }
-  'asset'
-  '137'
-  'sha256:e95062b4d0519ef8335c02f7d0f1952d11b814c7ab7e6d566a206116162fa2be'
+  \dk.asset(byteSize: "141", checksum: (sha256: "754a4537c5f9ce32f6df2de34eee00a7fe45986aea3ddf47764f98768824fc56"))\;
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  'asset'
-  '49078'
-  'sha256:e095fbc4f828a5a002a9b53298185c7a9b336ce8d08688e6f5172dc3ea8426da'
+  \dk.asset(byteSize: "49078", checksum: (sha256: "e095fbc4f828a5a002a9b53298185c7a9b336ce8d08688e6f5172dc3ea8426da"))\;
 
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
-  'asset'
-  '178821'
-  'sha256:33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e'
+  \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
