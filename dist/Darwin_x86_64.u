@@ -56,7 +56,7 @@ Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean.
   \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")
   \dk.object(abi: "Release.Darwin_x86_64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.1 -f ${RUNTIME}/OpamBuild.Export-1.0.1.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.2 -f ${RUNTIME}/OpamBuild.Export-1.0.2.zip
   \test(pass)
   \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")
   \dk.object(abi: "Release.Darwin_x86_64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;
