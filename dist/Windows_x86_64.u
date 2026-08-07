@@ -94,12 +94,11 @@ resolution deterministic, and the version is a solve artifact only: the DkML
 The @1.1.0 revision ships alongside @1.0.0: its Solve rule delegates the lock
 logic to a compiled OCaml helper (dk_opam_lock.ml + a vendored opam-file-format
 amalgam), fixing the lua-ml depends-order scramble and the dropped
-Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean; its per-slot
-value-id is harvested from the first CI run (the DkML pattern).
+Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean.
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.0 -f ${RUNTIME}/OpamLock.Export-1.1.0.zip
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "o4z5z3zdrecgprn5m46h7hczhygs6tra4jc4tjxwtfdqxagnsik2a")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "ook3wmaqxmmt4j2ctuuh44dx2h34nv4rdmzdjfuafmdepnxjlkc7a")\;
 
 
 ## Dk.OpamBuild
