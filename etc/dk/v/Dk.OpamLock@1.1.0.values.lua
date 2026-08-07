@@ -222,14 +222,20 @@ function uirules.Solve(command, request, continue_)
   -- Compile the helper with the materialized DkML compiler. OCAMLLIB points the
   -- relocatable compiler and runtime at their own stdlib (the helper strips it
   -- before spawning opam/curl). The generated amalgam compiles with -w -a.
+  -- The two get-asset files materialize into SEPARATE sandbox dirs and ocamlc
+  -- runs with cwd = the project dir, so each source's dir must be on the load
+  -- path (-I) or the helper fails "Unbound module Opam_file_format": the
+  -- amalgam's .cmi lands next to its .ml, not in the cwd.
   local ocamlc = dkmldir .. "/bin/ocamlc" .. exe
   local ocamlrun = dkmldir .. "/bin/ocamlrun" .. exe
   local bc = workdir .. "/dk_opam_lock.bc"
   local cenv = { "+OCAMLLIB=" .. dkmldir .. "/lib/ocaml" }
-  print("+ " .. ocamlc .. " -w -a unix.cma <amalgam> <helper> -o " .. bc)
+  print("+ " .. ocamlc .. " -w -a -I <amalgamdir> -I <helperdir> unix.cma <amalgam> <helper> -o " .. bc)
   local cres = request.ui.capture {
     program = ocamlc,
-    args = { "-w", "-a", "unix.cma", amalgam, helper, "-o", bc },
+    args = { "-w", "-a",
+      "-I", H.dirname(amalgam), "-I", H.dirname(helper),
+      "unix.cma", amalgam, helper, "-o", bc },
     envmods = cenv,
     max_output_bytes = 16777211
   }
