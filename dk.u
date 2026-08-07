@@ -196,3 +196,13 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
   'asset'
   '137'
   'sha256:e95062b4d0519ef8335c02f7d0f1952d11b814c7ab7e6d566a206116162fa2be'
+
+  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
+  'asset'
+  '49078'
+  'sha256:e095fbc4f828a5a002a9b53298185c7a9b336ce8d08688e6f5172dc3ea8426da'
+
+  % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
+  'asset'
+  '178821'
+  'sha256:33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e'
