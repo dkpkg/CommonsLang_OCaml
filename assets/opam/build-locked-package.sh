@@ -223,21 +223,6 @@ while [ "$n" -gt 0 ]; do
   set -- "$@" "$a"
   n=$((n - 1))
 done
-# `dune install --create-install-files` (run by some packages' own opam build,
-# e.g. crowbar) resolves section directories -- notably the mandir for a package
-# that ships a man page -- from the install prefix. opam normally supplies that
-# from the switch, but the hermetic env strips OPAM_SWITCH_PREFIX, so dune aborts
-# "The mandir installation directory is unknown". When such a command carries no
-# explicit prefix, add ip/ (the package's own install prefix): the sections then
-# resolve, install.zip still ships only what the package installs, and the
-# @OPAM_IP@ dune-package normalization is unaffected. No-op otherwise.
-case " $* " in
-  *" install "*" --create-install-files "*)
-    case " $* " in
-      *" --prefix "*|*" --mandir "*) : ;;
-      *) set -- "$@" --prefix "$ipabs" ;;
-    esac ;;
-esac
 "$@"
 rc=$?
 # ocamlfind/findlib in the DkML no-topfind environment: findlib compiles topfind

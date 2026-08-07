@@ -189,8 +189,8 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
 
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
   'asset'
-  '13754'
-  'sha256:ded473a5b47d498a9c9612823dd6d8fef167f15b2592eb90ea5937216eba0ff1'
+  '12945'
+  'sha256:34fc2da6ac8d38d433edb9c7451de4cb9dc04abf8743af019edad725d67af1f2'
 
   % unified.asset { name="OpamBuildSeqMeta", file="assets/opam/seq-META" }
   'asset'
