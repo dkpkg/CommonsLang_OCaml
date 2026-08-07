@@ -91,3 +91,11 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
   \test(pass)
   \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;
+
+The @1.0.1 revision ships alongside @1.0.0 for the MlFront with-test closure
+(short-circuit filter eval, an arch fenv, and the dune-install --prefix
+repair); its per-slot value-id is likewise harvested from the first CI run.
+
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.1 -f ${RUNTIME}/OpamBuild.Export-1.0.1.zip
+  \test(pass)
+  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;

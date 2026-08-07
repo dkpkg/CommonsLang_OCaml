@@ -102,3 +102,11 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
   \test(pass)
   \dk.object(abi: "Release.Windows_x86_64", value-id: "orlivsdhgqn6hmk3yq3gm35adggjgmx3bccn6nyluhahl4wl27cvq")\;
+
+The @1.0.1 revision ships alongside @1.0.0 for the MlFront with-test closure
+(short-circuit filter eval, an arch fenv, and the dune-install --prefix
+repair); its per-slot value-id is likewise harvested from the first CI run.
+
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.1 -f ${RUNTIME}/OpamBuild.Export-1.0.1.zip
+  \test(pass)
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "orlivsdhgqn6hmk3yq3gm35adggjgmx3bccn6nyluhahl4wl27cvq")\;
