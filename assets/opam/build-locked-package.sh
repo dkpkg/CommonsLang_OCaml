@@ -223,26 +223,28 @@ while [ "$n" -gt 0 ]; do
   set -- "$@" "$a"
   n=$((n - 1))
 done
-# Force the dune sandbox mode when requested via DUNE_SANDBOX in the environment.
-# dune's default sandbox on Windows is `copy` (dune#4362), which fails to
-# materialize a vendored dependency's .cmi into the sandbox for some packages
-# (e.g. menhir: parser__mock.mli.inferred needs vendored fix's cmi). dune honours
-# the --sandbox FLAG, not the DUNE_SANDBOX env var, so translate the env var into a
-# flag on `dune build` commands. No-op when DUNE_SANDBOX is unset (so non-dune
-# commands and the default build behaviour are unchanged).
+# dune's default sandbox on Windows is `copy` (dune#4362): for some packages it
+# fails to materialize a vendored dependency's .cmi into the sandbox (menhir:
+# parser__mock.mli.inferred needs vendored fix's cmi), aborting the build. Force
+# `hardlink` (works on same-volume NTFS, and is what dune#4362 wants for Windows)
+# on Windows `dune build` commands. Unix ($arch = "-") keeps dune's default
+# sandbox, so Linux/macOS builds are unchanged.
 #
-# Propagation diagnostic (grep `[wrapper-diag]` in the per-command stderr logs):
-# reports whether DUNE_SANDBOX actually reached this wrapper and, when a dune build
-# is detected, that the --sandbox flag was injected. Cheap; one line per command.
-printf '[wrapper-diag] DUNE_SANDBOX=%s cmd0=%s cmd1=%s\n' "${DUNE_SANDBOX:-<unset>}" "${1##*/}" "${2:-<none>}" >&2
-if [ -n "${DUNE_SANDBOX:-}" ]; then
+# An explicit DUNE_SANDBOX overrides the forced mode -- but note that dk0 runs this
+# wrapper with a sanitized environment, so a JOB-level DUNE_SANDBOX does NOT arrive
+# here (confirmed via [wrapper-diag]: it reads <unset> even when set on the CI job).
+# The `[wrapper-diag]` stderr lines report the effective sandbox and the injection.
+_sbx="${DUNE_SANDBOX:-}"
+[ -z "$_sbx" ] && [ "$arch" != "-" ] && _sbx=hardlink
+printf '[wrapper-diag] DUNE_SANDBOX=%s arch=%s effective=%s cmd0=%s cmd1=%s\n' "${DUNE_SANDBOX:-<unset>}" "$arch" "${_sbx:-<dune-default>}" "${1##*/}" "${2:-<none>}" >&2
+if [ -n "$_sbx" ]; then
   case "$1" in
     *dune | *dune.exe)
       if [ "$2" = "build" ]; then
         _dexe=$1
         shift 2
-        set -- "$_dexe" build "--sandbox=${DUNE_SANDBOX}" "$@"
-        printf '[wrapper-diag] injected --sandbox=%s into: %s\n' "${DUNE_SANDBOX}" "$*" >&2
+        set -- "$_dexe" build "--sandbox=${_sbx}" "$@"
+        printf '[wrapper-diag] injected --sandbox=%s into: %s\n' "$_sbx" "$*" >&2
       fi
       ;;
   esac

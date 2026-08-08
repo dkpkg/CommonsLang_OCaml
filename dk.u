@@ -152,7 +152,7 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
   \dk.asset(byteSize: "726", checksum: (sha256: "ce730a5008fd4f856e01ea02a62c9e17a8adcb272ca91679ecc413a2e17672a9"))\;
 
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
-  \dk.asset(byteSize: "14171", checksum: (sha256: "55d30362872a5522ccb908d7bcb8a5782eb30c9bb2d9b25cb7b4f27c6ea97d41"))\;
+  \dk.asset(byteSize: "14272", checksum: (sha256: "bd5a3bd186c8a8c91718f97d9f7fe8f79b45ab5d4087d80d6b054a9e842f0a79"))\;
 
   % unified.asset { name="OpamBuildSeqMeta", file="assets/opam/seq-META" }
   \dk.asset(byteSize: "141", checksum: (sha256: "754a4537c5f9ce32f6df2de34eee00a7fe45986aea3ddf47764f98768824fc56"))\;
