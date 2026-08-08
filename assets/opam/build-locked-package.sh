@@ -68,6 +68,26 @@ if [ "$count" -eq 1 ] && [ -d "$only" ]; then
   fi
   cd "$only"
 fi
+# Pin dune's workspace root to this build sandbox. dune finds its workspace root
+# by walking UP from the build directory for the highest-priority marker -- a
+# dune-workspace file, else the topmost dune-project. With no marker in the
+# sandbox, discovery ESCAPES into an enclosing consumer repo that has a root
+# dune-project (dk keeps its per-process sandboxes at <consumer>/t/p/<pid>/...),
+# where dune then scans sibling package sandboxes and dies on duplicate opam
+# package names -- e.g. menhir's sub-packages each vendor pprint/vendored_pprint.opam,
+# so two menhir-* sandboxes collide during `dune install --prefix @IP@ <pkg>`.
+# (The compile step `dune build -p <pkg>` is --only-packages-scoped and tolerates
+# the duplicates; the unscoped install does not.) A dune-workspace at $root -- the
+# build root that holds s/ p/ ip/ -- stops discovery there, so the escape and the
+# collision both disappear. It goes at $root, NOT the source dir: dune keeps a
+# relative `--prefix` inside the workspace root, and a dune package installs to the
+# RELATIVE ../../ip prefix (see the rule), which resolves to $root/ip -- inside a
+# $root-rooted workspace but OUTSIDE a source-dir-rooted one ("path outside the
+# workspace"). --root is not injected: a package's own opam argv may already pass
+# --root, and a second one is a hard error. Only write when absent, so a source
+# shipping its own dune-workspace is left untouched. `(lang dune 3.0)` is a valid
+# root for the provided Dune 3.23.1 (an empty file also works).
+[ -e "$root/dune-workspace" ] || printf '(lang dune 3.0)\n' > "$root/dune-workspace"
 if [ "$arch" != "-" ]; then
   # Windows: MSYS2's coreutils (tr, sed, cygpath) live in /usr/bin, which the
   # MSYS2 runtime maps to the tree dash.exe was launched from. Put it on PATH so
