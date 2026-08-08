@@ -48,6 +48,6 @@ its marker output is unused (no object value-id is recorded).
   \test(pass)
   \dk.object(abi: "Release.Linux_arm64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.5 -f ${RUNTIME}/OpamBuild.Export-1.0.5.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.6 -f ${RUNTIME}/OpamBuild.Export-1.0.6.zip
   \test(pass)
   \dk.object(abi: "Release.Linux_arm64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;
