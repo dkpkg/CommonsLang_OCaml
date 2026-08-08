@@ -58,7 +58,14 @@ cd s
 count=0; only=
 for e in * .[!.]*; do [ -e "$e" ] || continue; count=$((count + 1)); only=$e; done
 if [ "$count" -eq 1 ] && [ -d "$only" ]; then
-  if [ "$only" != "x" ]; then mv -- "$only" x && only=x; fi
+  # `mv` lives in MSYS2 /usr/bin, which dk0 does NOT put on PATH this early (it is
+  # added below, before the MSVC import). Without it the rename was a silent no-op
+  # (command-not-found inside a `&&` list does not trip `set -e`), so the build ran
+  # at the long name and hit MAX_PATH. Run mv with /usr/bin on PATH; report on fail.
+  if [ "$only" != "x" ]; then
+    err=$(PATH="/usr/bin:$PATH" mv -- "$only" x 2>&1) && only=x \
+      || printf '[wrapper-diag] rename %s -> x FAILED: %s\n' "$only" "$err" >&2
+  fi
   cd "$only"
 fi
 if [ "$arch" != "-" ]; then
