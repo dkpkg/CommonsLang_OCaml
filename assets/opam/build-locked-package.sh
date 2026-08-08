@@ -223,19 +223,23 @@ while [ "$n" -gt 0 ]; do
   set -- "$@" "$a"
   n=$((n - 1))
 done
-# dune's default sandbox on Windows is `copy` (dune#4362): for some packages it
-# fails to materialize a vendored dependency's .cmi into the sandbox (menhir:
-# parser__mock.mli.inferred needs vendored fix's cmi), aborting the build. Force
-# `hardlink` (works on same-volume NTFS, and is what dune#4362 wants for Windows)
-# on Windows `dune build` commands. Unix ($arch = "-") keeps dune's default
-# sandbox, so Linux/macOS builds are unchanged.
+# dune's sandbox on Windows drops files from the sandbox for some packages,
+# aborting the build: `copy` (the Windows default) drops a vendored dependency's
+# real .cmi (menhir: parser__mock.mli.inferred needs vendored fix's cmi), and even
+# `hardlink` drops dune-generated files (ppxlib: runner_as_ppx *.all-deps). Since
+# F_BuildLockedPackage builds ONE isolated package per directory, dune's sandbox is
+# redundant here, so force `--sandbox=none` on Windows `dune build` commands: dune
+# builds in _build/default where every input and generated file is present,
+# sidestepping the whole class of Windows sandbox bugs. `none` also needs no
+# NTFS/same-volume (hardlink) or privilege (symlink). Unix ($arch = "-") keeps
+# dune's default sandbox, so Linux/macOS builds are unchanged.
 #
-# An explicit DUNE_SANDBOX overrides the forced mode -- but note that dk0 runs this
-# wrapper with a sanitized environment, so a JOB-level DUNE_SANDBOX does NOT arrive
-# here (confirmed via [wrapper-diag]: it reads <unset> even when set on the CI job).
-# The `[wrapper-diag]` stderr lines report the effective sandbox and the injection.
+# An explicit DUNE_SANDBOX overrides -- but dk0 runs this wrapper with a sanitized
+# environment, so a JOB-level DUNE_SANDBOX does NOT arrive here (confirmed via
+# [wrapper-diag]: it reads <unset> even when set on the CI job). The `[wrapper-diag]`
+# stderr lines report the effective sandbox and the injection.
 _sbx="${DUNE_SANDBOX:-}"
-[ -z "$_sbx" ] && [ "$arch" != "-" ] && _sbx=hardlink
+[ -z "$_sbx" ] && [ "$arch" != "-" ] && _sbx=none
 printf '[wrapper-diag] DUNE_SANDBOX=%s arch=%s effective=%s cmd0=%s cmd1=%s\n' "${DUNE_SANDBOX:-<unset>}" "$arch" "${_sbx:-<dune-default>}" "${1##*/}" "${2:-<none>}" >&2
 if [ -n "$_sbx" ]; then
   case "$1" in
