@@ -498,6 +498,11 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_6.filter_atom(words, st, fenv, pkg
     assert(lhs ~= nil, "unknown filter variable `" .. wtok.v .. "` in `" .. ftext .. "` for package " .. pkg)
     if op == ">=" then value = H.version_ge(lhs, rhs.v)
     elseif op == "<=" then value = H.version_ge(rhs.v, lhs)
+    -- strict: a > b iff NOT (b >= a); a < b iff NOT (a >= b). (num's build gates on
+    -- `ocaml:version < "5.0.0~~"`.) version_ge is numeric (it drops the opam `~`
+    -- pre-release marker), which is exact for the major-version bounds in the lock.
+    elseif op == ">" then value = (H.version_ge(rhs.v, lhs) == nil)
+    elseif op == "<" then value = (H.version_ge(lhs, rhs.v) == nil)
     elseif op == "=" then value = (lhs == rhs.v)
     elseif op == "!=" then value = (lhs ~= rhs.v)
     else assert(false, "unsupported operator `" .. op .. "` in filter `" .. ftext .. "` for package " .. pkg) end
@@ -1140,9 +1145,24 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   vars["jobs"] = "4"
   vars["make"] = "make"
   vars["prefix"] = ip
+  -- opam GLOBAL directory variables (the switch's dirs, i.e. prefix/<dir> with no
+  -- package-name segment -- the package-scoped forms %{_:VAR}% / %{<pkg>:VAR}% are
+  -- seeded separately below). An opam install field that uses e.g. %{share}% or
+  -- %{man}% (cmdliner) resolves to the install prefix's conventional subdir. Full
+  -- set per the opam manual so a package using any of them does not abort.
   vars["bin"] = ip .. "/bin"
+  vars["sbin"] = ip .. "/sbin"
   vars["lib"] = ip .. "/lib"
+  vars["lib_root"] = ip .. "/lib"
+  vars["libexec"] = ip .. "/lib"
+  vars["libexec_root"] = ip .. "/lib"
   vars["man"] = ip .. "/man"
+  vars["doc"] = ip .. "/doc"
+  vars["share"] = ip .. "/share"
+  vars["share_root"] = ip .. "/share"
+  vars["etc"] = ip .. "/etc"
+  vars["stublibs"] = ip .. "/lib/stublibs"
+  vars["toplevel"] = ip .. "/lib/toplevel"
   vars["dev"] = "false"
   vars["pinned"] = "false"
   -- opam variables that appear in %{...}% interpolations (not just filters); the

@@ -47,9 +47,20 @@ cd s
 # The source is extracted (by 7zz) without stripping its single top-level
 # directory. Descend into that sole directory when it is the only entry in s/,
 # so the build runs from the source root on every platform.
+#
+# Windows MAX_PATH (260): the extracted dir name (e.g.
+# menhir-20231231-<40-hex-sha>, ~59 chars) pushes dune's deep sandbox paths
+# (_build/.sandbox/<32-hex>/default/<pkg>/.<pkg>.objs/byte/<Long_Module>.cmi and
+# *.impl.all-deps) past 260, so a compiled/generated file "disappears" mid-build.
+# The GitLab-Runner build root is itself long and MSYS2 resolves our short-path
+# junction back to it, so the only reliable slack is the source dir name: rename
+# the sole top-level dir to `x` before building. Harmless on Unix.
 count=0; only=
 for e in * .[!.]*; do [ -e "$e" ] || continue; count=$((count + 1)); only=$e; done
-if [ "$count" -eq 1 ] && [ -d "$only" ]; then cd "$only"; fi
+if [ "$count" -eq 1 ] && [ -d "$only" ]; then
+  if [ "$only" != "x" ]; then mv -- "$only" x && only=x; fi
+  cd "$only"
+fi
 if [ "$arch" != "-" ]; then
   # Windows: MSYS2's coreutils (tr, sed, cygpath) live in /usr/bin, which the
   # MSYS2 runtime maps to the tree dash.exe was launched from. Put it on PATH so
@@ -223,36 +234,14 @@ while [ "$n" -gt 0 ]; do
   set -- "$@" "$a"
   n=$((n - 1))
 done
-# dune's sandbox on Windows drops files from the sandbox for some packages,
-# aborting the build: `copy` (the Windows default) drops a vendored dependency's
-# real .cmi (menhir: parser__mock.mli.inferred needs vendored fix's cmi), and even
-# `hardlink` drops dune-generated files (ppxlib: runner_as_ppx *.all-deps). Since
-# F_BuildLockedPackage builds ONE isolated package per directory, dune's sandbox is
-# redundant here, so force `--sandbox=none` on Windows `dune build` commands: dune
-# builds in _build/default where every input and generated file is present,
-# sidestepping the whole class of Windows sandbox bugs. `none` also needs no
-# NTFS/same-volume (hardlink) or privilege (symlink). Unix ($arch = "-") keeps
-# dune's default sandbox, so Linux/macOS builds are unchanged.
-#
-# An explicit DUNE_SANDBOX overrides -- but dk0 runs this wrapper with a sanitized
-# environment, so a JOB-level DUNE_SANDBOX does NOT arrive here (confirmed via
-# [wrapper-diag]: it reads <unset> even when set on the CI job). The `[wrapper-diag]`
-# stderr lines report the effective sandbox and the injection.
-_sbx="${DUNE_SANDBOX:-}"
-[ -z "$_sbx" ] && [ "$arch" != "-" ] && _sbx=none
-printf '[wrapper-diag] DUNE_SANDBOX=%s arch=%s effective=%s cmd0=%s cmd1=%s\n' "${DUNE_SANDBOX:-<unset>}" "$arch" "${_sbx:-<dune-default>}" "${1##*/}" "${2:-<none>}" >&2
-if [ -n "$_sbx" ]; then
-  case "$1" in
-    *dune | *dune.exe)
-      if [ "$2" = "build" ]; then
-        _dexe=$1
-        shift 2
-        set -- "$_dexe" build "--sandbox=${_sbx}" "$@"
-        printf '[wrapper-diag] injected --sandbox=%s into: %s\n' "$_sbx" "$*" >&2
-      fi
-      ;;
-  esac
-fi
+# The sole source dir was renamed to `x` above to keep dune's deep sandbox paths
+# under Windows MAX_PATH (260). No sandbox mode is forced here: the earlier
+# menhir/ppxlib "sandbox" failures were MAX_PATH artifacts (a compiled/generated
+# file at a >260-char path reads back as "No such file"), not sandbox semantics, so
+# dune's default sandbox is used. [wrapper-diag] reports the build cwd + its length
+# so the path-length fix can be confirmed (temporary; removed after confirmation).
+_cwd=$(pwd)
+printf '[wrapper-diag] arch=%s cwd_len=%s cmd0=%s cmd1=%s cwd=%s\n' "$arch" "${#_cwd}" "${1##*/}" "${2:-<none>}" "$_cwd" >&2
 "$@"
 rc=$?
 # ocamlfind/findlib in the DkML no-topfind environment: findlib compiles topfind
