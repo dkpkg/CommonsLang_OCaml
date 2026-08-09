@@ -161,8 +161,8 @@ function uirules.Solve(command, request, continue_)
       end
     end
     local files = {
-      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.0 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
-      amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.0 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
+      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.1 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
+      amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.1 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
     }
     return {
       submit = {
@@ -612,7 +612,7 @@ function uirules.GenerateDriver(command, request)
   if mergedprefix ~= nil then
     outname = "prefix.zip"
     local zz = "\"$(get-object CommonsBase_Std.S7z@25.1.0 -s Release.execution_abi -e '*' -d :)/7zz.exe\""
-    local sq = "\"$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildSeqMeta@1.0.0 -p assets/opam/seq-META -f seq-meta-src)\""
+    local sq = "\"$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildSeqMeta@1.0.1 -p assets/opam/seq-META -f seq-meta-src)\""
     table.insert(fcmds, "          [" .. nl .. "            " .. co .. ", \"mkdir\", \"-p\", \"p/lib/seq\"" .. nl .. "          ]")
     table.insert(fcmds, "          [" .. nl .. "            " .. co .. ", \"cp\", " .. sq .. ", \"p/lib/seq/META\"" .. nl .. "          ]")
     local pj = 1

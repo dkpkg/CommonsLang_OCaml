@@ -53,7 +53,7 @@
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLRoot@1.0.0 -p assets/dkml/dkmlroot.2.4.2-29.txt -f dkmlroot.2.4.2-29.txt)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLRoot@1.0.1 -p assets/dkml/dkmlroot.2.4.2-29.txt -f dkmlroot.2.4.2-29.txt)",
                         "s/dkmldir/.dkmlroot"
                     ],
                     [
@@ -74,7 +74,7 @@
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslEnv@1.0.0 -p assets/dkml/musl-compiler-env-to-ocaml-configure-env.sh -f musl-compiler-env-to-ocaml-configure-env.sh)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslEnv@1.0.1 -p assets/dkml/musl-compiler-env-to-ocaml-configure-env.sh -f musl-compiler-env-to-ocaml-configure-env.sh)",
                         "s/dkmldir/vendor/dkml-compiler/env/musl-compiler-env-to-ocaml-configure-env.sh"
                     ],
                     [
@@ -86,7 +86,7 @@
                     ],
                     [
                         "/bin/sh",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLPatchRelocatableVersion@1.0.0 -p assets/dkml/patch-r-c-ocaml-1-setup-relocatable-version.sh -f patch-r-c-ocaml-1-setup-relocatable-version.sh)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLPatchRelocatableVersion@1.0.1 -p assets/dkml/patch-r-c-ocaml-1-setup-relocatable-version.sh -f patch-r-c-ocaml-1-setup-relocatable-version.sh)",
                         "s/src/r-c-ocaml-1-setup.sh"
                     ],
                     [
@@ -134,7 +134,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Linux_x86_64}",
                         "/bin/sh",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.0 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.1 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
                     ],
                     [
                         "/usr/bin/tar",
@@ -213,7 +213,7 @@
                         "\"SAK_LINK=x86_64-linux-musl-gcc -static -o sak sak.o\"",
                         "DKML_MUSL_BINDIR=${SLOTABS.Release.Linux_x86_64_musl}/x86_64-linux-musl-cross/bin",
                         "/bin/sh",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslBuildHost@1.0.0 -p assets/dkml/run-musl-build-host.sh -f run-musl-build-host.sh)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslBuildHost@1.0.1 -p assets/dkml/run-musl-build-host.sh -f run-musl-build-host.sh)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -221,7 +221,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Linux_x86_64_musl}",
                         "/bin/sh",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.0 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.1 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -229,7 +229,7 @@
                         "-D",
                         "-m",
                         "755",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslWrap@1.0.0 -p assets/dkml/musl-tool-wrapper.sh -f musl-tool-wrapper.sh)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslWrap@1.0.1 -p assets/dkml/musl-tool-wrapper.sh -f musl-tool-wrapper.sh)",
                         "${SLOTABS.Release.Linux_x86_64_musl}/bin/x86_64-linux-musl-as"
                     ],
                     [
@@ -238,7 +238,7 @@
                         "-D",
                         "-m",
                         "755",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslWrap@1.0.0 -p assets/dkml/musl-tool-wrapper.sh -f musl-tool-wrapper.sh)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslWrap@1.0.1 -p assets/dkml/musl-tool-wrapper.sh -f musl-tool-wrapper.sh)",
                         "${SLOTABS.Release.Linux_x86_64_musl}/bin/x86_64-linux-musl-cpp"
                     ],
                     [
@@ -247,7 +247,7 @@
                         "-D",
                         "-m",
                         "755",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslWrap@1.0.0 -p assets/dkml/musl-tool-wrapper.sh -f musl-tool-wrapper.sh)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslWrap@1.0.1 -p assets/dkml/musl-tool-wrapper.sh -f musl-tool-wrapper.sh)",
                         "${SLOTABS.Release.Linux_x86_64_musl}/bin/x86_64-linux-musl-g++"
                     ],
                     [
@@ -256,7 +256,7 @@
                         "-D",
                         "-m",
                         "755",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslWrap@1.0.0 -p assets/dkml/musl-tool-wrapper.sh -f musl-tool-wrapper.sh)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslWrap@1.0.1 -p assets/dkml/musl-tool-wrapper.sh -f musl-tool-wrapper.sh)",
                         "${SLOTABS.Release.Linux_x86_64_musl}/bin/x86_64-linux-musl-gcc"
                     ],
                     [
@@ -265,7 +265,7 @@
                         "-D",
                         "-m",
                         "755",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslWrap@1.0.0 -p assets/dkml/musl-tool-wrapper.sh -f musl-tool-wrapper.sh)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLMuslWrap@1.0.1 -p assets/dkml/musl-tool-wrapper.sh -f musl-tool-wrapper.sh)",
                         "${SLOTABS.Release.Linux_x86_64_musl}/bin/x86_64-linux-musl-ld"
                     ],
                     [
@@ -313,7 +313,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Linux_x86}",
                         "/bin/sh",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.0 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.1 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -360,7 +360,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Linux_arm64}",
                         "/bin/sh",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.0 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.1 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -407,7 +407,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Darwin_x86_64}",
                         "/bin/sh",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.0 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.1 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -454,7 +454,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Darwin_arm64}",
                         "/bin/sh",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.0 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.1 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
                     ]
                 ]
             },

@@ -1679,7 +1679,7 @@ function uirules.GenerateDriver(command, request)
   if mergedprefix ~= nil then
     outname = "prefix.zip"
     local zz = "\"$(get-object CommonsBase_Std.S7z@25.1.0 -s Release.execution_abi -e '*' -d :)/7zz.exe\""
-    local sq = "\"$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildSeqMeta@1.0.0 -p assets/opam/seq-META -f seq-meta-src)\""
+    local sq = "\"$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildSeqMeta@1.0.1 -p assets/opam/seq-META -f seq-meta-src)\""
     table.insert(fcmds, "          [" .. nl .. "            " .. co .. ", \"mkdir\", \"-p\", \"p/lib/seq\"" .. nl .. "          ]")
     table.insert(fcmds, "          [" .. nl .. "            " .. co .. ", \"cp\", " .. sq .. ", \"p/lib/seq/META\"" .. nl .. "          ]")
     local pj = 1

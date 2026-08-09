@@ -78,7 +78,7 @@
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLRoot@1.0.0 -p assets/dkml/dkmlroot.2.4.2-29.txt -f dkmlroot.2.4.2-29.txt)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLRoot@1.0.1 -p assets/dkml/dkmlroot.2.4.2-29.txt -f dkmlroot.2.4.2-29.txt)",
                         "s/dkmldir/.dkmlroot"
                     ],
                     [
@@ -90,7 +90,7 @@
                     ],
                     [
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)/bin/sh.exe",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLPatchStandardCompilerEnvWv18@1.0.0 -p assets/dkml/patch-standard-compiler-env-wv18.sh -f patch-standard-compiler-env-wv18.sh)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLPatchStandardCompilerEnvWv18@1.0.1 -p assets/dkml/patch-standard-compiler-env-wv18.sh -f patch-standard-compiler-env-wv18.sh)",
                         "s/env/standard-compiler-env-to-ocaml-configure-env.sh"
                     ],
                     [
@@ -110,7 +110,7 @@
                     ],
                     [
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)/bin/sh.exe",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLPatchRelocatableVersion@1.0.0 -p assets/dkml/patch-r-c-ocaml-1-setup-relocatable-version.sh -f patch-r-c-ocaml-1-setup-relocatable-version.sh)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLPatchRelocatableVersion@1.0.1 -p assets/dkml/patch-r-c-ocaml-1-setup-relocatable-version.sh -f patch-r-c-ocaml-1-setup-relocatable-version.sh)",
                         "s/src/r-c-ocaml-1-setup.sh"
                     ],
                     [
@@ -148,8 +148,8 @@
                         "MAKE_WIN=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/make.exe -d :)/bin/make.exe",
                         "DK_UNIX_ESSENTIALS=$(--path=absnative get-object CommonsBase_GNU.UnixEssentials@0.1.0 -s Release.execution_abi -e bin/sed.exe -d :)",
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)/bin/sh.exe",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLRunBuildHost@1.0.0 -p assets/dkml/run-build-host.sh -f run-build-host.sh)",
-                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.DkMLDetectVsEnvBat@1.0.0 -p assets/dkml/detect-vsenv.bat -f detect-vsenv.bat)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLRunBuildHost@1.0.1 -p assets/dkml/run-build-host.sh -f run-build-host.sh)",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.DkMLDetectVsEnvBat@1.0.1 -p assets/dkml/detect-vsenv.bat -f detect-vsenv.bat)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -157,7 +157,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Windows_x86_64}",
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)/bin/sh.exe",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.0 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.1 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -228,8 +228,8 @@
                         "MAKE_WIN=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/make.exe -d :)/bin/make.exe",
                         "DK_UNIX_ESSENTIALS=$(--path=absnative get-object CommonsBase_GNU.UnixEssentials@0.1.0 -s Release.execution_abi -e bin/sed.exe -d :)",
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)/bin/sh.exe",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLRunBuildHost@1.0.0 -p assets/dkml/run-build-host.sh -f run-build-host.sh)",
-                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.DkMLDetectVsEnvBat@1.0.0 -p assets/dkml/detect-vsenv.bat -f detect-vsenv.bat)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLRunBuildHost@1.0.1 -p assets/dkml/run-build-host.sh -f run-build-host.sh)",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.DkMLDetectVsEnvBat@1.0.1 -p assets/dkml/detect-vsenv.bat -f detect-vsenv.bat)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -237,7 +237,7 @@
                         "--chdir",
                         "${SLOTABS.Release.Windows_x86}",
                         "$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -e bin/sh.exe -d :)/bin/sh.exe",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.0 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLCleanupSlot@1.0.1 -p assets/dkml/cleanup-dkml-slot.sh -f cleanup-dkml-slot.sh)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",

@@ -95,7 +95,7 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
       } } }
 ## Assets
 
-### CommonsLang_OCaml.Apparatus@1.0.0
+### CommonsLang_OCaml.Apparatus@1.0.1
 
   % unified.asset { name="Patches", dir="assets/p" }
   \dk.asset(byteSize: "1789", checksum: (sha256: "e918c820b854d3e19c252870d2dc36a851c2933a451c25af240287a9061dc516"))\;
