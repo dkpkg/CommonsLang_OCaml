@@ -209,6 +209,14 @@ sources in precedence order.
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
   \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
 
+### CommonsLang_OCaml.Apparatus@1.0.2
+
+  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
+  \dk.asset(byteSize: "55129", checksum: (sha256: "94dac7b85147cc4e6021972eef96812aff5719584900e80478bff362cda755a3"))\;
+
+  % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
+  \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
+
 ## Dk.OpamLock
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
