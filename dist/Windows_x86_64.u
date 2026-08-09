@@ -62,9 +62,10 @@ Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean.
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.0 -f ${RUNTIME}/OpamLock.Export-1.1.0.zip
   \test(pass)
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.1 -f ${RUNTIME}/OpamLock.Export-1.1.1.zip
-  	est(pass)
   \dk.object(abi: "Release.Windows_x86_64", value-id: "ook3wmaqxmmt4j2ctuuh44dx2h34nv4rdmzdjfuafmdepnxjlkc7a")\;
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.1 -f ${RUNTIME}/OpamLock.Export-1.1.1.zip
+  \test(pass)
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "oxagrq3htmsekhfb3f2ulnmrburpbycp4e7rktb4g7lts4jfuxnbq")\;
 
 
 ## Dk.OpamBuild
@@ -75,6 +76,7 @@ Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean.
 
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.6 -f ${RUNTIME}/OpamBuild.Export-1.0.6.zip
   \test(pass)
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "orlivsdhgqn6hmk3yq3gm35adggjgmx3bccn6nyluhahl4wl27cvq")\;
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.7 -f ${RUNTIME}/OpamBuild.Export-1.0.7.zip
-  	est(pass)
+  \test(pass)
   \dk.object(abi: "Release.Windows_x86_64", value-id: "orlivsdhgqn6hmk3yq3gm35adggjgmx3bccn6nyluhahl4wl27cvq")\;

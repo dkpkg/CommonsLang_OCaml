@@ -39,9 +39,10 @@ Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean.
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.0 -f ${RUNTIME}/OpamLock.Export-1.1.0.zip
   \test(pass)
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.1 -f ${RUNTIME}/OpamLock.Export-1.1.1.zip
-  	est(pass)
   \dk.object(abi: "Release.Linux_x86_64", value-id: "ofot2gh6jlflllyw3fsfejr3zry2arpphivqbmi2sxjlbsuo724ka")\;
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.1 -f ${RUNTIME}/OpamLock.Export-1.1.1.zip
+  \test(pass)
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "oimllqf4c4qgwdywgchfppmedj2sgf53xn44mw5hi3foyb6hbus2a")\;
 
 
 ## Dk.OpamBuild
@@ -53,7 +54,7 @@ Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean.
 
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.6 -f ${RUNTIME}/OpamBuild.Export-1.0.6.zip
   \test(pass)
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "ox2yguwbuo7ev3o5ovs5vcjgsljpqjev73hi6ze6isy6mmksrfasq")\;
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.7 -f ${RUNTIME}/OpamBuild.Export-1.0.7.zip
-  	est(pass)
-  \dk.object(abi: "Release.Linux_x86", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")
+  \test(pass)
   \dk.object(abi: "Release.Linux_x86_64", value-id: "ox2yguwbuo7ev3o5ovs5vcjgsljpqjev73hi6ze6isy6mmksrfasq")\;
