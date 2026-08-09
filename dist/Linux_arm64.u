@@ -41,6 +41,8 @@ its marker output is unused (no object value-id is recorded).
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.0 -f ${RUNTIME}/OpamLock.Export-1.1.0.zip
   \test(pass)
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.1 -f ${RUNTIME}/OpamLock.Export-1.1.1.zip
+  	est(pass)
 
 ## Dk.OpamBuild
 
@@ -50,4 +52,6 @@ its marker output is unused (no object value-id is recorded).
 
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.6 -f ${RUNTIME}/OpamBuild.Export-1.0.6.zip
   \test(pass)
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.7 -f ${RUNTIME}/OpamBuild.Export-1.0.7.zip
+  	est(pass)
   \dk.object(abi: "Release.Linux_arm64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;
