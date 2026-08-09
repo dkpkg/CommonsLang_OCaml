@@ -204,7 +204,7 @@ sources in precedence order.
   \dk.asset(byteSize: "141", checksum: (sha256: "754a4537c5f9ce32f6df2de34eee00a7fe45986aea3ddf47764f98768824fc56"))\;
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "49078", checksum: (sha256: "e095fbc4f828a5a002a9b53298185c7a9b336ce8d08688e6f5172dc3ea8426da"))\;
+  \dk.asset(byteSize: "55129", checksum: (sha256: "94dac7b85147cc4e6021972eef96812aff5719584900e80478bff362cda755a3"))\;
 
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
   \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
@@ -246,6 +246,32 @@ resolution deterministic, and the version is a solve artifact only: the DkML
 + The DkML 4.14.3 toolchain ocaml replaces this solve compiler at build time,
   so the lock's ocaml and ocaml-base-compiler entries are solve artifacts, not
   build inputs.
+
+### Relocatable ocamlfind and ocamlbuild
+
+The solver still resolves ocamlfind and ocamlbuild (so the rest of the closure
+resolves and both still satisfy their dependents at the resolved version), but
+when the helper emits these two entries it substitutes a fixed relocatable
+specification for the solved source and build commands. A stock findlib bakes an
+absolute stdlib path into `topfind` and `findlib.conf`, and a stock ocamlbuild
+bakes an absolute libdir. Those absolute paths are valid only in the build tree
+that produced them, so a prebuilt `CommonsBase_Dk.Dk0.Pkg.Ocamlfind` or
+`Pkg.Ocamlbuild` object is unusable once imported into a different build tree
+(the imported `#use "topfind"` loads a dead `#directory`). The relocatable
+builds write paths relative to the tool's own location instead, so the imported
+objects stay usable across build trees.
+
++ ocamlfind is pinned to dra27's relocatable fork (v1.9.8) and built with
+  `-sitelib "."`, so findlib writes a relative `topfind` and `findlib.conf`.
++ ocamlbuild is pinned to dra27's relocatable-0.14.3 fork (0.14.3 plus the
+  relocatable patch) and built through `configure.make` with
+  `OCAMLBUILD_LIBDIR=..`, so ocamlbuild computes its libdir at runtime.
++ Both sources are addressed by git commit, so the pin does not move. The
+  substitution is a property of the lock the helper writes; downstream projects
+  do not list these packages in their `dk-opam-pins.txt`.
++ The DkML `4.14.3+relocatable` toolchain supplies the runtime support the two
+  forks rely on (`standard_library_relative`, `-set-runtime-default`), so no
+  compiler change is needed.
 
 ## Dk.OpamBuild
 
