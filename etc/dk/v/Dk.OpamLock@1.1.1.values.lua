@@ -548,7 +548,9 @@ function uirules.GenerateDriver(command, request)
             local gname = string.sub(gk, 1, gd - 1)
             local gver = string.sub(gk, gd + 1)
             if imported[gname] == nil and sbyver[gname] == gver then
-              imported[gname] = slib .. ".Pkg." .. H.modsegment(gname) .. "@" .. sver
+              -- `slib` is the full object namespace (ex. CommonsBase_Dk.Dk0.Pkg),
+              -- so the id is `<slib>.<Seg>@<ver>` -- do NOT insert another `.Pkg`.
+              imported[gname] = slib .. "." .. H.modsegment(gname) .. "@" .. sver
             end
           end
           gk = next(lock.packages, gk)
