@@ -204,15 +204,15 @@ sources in precedence order.
   \dk.asset(byteSize: "141", checksum: (sha256: "754a4537c5f9ce32f6df2de34eee00a7fe45986aea3ddf47764f98768824fc56"))\;
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "55129", checksum: (sha256: "94dac7b85147cc4e6021972eef96812aff5719584900e80478bff362cda755a3"))\;
+  \dk.asset(byteSize: "49078", checksum: (sha256: "e095fbc4f828a5a002a9b53298185c7a9b336ce8d08688e6f5172dc3ea8426da"))\;
 
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
   \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
 
-### CommonsLang_OCaml.Apparatus@1.0.2
+### CommonsLang_OCaml.Apparatus@1.0.3
 
-  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "55129", checksum: (sha256: "94dac7b85147cc4e6021972eef96812aff5719584900e80478bff362cda755a3"))\;
+  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock_reloc.ml" }
+  \dk.asset(byteSize: "55123", checksum: (sha256: "ad43377930ba4d0a0e9045997f7281361153dde1c611afa35ce931352b69e79e"))\;
 
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
   \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;

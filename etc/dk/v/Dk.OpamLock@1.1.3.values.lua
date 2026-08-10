@@ -94,7 +94,7 @@ function rules.Export(command, request)
     return {
       declareoutput = {
         return_objects = {
-          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.1",
+          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.3",
           slots = slots,
           execution_slot = "Release.execution_abi"
         }
@@ -161,8 +161,8 @@ function uirules.Solve(command, request, continue_)
       end
     end
     local files = {
-      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.2 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
-      amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.2 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
+      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.3 -p assets/opam-lock/dk_opam_lock_reloc.ml -f dk_opam_lock.ml)",
+      amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.3 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
     }
     return {
       submit = {
