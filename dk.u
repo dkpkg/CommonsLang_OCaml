@@ -198,7 +198,7 @@ sources in precedence order.
   \dk.asset(byteSize: "726", checksum: (sha256: "ce730a5008fd4f856e01ea02a62c9e17a8adcb272ca91679ecc413a2e17672a9"))\;
 
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
-  \dk.asset(byteSize: "17346", checksum: (sha256: "8837c8c4c7a2245780c23df816a0adfa09fb55eba0b22144e6ec9b2ab2c877c3"))\;
+  \dk.asset(byteSize: "16817", checksum: (sha256: "e84dd69f4276ead99b010eb29a8b9668de7989eed903f118c34b25c4591f56a1"))\;
 
   % unified.asset { name="OpamBuildSeqMeta", file="assets/opam/seq-META" }
   \dk.asset(byteSize: "141", checksum: (sha256: "754a4537c5f9ce32f6df2de34eee00a7fe45986aea3ddf47764f98768824fc56"))\;
@@ -216,6 +216,11 @@ sources in precedence order.
 
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
   \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.4
+
+  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v2.sh" }
+  \dk.asset(byteSize: "17346", checksum: (sha256: "8837c8c4c7a2245780c23df816a0adfa09fb55eba0b22144e6ec9b2ab2c877c3"))\;
 
 ## Dk.OpamLock
 
@@ -291,3 +296,11 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
 The @1.0.1 revision ships alongside @1.0.0 for the MlFront with-test closure
 (short-circuit filter eval, an arch fenv, and the dune-install --prefix
 repair); its per-slot value-id is likewise harvested from the first CI run.
+
+The @1.0.8 revision ships alongside @1.0.7: it fetches the build wrapper from
+the fresh Apparatus.OpamBuildWrapper@1.0.4 (build-locked-package-v2.sh), whose
+@INSTALL@ installs Windows executables under their .exe name so cmd.exe can run
+a staged ocamlbuild. @1.0.4 is a new asset module because an in-place edit of
+@1.0.1 does not propagate through a distribution (value id hashes the
+invocation, not the content). All other assets stay at @1.0.1; the Export marker
+value-id is shared with @1.0.0/@1.0.6/@1.0.7, so no new harvest is needed.
