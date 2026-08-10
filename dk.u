@@ -222,6 +222,11 @@ sources in precedence order.
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v2.sh" }
   \dk.asset(byteSize: "17346", checksum: (sha256: "8837c8c4c7a2245780c23df816a0adfa09fb55eba0b22144e6ec9b2ab2c877c3"))\;
 
+### CommonsLang_OCaml.Apparatus@1.0.5
+
+  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v3.sh" }
+  \dk.asset(byteSize: "17536", checksum: (sha256: "efa8e8424d7049f1a2efbef495ec6c61f346ce22b9a5ef3811a4f78bfbd20007"))\;
+
 ## Dk.OpamLock
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
@@ -304,3 +309,11 @@ a staged ocamlbuild. @1.0.4 is a new asset module because an in-place edit of
 @1.0.1 does not propagate through a distribution (value id hashes the
 invocation, not the content). All other assets stay at @1.0.1; the Export marker
 value-id is shared with @1.0.0/@1.0.6/@1.0.7, so no new harvest is needed.
+
+The @1.0.9 revision supersedes @1.0.8's wrapper: @1.0.4's @INSTALL@ only added
+.exe when a literal <name>.exe existed, but DkML's ocamlopt emits <name> with no
+.exe when -o carries an extension (ocamlbuild.native), so nothing matched and the
+staged ocamlbuild stayed unrunnable. @1.0.9 fetches Apparatus.OpamBuildWrapper@1.0.5
+(build-locked-package-v3.sh), which instead gives every bin/sbin destination the
+.exe suffix on Windows. @1.0.5 is again a new asset module for the same
+propagation reason; the Export marker value-id stays shared.
