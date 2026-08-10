@@ -198,7 +198,7 @@ sources in precedence order.
   \dk.asset(byteSize: "726", checksum: (sha256: "ce730a5008fd4f856e01ea02a62c9e17a8adcb272ca91679ecc413a2e17672a9"))\;
 
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
-  \dk.asset(byteSize: "16817", checksum: (sha256: "e84dd69f4276ead99b010eb29a8b9668de7989eed903f118c34b25c4591f56a1"))\;
+  \dk.asset(byteSize: "17346", checksum: (sha256: "8837c8c4c7a2245780c23df816a0adfa09fb55eba0b22144e6ec9b2ab2c877c3"))\;
 
   % unified.asset { name="OpamBuildSeqMeta", file="assets/opam/seq-META" }
   \dk.asset(byteSize: "141", checksum: (sha256: "754a4537c5f9ce32f6df2de34eee00a7fe45986aea3ddf47764f98768824fc56"))\;
