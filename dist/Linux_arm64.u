@@ -43,6 +43,8 @@ its marker output is unused (no object value-id is recorded).
   \test(pass)
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.3 -f ${RUNTIME}/OpamLock.Export-1.1.3.zip
   \test(pass)
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.4 -f ${RUNTIME}/OpamLock.Export-1.1.4.zip
+  \test(pass)
 
 ## Dk.OpamBuild
 
