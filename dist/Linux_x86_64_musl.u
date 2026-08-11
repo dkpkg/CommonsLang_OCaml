@@ -83,7 +83,7 @@ Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean.
   \dk.object(abi: "Release.Linux_x86_64", value-id: "o2i2aart5wgtdaokxyybpwnvgdgm6n2ic7bgtkiabsz7alyblcxia")\;
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.4 -f ${RUNTIME}/OpamLock.Export-1.1.4.zip
   \test(pass)
-  \dk.object(abi: "Release.Linux_x86_64", value-id: "o2i2aart5wgtdaokxyybpwnvgdgm6n2ic7bgtkiabsz7alyblcxia")\;
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "oupyfttkspyjulfiy5kodvdlreesufidd6aplu6hiun4a3xksnqoa")\;
 
 ## Dk.OpamBuild
 
