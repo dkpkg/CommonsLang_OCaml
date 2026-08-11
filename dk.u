@@ -301,6 +301,25 @@ objects stay usable across build trees.
   forks rely on (`standard_library_relative`, `-set-runtime-default`), so no
   compiler change is needed.
 
+### Host tools built at the host ABI
+
+`ocamlfind` and `ocamlbuild` are host tools: their built artifacts are native
+executables that run on the build host during every later package build (topkg's
+`ocaml pkg/pkg.ml build` invokes `ocamlfind` and `ocamlbuild`). GenerateDriver
+emits `targetabi=Release.execution_abi` for these two, so the per-package rule
+stages the host toolchain to build them, while every other package keeps
+`targetabi=Release.target_abi` and cross-compiles for its slot.
+
+Building a host tool at the target ABI produces a binary the host cannot run. On
+a cross slot such as `Release.Linux_x86_64_musl` the tool links against the
+target musl toolchain and becomes a musl-dynamic executable; the glibc host that
+must run it during the build lacks the musl loader. The opam-build form is
+host-keyed and carries the `Release.target_abi` wildcard in its value-id, so a
+single such build is stored under one key and shared to every slot, including the
+glibc `Release.Linux_x86_64` one, where the tool then fails to exec. Pinning host
+tools to the execution ABI keeps the target (for example musl) toolchain scoped
+to the actual target artifacts and keeps the host tools host-native.
+
 ## Dk.OpamBuild
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
