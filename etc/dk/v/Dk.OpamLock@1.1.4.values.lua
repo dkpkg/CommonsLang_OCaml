@@ -94,7 +94,7 @@ function rules.Export(command, request)
     return {
       declareoutput = {
         return_objects = {
-          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.3",
+          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.4",
           slots = slots,
           execution_slot = "Release.execution_abi"
         }
