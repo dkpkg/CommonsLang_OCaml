@@ -142,13 +142,44 @@ export OCAMLPATH
 # topkg packages' pkg.ml starts with `#use "topfind"`. findlib installs topfind
 # into the OCaml stdlib dir, which here is the read-only, per-build DkML compiler
 # object, so it never persists. The producer-side capture below (run during the
-# findlib build) copies topfind into this build's own lib/findlib prefix, so point
-# the toplevel there via OCAML_TOPLEVEL_PATH.
+# findlib build) copies topfind into this build's own lib/findlib prefix; point
+# both toplevel search variables there.
+#
+# Two variables, two distinct jobs (OCaml >= 4.13 split them, and DkML 4.14.3
+# honors the split): OCAML_TOPLEVEL_PATH is read by findlib_config to resolve its
+# `location` (so findlib.conf and findlib.cma load from THIS relocated prefix, not
+# the absolute build path baked into findlib_config at compile time), while
+# OCAMLTOP_INCLUDE_PATH is the directory list the toplevel actually SEARCHES for
+# `#use "topfind"`. The toplevel does NOT search OCAML_TOPLEVEL_PATH for `#use`, so
+# without OCAMLTOP_INCLUDE_PATH the imported findlib fails at `Cannot find file
+# topfind` (it only worked in-closure because the findlib build also dropped
+# topfind into the then-writable shared stdlib). Both are required.
 if [ -f "$root/p/lib/findlib/topfind" ]; then
   if [ "$arch" != "-" ]; then
-    export OCAML_TOPLEVEL_PATH=$(cygpath -m "$root/p/lib/findlib")
+    _tfdir=$(cygpath -m "$root/p/lib/findlib")
   else
-    export OCAML_TOPLEVEL_PATH="$root/p/lib/findlib"
+    _tfdir="$root/p/lib/findlib"
+  fi
+  export OCAML_TOPLEVEL_PATH="$_tfdir"
+  export OCAMLTOP_INCLUDE_PATH="$_tfdir"
+fi
+# findlib_config also bakes ocaml_stdlib (hence ocaml_ldconf = <stdlib>/ld.conf) as
+# an absolute compile-time path -- the build tree where the prebuilt findlib was
+# produced -- which is dead once the object is imported into another build tree, so
+# `ocamlfind ocamlc` aborts with "<baked>/ld.conf: No such file or directory" (and
+# ocamlbuild -use-ocamlfind fails with it). Unlike findlib.conf's `location`, this
+# path is a compiled constant with no relative-path relocation, so point findlib at
+# the RUNNING compiler's real ld.conf via OCAMLFIND_LDCONF. (It only worked
+# in-closure because the baked path was still live on the same runner.)
+_oc=$(command -v ocamlc.exe 2>/dev/null || command -v ocamlc 2>/dev/null || true)
+if [ -n "$_oc" ]; then
+  _ocw=$("$_oc" -where 2>/dev/null | tr -d '\r')
+  if [ -n "$_ocw" ] && [ -f "$_ocw/ld.conf" ]; then
+    if [ "$arch" != "-" ]; then
+      export OCAMLFIND_LDCONF=$(cygpath -m "$_ocw/ld.conf")
+    else
+      export OCAMLFIND_LDCONF="$_ocw/ld.conf"
+    fi
   fi
 fi
 PATH="$root/p/bin:$PATH"; export PATH
@@ -202,7 +233,17 @@ if [ "$arch" != "-" ]; then
   # p/bin (first on PATH) that calls the real ocamlbuild via PATH (as topkg does
   # by default) with -no-hygiene prepended. Uses the PATH-resolved name, not the
   # shim's own directory, because topkg runs the shim from the package source dir.
-  printf '@ocamlbuild -no-hygiene %%*\r\n' > "$root/p/bin/ocamlbuild-nh.cmd"
+  #
+  # -install-lib-dir points ocamlbuild -where at this build's p/lib/ocamlbuild.
+  # The relocatable ocamlbuild computes -where at runtime as
+  # dirname(ocaml_libdir)/ocamlbuild, i.e. beside the DkML compiler (opam-switch
+  # layout); but in the dk0 closure the compiler is a separate object and
+  # ocamlbuild.cmo/ocamlbuildlib.cma install into the package prefix. Without this,
+  # compiling a package's myocamlbuild.ml plugin (e.g. ptime) fails with
+  # "Cannot find ocamlbuild.cmo in ocamlbuild -where directory".
+  obldir=$(cygpath -m "$root/p/lib/ocamlbuild")
+  printf '@ocamlbuild -no-hygiene -install-lib-dir "%s" %%*\r\n' "$obldir" \
+    > "$root/p/bin/ocamlbuild-nh.cmd"
   export HOST_OS_OCAMLBUILD=ocamlbuild-nh
   export BUILD_OS_OCAMLBUILD=ocamlbuild-nh
 fi
@@ -240,6 +281,18 @@ if [ "$1" = "@INSTALL@" ]; then
   ' "$inst" > .dk-install-list
   while IFS="$(printf '\t')" read -r opt src rel; do
     tgt="$ipabs/$rel"
+    # Windows: bin/sbin entries are executables that cmd.exe can only run with a
+    # .exe suffix, but DkML's ocamlopt emits <name> with no .exe when -o carries
+    # an extension (e.g. `-o ocamlbuild.native` produces `ocamlbuild.native`, not
+    # `ocamlbuild.native.exe`), so opam .install names them without one. Without a
+    # suffix cp stages an unrunnable `ocamlbuild`, and a topkg ocamlbuild shim then
+    # fails to spawn plain `ocamlbuild`. Give the destination the .exe suffix; cp
+    # copies the source binary (<name>, or its .exe via exe-magic) into place.
+    if [ "$arch" != "-" ]; then
+      case "$rel" in
+        bin/*|sbin/*) case "$tgt" in *.exe) ;; *) tgt="$tgt.exe" ;; esac ;;
+      esac
+    fi
     if [ -f "$src" ]; then
       mkdir -p "$(dirname "$tgt")"; cp "$src" "$tgt"
     elif [ "$opt" = "0" ]; then

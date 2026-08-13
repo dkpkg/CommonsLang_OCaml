@@ -731,7 +731,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_6.percommand_abi(coreutils, wrappe
     -- note above): a Windows_x86 target needs the x86-targeting cl/ml even
     -- though its closure commands are gated at the x64 host abi.
     table.insert(cmd,
-      "$(get-asset CommonsLang_OCaml.Apparatus.Tables@1.0.0 -p assets/table -m ./msvc-arch/${SLOTNAME." ..
+      "$(get-asset CommonsLang_OCaml.Apparatus.Tables@1.0.1 -p assets/table -m ./msvc-arch/${SLOTNAME." ..
       targetabi .. "})")
   else
     table.insert(cmd, abi.msvc)
@@ -1013,7 +1013,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- object to stage, so the rule places the stub directly into every prefix.
   table.insert(commands, {
     coreutils, "cp",
-    "$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildSeqMeta@1.0.0 -p assets/opam/seq-META -f seq-meta-src)",
+    "$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildSeqMeta@1.0.1 -p assets/opam/seq-META -f seq-meta-src)",
     "p/lib/seq/META"
   })
 
@@ -1219,7 +1219,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- OCAML_TOPLEVEL_PATH=p/lib/findlib. This works for ANY such package because it
   -- always depends on ocamlfind (topfind IS findlib), so ocamlfind is in its p/
   -- closure -- nothing package-specific is required here.
-  local wrapperfetch = "$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildWrapper@1.0.0 -p assets/opam/build-locked-package.sh -f build-wrapper.sh)"
+  local wrapperfetch = "$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildWrapper@1.0.1 -p assets/opam/build-locked-package.sh -f build-wrapper.sh)"
   -- The Windows POSIX shell is MSYS2's dash (its runtime translates the unix-form
   -- PATH into Windows form for the native dune.exe/cl.exe children, and provides
   -- cygpath). MSYS2 ships only the Windows_x86_64 tree; a Windows_x86 host runs
@@ -1328,7 +1328,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
     -- gated at the execution abi), so the per-command abi.staticgcc branch in
     -- percommand_abi never fires for a cross target such as musl-on-glibc --
     -- that branch only serves a build whose HOST abi is the static one.
-    "+MLFRONT_STATIC_GCC_BINARIES=$(get-asset CommonsLang_OCaml.Apparatus.Tables@1.0.0 -p assets/table -m ./mlfront-static-gcc/${SLOTNAME." .. targetabi .. "})",
+    "+MLFRONT_STATIC_GCC_BINARIES=$(get-asset CommonsLang_OCaml.Apparatus.Tables@1.0.1 -p assets/table -m ./mlfront-static-gcc/${SLOTNAME." .. targetabi .. "})",
     -- OCaml compiler and runtime:
     "-OCAMLLIB", "-CAMLLIB",
     "-OCAMLPARAM", "-OCAMLRUNPARAM", "-CAMLRUNPARAM",

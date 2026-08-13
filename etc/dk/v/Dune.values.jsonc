@@ -102,12 +102,12 @@
                     [
                         "--cmd.exe",
                         "/c",
-                        "\"`\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.DuneBootstrapMsvc@1.0.0 -p assets/dune/bootstrap-msvc.bat -f bootstrap-msvc.bat)`\" `\"$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe`\" x64 `\"${SLOTABS.Release.Windows_x86_64}${/}bin`\"\""
+                        "\"`\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.DuneBootstrapMsvc@1.0.1 -p assets/dune/bootstrap-msvc.bat -f bootstrap-msvc.bat)`\" `\"$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe`\" x64 `\"${SLOTABS.Release.Windows_x86_64}${/}bin`\"\""
                     ],
                     [
                         "--cmd.exe",
                         "/c",
-                        "\"`\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.DuneBootstrapMsvc@1.0.0 -p assets/dune/bootstrap-msvc.bat -f bootstrap-msvc.bat)`\" `\"$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe`\" x86 `\"${SLOTABS.Release.Windows_x86}${/}bin`\"\""
+                        "\"`\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.DuneBootstrapMsvc@1.0.1 -p assets/dune/bootstrap-msvc.bat -f bootstrap-msvc.bat)`\" `\"$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe`\" x86 `\"${SLOTABS.Release.Windows_x86}${/}bin`\"\""
                     ]
                 ]
             },

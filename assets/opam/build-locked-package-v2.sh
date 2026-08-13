@@ -240,6 +240,14 @@ if [ "$1" = "@INSTALL@" ]; then
   ' "$inst" > .dk-install-list
   while IFS="$(printf '\t')" read -r opt src rel; do
     tgt="$ipabs/$rel"
+    # Windows: executables build as <name>.exe, but opam .install files name them
+    # without the suffix. Cygwin cp reads <name>.exe through exe-magic yet writes
+    # the literal extensionless target, which cmd.exe cannot execute (a topkg
+    # ocamlbuild shim then fails to spawn plain `ocamlbuild`). When a literal
+    # <src>.exe exists, install <src>.exe -> <dest>.exe, as opam does on Windows.
+    if [ "$arch" != "-" ] && [ "${src%.exe}" = "$src" ] && [ -f "$src.exe" ]; then
+      src="$src.exe"; tgt="$tgt.exe"
+    fi
     if [ -f "$src" ]; then
       mkdir -p "$(dirname "$tgt")"; cp "$src" "$tgt"
     elif [ "$opt" = "0" ]; then

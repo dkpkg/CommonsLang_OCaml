@@ -240,6 +240,18 @@ if [ "$1" = "@INSTALL@" ]; then
   ' "$inst" > .dk-install-list
   while IFS="$(printf '\t')" read -r opt src rel; do
     tgt="$ipabs/$rel"
+    # Windows: bin/sbin entries are executables that cmd.exe can only run with a
+    # .exe suffix, but DkML's ocamlopt emits <name> with no .exe when -o carries
+    # an extension (e.g. `-o ocamlbuild.native` produces `ocamlbuild.native`, not
+    # `ocamlbuild.native.exe`), so opam .install names them without one. Without a
+    # suffix cp stages an unrunnable `ocamlbuild`, and a topkg ocamlbuild shim then
+    # fails to spawn plain `ocamlbuild`. Give the destination the .exe suffix; cp
+    # copies the source binary (<name>, or its .exe via exe-magic) into place.
+    if [ "$arch" != "-" ]; then
+      case "$rel" in
+        bin/*|sbin/*) case "$tgt" in *.exe) ;; *) tgt="$tgt.exe" ;; esac ;;
+      esac
+    fi
     if [ -f "$src" ]; then
       mkdir -p "$(dirname "$tgt")"; cp "$src" "$tgt"
     elif [ "$opt" = "0" ]; then

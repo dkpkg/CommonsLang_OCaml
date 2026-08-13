@@ -202,7 +202,17 @@ if [ "$arch" != "-" ]; then
   # p/bin (first on PATH) that calls the real ocamlbuild via PATH (as topkg does
   # by default) with -no-hygiene prepended. Uses the PATH-resolved name, not the
   # shim's own directory, because topkg runs the shim from the package source dir.
-  printf '@ocamlbuild -no-hygiene %%*\r\n' > "$root/p/bin/ocamlbuild-nh.cmd"
+  #
+  # -install-lib-dir points ocamlbuild -where at this build's p/lib/ocamlbuild.
+  # The relocatable ocamlbuild computes -where at runtime as
+  # dirname(ocaml_libdir)/ocamlbuild, i.e. beside the DkML compiler (opam-switch
+  # layout); but in the dk0 closure the compiler is a separate object and
+  # ocamlbuild.cmo/ocamlbuildlib.cma install into the package prefix. Without this,
+  # compiling a package's myocamlbuild.ml plugin (e.g. ptime) fails with
+  # "Cannot find ocamlbuild.cmo in ocamlbuild -where directory".
+  obldir=$(cygpath -m "$root/p/lib/ocamlbuild")
+  printf '@ocamlbuild -no-hygiene -install-lib-dir "%s" %%*\r\n' "$obldir" \
+    > "$root/p/bin/ocamlbuild-nh.cmd"
   export HOST_OS_OCAMLBUILD=ocamlbuild-nh
   export BUILD_OS_OCAMLBUILD=ocamlbuild-nh
 fi
@@ -240,6 +250,18 @@ if [ "$1" = "@INSTALL@" ]; then
   ' "$inst" > .dk-install-list
   while IFS="$(printf '\t')" read -r opt src rel; do
     tgt="$ipabs/$rel"
+    # Windows: bin/sbin entries are executables that cmd.exe can only run with a
+    # .exe suffix, but DkML's ocamlopt emits <name> with no .exe when -o carries
+    # an extension (e.g. `-o ocamlbuild.native` produces `ocamlbuild.native`, not
+    # `ocamlbuild.native.exe`), so opam .install names them without one. Without a
+    # suffix cp stages an unrunnable `ocamlbuild`, and a topkg ocamlbuild shim then
+    # fails to spawn plain `ocamlbuild`. Give the destination the .exe suffix; cp
+    # copies the source binary (<name>, or its .exe via exe-magic) into place.
+    if [ "$arch" != "-" ]; then
+      case "$rel" in
+        bin/*|sbin/*) case "$tgt" in *.exe) ;; *) tgt="$tgt.exe" ;; esac ;;
+      esac
+    fi
     if [ -f "$src" ]; then
       mkdir -p "$(dirname "$tgt")"; cp "$src" "$tgt"
     elif [ "$opt" = "0" ]; then

@@ -69,9 +69,55 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
     checksum: (blake2b-256: "cb34eae2806a11382fcc8466c4b083993f34d6854fc49bb2d92f3cf05d201cc0",
       sha256: "f48d91a5fad0af891c79d2e56d5a9d68f45677d240565099aaf8dd947af591ec",
       sha1: "abd205268d9a7ca456f22b3425404e0f8ea06dff"))\;
+## Resolution of imports
+
+When a workspace drives per-package opam builds through
+`Dk.OpamLock.GenerateDriver` + `Dk.OpamBuild.F_BuildLockedPackage` and declares
+one or more package-import sources (`imports[]`), the generated driver reuses a
+locked opam package that a source already built and distributes, fetching the
+prebuilt object lazily. Resolution runs per package, against the `imports[]`
+sources in precedence order.
+
+1. **Read each source's own opam lock.** Every import source ships the exact opam
+   lock it was built from. For a `CommonsBase_Dk.Dk0.Pkg` source that is the
+   `dk-opam-lock.jsonc` member of its `localsrc`
+   (`CommonsBase_Dk.Dk0.MlFrontSource@<mv>`), fetched from the pinned import. That
+   lock is authoritative for which opam package and version each of the source's
+   objects contains.
+
+2. **Map object id to opam package and version.** For an opam package
+   `<name>.<opamver>` in a source's lock, the source provides the dk object
+   `<source-lib>.<Segment(name)>@<module-version>`, whose version component is the
+   source's release version (`imports[].version`, for example `@2.4.2`). The opam
+   version is recorded only in the source's lock, which is what step 3 matches
+   against.
+
+3. **Match on opam name and opam version.** For each opam `<name>.<needver>` the
+   consumer's (with-test) lock requires, a source matches when its lock pins
+   `<name>` at the same `<needver>`. On the first matching source the package is
+   imported: the driver stages it with `get-object <source-lib>.<Seg>@<mv>`,
+   lazily, fetched when a build needs its `install.zip`, and emits no local build
+   form. A package that no source provides at the required opam version is built
+   locally through `F_BuildLockedPackage`, with its own dependencies resolved the
+   same way.
+
+4. **The compiler must match; Dune and MSYS2 need not.** Each lock records the
+   OCaml compiler its packages are built with in a top-level `ocaml` field, a full
+   module id such as `CommonsLang_OCaml.DkML@4.14.3` (or a `CommonsLang_OCaml.Base@5.5.x`
+   for a 5.5 toolchain); a lock without the field takes the default
+   `CommonsLang_OCaml.DkML@4.14.3`. `Dk.OpamLock.GenerateDriver` reads the `ocaml`
+   field from both the consumer's lock and each source's lock (already fetched in
+   step 1) and passes it to `F_BuildLockedPackage` as the `ocaml=` argument, along
+   with `dune=CommonsLang_OCaml.Dune@<v>` and (Windows) `msys2=CommonsLang_OCaml.MSYS2@<v>`.
+   An imported package ships compiled `.cmi`/`.cmx`/`.cmxa`, whose magic numbers are
+   fixed by the compiler, so a source is consumable only when its lock's `ocaml`
+   equals the consumer's; a package from a source whose `ocaml` differs is built
+   locally instead. Dune and MSYS2 leave no trace in the compiled artifacts, so a
+   `dune` or `msys2` difference does not affect consumability.
+
 ## Assets
 
-### CommonsLang_OCaml.Apparatus@1.0.0
+### CommonsLang_OCaml.Apparatus@1.0.1
 
   % unified.asset { name="Patches", dir="assets/p" }
   \dk.asset(byteSize: "1789", checksum: (sha256: "e918c820b854d3e19c252870d2dc36a851c2933a451c25af240287a9061dc516"))\;
@@ -128,13 +174,49 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
   \dk.asset(byteSize: "726", checksum: (sha256: "ce730a5008fd4f856e01ea02a62c9e17a8adcb272ca91679ecc413a2e17672a9"))\;
 
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
-  \dk.asset(byteSize: "16213", checksum: (sha256: "23c5d81129159941e3d0ff5d702d78b3b514cc8204f995fa030c0f40615bde93"))\;
+  \dk.asset(byteSize: "16817", checksum: (sha256: "e84dd69f4276ead99b010eb29a8b9668de7989eed903f118c34b25c4591f56a1"))\;
 
   % unified.asset { name="OpamBuildSeqMeta", file="assets/opam/seq-META" }
   \dk.asset(byteSize: "137", checksum: (sha256: "e95062b4d0519ef8335c02f7d0f1952d11b814c7ab7e6d566a206116162fa2be"))\;
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
   \dk.asset(byteSize: "49078", checksum: (sha256: "e095fbc4f828a5a002a9b53298185c7a9b336ce8d08688e6f5172dc3ea8426da"))\;
+
+  % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
+  \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.3
+
+  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock_reloc.ml" }
+  \dk.asset(byteSize: "55123", checksum: (sha256: "ad43377930ba4d0a0e9045997f7281361153dde1c611afa35ce931352b69e79e"))\;
+
+  % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
+  \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.4
+
+  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v2.sh" }
+  \dk.asset(byteSize: "17346", checksum: (sha256: "8837c8c4c7a2245780c23df816a0adfa09fb55eba0b22144e6ec9b2ab2c877c3"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.5
+
+  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v3.sh" }
+  \dk.asset(byteSize: "17536", checksum: (sha256: "efa8e8424d7049f1a2efbef495ec6c61f346ce22b9a5ef3811a4f78bfbd20007"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.6
+
+  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v4.sh" }
+  \dk.asset(byteSize: "18144", checksum: (sha256: "5b055288d4d7fa3d8dddb3a7d130ce57a20ef7ff658bcab253e5567e7bfc4cdc"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.7
+
+  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v5.sh" }
+  \dk.asset(byteSize: "19901", checksum: (sha256: "6ef6c47e35a896410e25a1a1294bfe6ef08cca9797248bc44a3bf9eeaedcf8e6"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.8
+
+  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock_filtered.ml" }
+  \dk.asset(byteSize: "58039", checksum: (sha256: "a269fd6934451377bca85f5a73d177481be801a5cdcbffbded982ad7c2cfd9d4"))\;
 
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
   \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
@@ -177,6 +259,51 @@ resolution deterministic, and the version is a solve artifact only: the DkML
   so the lock's ocaml and ocaml-base-compiler entries are solve artifacts, not
   build inputs.
 
+### Relocatable ocamlfind and ocamlbuild
+
+The solver still resolves ocamlfind and ocamlbuild (so the rest of the closure
+resolves and both still satisfy their dependents at the resolved version), but
+when the helper emits these two entries it substitutes a fixed relocatable
+specification for the solved source and build commands. A stock findlib bakes an
+absolute stdlib path into `topfind` and `findlib.conf`, and a stock ocamlbuild
+bakes an absolute libdir. Those absolute paths are valid only in the build tree
+that produced them, so a prebuilt `CommonsBase_Dk.Dk0.Pkg.Ocamlfind` or
+`Pkg.Ocamlbuild` object is unusable once imported into a different build tree
+(the imported `#use "topfind"` loads a dead `#directory`). The relocatable
+builds write paths relative to the tool's own location instead, so the imported
+objects stay usable across build trees.
+
++ ocamlfind is pinned to dra27's relocatable fork (v1.9.8) and built with
+  `-sitelib "."`, so findlib writes a relative `topfind` and `findlib.conf`.
++ ocamlbuild is pinned to dra27's relocatable-0.14.3 fork (0.14.3 plus the
+  relocatable patch) and built through `configure.make` with
+  `OCAMLBUILD_LIBDIR=..`, so ocamlbuild computes its libdir at runtime.
++ Both sources are addressed by git commit, so the pin does not move. The
+  substitution is a property of the lock the helper writes; downstream projects
+  do not list these packages in their `dk-opam-pins.txt`.
++ The DkML `4.14.3+relocatable` toolchain supplies the runtime support the two
+  forks rely on (`standard_library_relative`, `-set-runtime-default`), so no
+  compiler change is needed.
+
+### Host tools built at the host ABI
+
+`ocamlfind` and `ocamlbuild` are host tools: their built artifacts are native
+executables that run on the build host during every later package build (topkg's
+`ocaml pkg/pkg.ml build` invokes `ocamlfind` and `ocamlbuild`). GenerateDriver
+emits `targetabi=Release.execution_abi` for these two, so the per-package rule
+stages the host toolchain to build them, while every other package keeps
+`targetabi=Release.target_abi` and cross-compiles for its slot.
+
+Building a host tool at the target ABI produces a binary the host cannot run. On
+a cross slot such as `Release.Linux_x86_64_musl` the tool links against the
+target musl toolchain and becomes a musl-dynamic executable; the glibc host that
+must run it during the build lacks the musl loader. The opam-build form is
+host-keyed and carries the `Release.target_abi` wildcard in its value-id, so a
+single such build is stored under one key and shared to every slot, including the
+glibc `Release.Linux_x86_64` one, where the tool then fails to exec. Pinning host
+tools to the execution ABI keeps the target (for example musl) toolchain scoped
+to the actual target artifacts and keeps the host tools host-native.
+
 ## Dk.OpamBuild
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
@@ -187,3 +314,43 @@ unused. The value-id is harvested from the first CI run (the DkML pattern).
 The @1.0.1 revision ships alongside @1.0.0 for the MlFront with-test closure
 (short-circuit filter eval, an arch fenv, and the dune-install --prefix
 repair); its per-slot value-id is likewise harvested from the first CI run.
+
+The @1.0.8 revision ships alongside @1.0.7: it fetches the build wrapper from
+the fresh Apparatus.OpamBuildWrapper@1.0.4 (build-locked-package-v2.sh), whose
+@INSTALL@ installs Windows executables under their .exe name so cmd.exe can run
+a staged ocamlbuild. @1.0.4 is a new asset module because an in-place edit of
+@1.0.1 does not propagate through a distribution (value id hashes the
+invocation, not the content). All other assets stay at @1.0.1; the Export marker
+value-id is shared with @1.0.0/@1.0.6/@1.0.7, so no new harvest is needed.
+
+The @1.0.9 revision supersedes @1.0.8's wrapper: @1.0.4's @INSTALL@ only added
+.exe when a literal <name>.exe existed, but DkML's ocamlopt emits <name> with no
+.exe when -o carries an extension (ocamlbuild.native), so nothing matched and the
+staged ocamlbuild stayed unrunnable. @1.0.9 fetches Apparatus.OpamBuildWrapper@1.0.5
+(build-locked-package-v3.sh), which instead gives every bin/sbin destination the
+.exe suffix on Windows. @1.0.5 is again a new asset module for the same
+propagation reason; the Export marker value-id stays shared.
+
+The @1.0.10 revision fetches Apparatus.OpamBuildWrapper@1.0.6
+(build-locked-package-v4.sh), whose ocamlbuild-nh shim passes
+`-install-lib-dir p/lib/ocamlbuild` so ocamlbuild -where resolves to the package
+prefix. The relocatable ocamlbuild otherwise computes -where beside the compiler
+(dirname of ocaml_libdir), but the dk0 closure keeps the compiler separate and
+installs ocamlbuild.cmo into the package prefix, so compiling a myocamlbuild.ml
+plugin (e.g. ptime) fails to find ocamlbuild.cmo. @1.0.6 is a new asset module;
+the Export marker value-id stays shared.
+
+The @1.0.11 revision fetches Apparatus.OpamBuildWrapper@1.0.7
+(build-locked-package-v5.sh), which makes the imported relocatable findlib usable
+by a topkg `#use "topfind"`. @1.0.10's wrapper set only OCAML_TOPLEVEL_PATH, which
+findlib_config reads to resolve its `location`, but the OCaml >= 4.13 toplevel does
+NOT search that variable for `#use`, so `#use "topfind"` failed with `Cannot find
+file topfind` whenever ocamlfind was imported (rather than built in-closure, where
+its build also seeded topfind into the then-writable shared stdlib). @1.0.7 also
+exports OCAMLTOP_INCLUDE_PATH (the toplevel's actual `#use` search path) and
+OCAMLFIND_LDCONF (pointing at the running compiler's ld.conf), because
+findlib_config bakes ocaml_stdlib/ocaml_ldconf as an absolute compile-time path
+that is dead once the object is imported into another build tree. All three
+variables are required together; the imported Dk0.Pkg.Ocamlfind object itself is
+correct and unchanged. @1.0.7 is a new asset module; the Export marker value-id
+stays shared.

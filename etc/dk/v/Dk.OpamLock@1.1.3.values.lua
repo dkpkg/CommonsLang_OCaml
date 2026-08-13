@@ -1,18 +1,18 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.0"
+  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.3"
 }
 
 -- lua-ml does not support local functions, and a "local" variable would be nil
 -- inside the rules/uirules function bodies. So a should-be-unique global table
 -- holds the helpers, matching the house style in CommonsBase_Std.Extract and
 -- CommonsBase_Remote.GitHub.
-CommonsLang_OCaml__Dk_OpamLock__1_1_0 = {}
+CommonsLang_OCaml__Dk_OpamLock__1_1_3 = {}
 
 rules, uirules = build.newrules(M)
 
 -- lua-ml's string library does not implement gsub, so trim by scanning for the
 -- first/last non-space with find (which does support patterns).
-function CommonsLang_OCaml__Dk_OpamLock__1_1_0.iswhite(c)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_3.iswhite(c)
   local b = string.byte(c)
   return b == 32 or b == 9 or b == 13 or b == 10
 end
@@ -23,14 +23,14 @@ end
 -- opam output on Windows (ex. the
 -- switch-exists check compared name-plus-CR ~= name and re-created the
 -- switch).
-function CommonsLang_OCaml__Dk_OpamLock__1_1_0.trim(s)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_3.trim(s)
   if s == nil then return "" end
   local n = string.len(s)
   local a = 1
-  while a <= n and CommonsLang_OCaml__Dk_OpamLock__1_1_0.iswhite(string.sub(s, a, a)) do a = a + 1 end
+  while a <= n and CommonsLang_OCaml__Dk_OpamLock__1_1_3.iswhite(string.sub(s, a, a)) do a = a + 1 end
   if a > n then return "" end
   local b = n
-  while b >= 1 and CommonsLang_OCaml__Dk_OpamLock__1_1_0.iswhite(string.sub(s, b, b)) do b = b - 1 end
+  while b >= 1 and CommonsLang_OCaml__Dk_OpamLock__1_1_3.iswhite(string.sub(s, b, b)) do b = b - 1 end
   return string.sub(s, a, b)
 end
 
@@ -38,7 +38,7 @@ end
 -- version did) walks lua-ml's arbitrary hash order, which silently scrambled the
 -- order of every joined array -- including the JSON encoder's `parts`, so a
 -- sorted key list still emitted unsorted. Walk 1..n instead.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_0.join(tbl, sep)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_3.join(tbl, sep)
   local r = nil
   local i = 1
   while tbl[i] ~= nil do
@@ -53,7 +53,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_0.join(tbl, sep)
   return r
 end
 
-function CommonsLang_OCaml__Dk_OpamLock__1_1_0.set_from_list(tbl)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_3.set_from_list(tbl)
   local set = {}
   if tbl == nil then return set end
   -- Store the value itself (not the boolean true): lua-ml does not reliably
@@ -66,7 +66,7 @@ end
 -- Directory part of a path (everything before the last '/' or '\'), or "." if
 -- the path has no separator. Byte-based (47='/', 92='\\') so it is correct for
 -- both the POSIX and Windows realpath forms request.io.realpath can return.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_0.dirname(p)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_3.dirname(p)
   local i = string.len(p)
   while i >= 1 do
     local b = string.byte(p, i)
@@ -94,7 +94,7 @@ function rules.Export(command, request)
     return {
       declareoutput = {
         return_objects = {
-          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.0",
+          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.3",
           slots = slots,
           execution_slot = "Release.execution_abi"
         }
@@ -135,9 +135,9 @@ end
 -- runs the helper, and publishes its stdout as the lock. Mirrors the thin
 -- CommonsLang_Python.UvLock.Solve design.
 function uirules.Solve(command, request, continue_)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_0
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_3
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.0: lock written.")
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.3: lock written.")
     return
   end
   if command ~= "submit" then return end
@@ -161,8 +161,8 @@ function uirules.Solve(command, request, continue_)
       end
     end
     local files = {
-      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.1 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
-      amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.1 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
+      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.3 -p assets/opam-lock/dk_opam_lock_reloc.ml -f dk_opam_lock.ml)",
+      amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.3 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
     }
     return {
       submit = {
@@ -245,7 +245,7 @@ function uirules.Solve(command, request, continue_)
 
   -- Build the helper argv.
   local args = { bc, "solve", "--opam", opamexe, "--work-dir", workdir, "--pins-file", pinsfile,
-    "--tool", "CommonsLang_OCaml.Dk.OpamLock@1.1.0" }
+    "--tool", "CommonsLang_OCaml.Dk.OpamLock@1.1.3" }
   local out = request.user.out or "dk.opam-lock.jsonc"
   if request.user.switch then table.insert(args, "--switch"); table.insert(args, request.user.switch) end
   if request.user.local_opam_dir then table.insert(args, "--local-opam-dir"); table.insert(args, request.user.local_opam_dir) end
@@ -282,13 +282,27 @@ function uirules.Solve(command, request, continue_)
   assert(result.status == "exit" and result.code == 0,
     "opam-lock helper failed (code " .. tostring(result.code) .. "): " .. tostring(result.stderr))
 
+  -- Record the OCaml compiler module the lock is built with as a top-level
+  -- `ocaml` field, so a consumer of an imported package can gate on compiler
+  -- compatibility (dk.u "## Resolution of imports"). The helper solves opam
+  -- packages and does not know dk toolchain modules, so inject the field here.
+  -- Default to the pinned DkML compiler; `ocaml=<full module id>` overrides.
+  local ocamlmod = request.user.ocaml
+  if ocamlmod == nil then ocamlmod = "CommonsLang_OCaml.DkML@4.14.3" end
+  local content = result.stdout
+  local brace = string.find(content, "{")
+  assert(brace ~= nil, "opam-lock helper output is not a JSON object")
+  content = string.sub(content, 1, brace)
+    .. "\n  \"ocaml\": \"" .. ocamlmod .. "\","
+    .. string.sub(content, brace + 1)
+
   -- Publish the lock into the checked-in project tree with a compare-and-swap
   -- guard (absent on first generation, else unchanged since the checksum just
   -- taken), so a concurrent writer is never silently clobbered.
   local meta = request.ui.checksum { path = out }
   local expected = "false"
   if meta and meta.sha256 then expected = meta.sha256 end
-  local ok, written = request.ui.writefile { path = out, content = result.stdout, expected_sha256 = expected }
+  local ok, written = request.ui.writefile { path = out, content = content, expected_sha256 = expected }
   assert(ok, "could not write opam lock to `" .. out .. "`: " .. tostring(written))
   print("wrote opam lock to " .. tostring(written))
   return { submit = {} }
@@ -300,7 +314,7 @@ end
 
 -- Index of the first occurrence of the single character `ch` in `s`, or nil.
 -- (string.find treats `.` as a pattern wildcard, so scan by byte instead.)
-function CommonsLang_OCaml__Dk_OpamLock__1_1_0.indexof_char(s, ch)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_3.indexof_char(s, ch)
   local i = 1
   local n = string.len(s)
   while i <= n do
@@ -312,7 +326,7 @@ end
 
 -- Decimal digits of a lua-ml number (no string.format; concat of a number is
 -- unreliable). Mirrors CommonsBase_Dk.Dk0Build.numstr.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_0.numstr(v)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_3.numstr(v)
   if type(v) == "string" then return v end
   if type(v) ~= "number" then return tostring(v) end
   if v == 0 then return "0" end
@@ -332,7 +346,7 @@ end
 -- lowercased. MUST match the modsegment transform in the per-package build
 -- rule (CommonsBase_Dk.Dk0Build), which derives sibling Pkg object ids from
 -- dependency names with the same function.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_0.modsegment(name)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_3.modsegment(name)
   local out = ""
   local i = 1
   local n = string.len(name)
@@ -350,7 +364,7 @@ end
 -- built as Pkg objects, so the driver never chains them. The default for
 -- GenerateDriver's provided[] parameter; a project on another toolchain
 -- passes its own list. Mirrors PROVIDED in CommonsBase_Dk.Dk0Build.
-CommonsLang_OCaml__Dk_OpamLock__1_1_0.DKML_PROVIDED = {
+CommonsLang_OCaml__Dk_OpamLock__1_1_3.DKML_PROVIDED = {
   "ocaml", "ocaml-base-compiler", "ocaml-config", "ocaml-options-vanilla",
   "base-unix", "base-threads", "base-bigarray", "dune", "flexdll",
   "conf-mingw-w64-gcc-x86_64", "host-arch-x86_64", "host-arch-x86_32",
@@ -358,7 +372,7 @@ CommonsLang_OCaml__Dk_OpamLock__1_1_0.DKML_PROVIDED = {
 }
 
 -- The 8 DkML slots; the default for GenerateDriver's slots[] parameter.
-CommonsLang_OCaml__Dk_OpamLock__1_1_0.DKML_SLOTS = {
+CommonsLang_OCaml__Dk_OpamLock__1_1_3.DKML_SLOTS = {
   "Release.Windows_x86_64", "Release.Windows_x86",
   "Release.Linux_x86_64", "Release.Linux_x86_64_musl", "Release.Linux_x86",
   "Release.Linux_arm64",
@@ -370,8 +384,8 @@ CommonsLang_OCaml__Dk_OpamLock__1_1_0.DKML_SLOTS = {
 -- before recursing (opam dependency graphs are acyclic, so no cycle check).
 -- A dependency with neither a source nor the local mark (a virtual package
 -- such as `seq`) is skipped; a dependency absent from the lock is an error.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_0.driver_visit(byname, provided, name, seen, order)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_0
+function CommonsLang_OCaml__Dk_OpamLock__1_1_3.driver_visit(byname, provided, name, seen, order)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_3
   if seen[name] ~= nil or provided[name] ~= nil then return end
   local e = byname[name]
   assert(e ~= nil, "dependency `" .. name .. "` is not in the lock")
@@ -392,7 +406,7 @@ end
 -- run-function produces the root. Author-time companion to Solve: re-run it
 -- whenever the lock changes.
 --
--- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.0):
+-- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.1):
 --   lock=PATH          project-relative lock file (the Solve output)
 --   out=PATH           project-relative driver values file to write
 --   root=PKG           opam package whose closure is chained (built last,
@@ -431,9 +445,9 @@ end
 --   'parallel=t'       optional: emit unordered precommands + per-package deps[]
 --                      edges for concurrent builds (default: a sequential chain)
 function uirules.GenerateDriver(command, request)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_0
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_3
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.0: driver written.")
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.3: driver written.")
     return
   end
   if command ~= "submit" then return end
@@ -491,6 +505,68 @@ function uirules.GenerateDriver(command, request)
     k = next(lock.packages, k)
   end
 
+  -- Import sources: prebuilt Pkg objects the driver consumes instead of building a
+  -- matching package locally (see dk.u "## Resolution of imports"). The caller
+  -- passes three parallel lists per source: implib[]=<Namespace> (ex.
+  -- CommonsBase_Dk.Dk0.Pkg), impver[]=<module version> (ex. 2.4.2), and
+  -- impsrclock[]=<path to that source's own opam lock>. A package is imported from
+  -- the first source that was built with the same `ocaml` compiler as this lock and
+  -- pins the package at the same opam version; every other package is built here.
+  local gate_ocaml = lock.ocaml
+  if gate_ocaml == nil then gate_ocaml = "CommonsLang_OCaml.DkML@4.14.3" end
+  local imported = {}   -- bare opam name -> fully-qualified imported object id
+  local implibs = request.user.implib
+  local impvers = request.user.impver
+  local impsrclocks = request.user.impsrclock
+  if implibs ~= nil then
+    assert(type(implibs) == "table" and type(impvers) == "table" and type(impsrclocks) == "table",
+      "implib[]/impver[]/impsrclock[] must be parallel lists")
+    local xi = 1
+    while implibs[xi] ~= nil do
+      local slib = implibs[xi]
+      local sver = assert(impvers[xi], "impver[] shorter than implib[]")
+      local spath = assert(impsrclocks[xi], "impsrclock[] shorter than implib[]")
+      local scontent = assert(request.ui.readfile { path = spath },
+        "could not read import srclock `" .. spath .. "`")
+      local slock = jd.decode(scontent)
+      assert(slock and slock.packages, "import srclock has no packages: " .. spath)
+      local socaml = slock.ocaml
+      if socaml == nil then socaml = "CommonsLang_OCaml.DkML@4.14.3" end
+      -- Compiler must match for the compiled .cmi/.cmxa to be consumable.
+      if socaml == gate_ocaml then
+        local sbyver = {}
+        local sk = next(slock.packages)
+        while sk do
+          local sd = H.indexof_char(sk, ".")
+          if sd ~= nil then sbyver[string.sub(sk, 1, sd - 1)] = string.sub(sk, sd + 1) end
+          sk = next(slock.packages, sk)
+        end
+        local gk = next(lock.packages)
+        while gk do
+          local gd = H.indexof_char(gk, ".")
+          if gd ~= nil then
+            local gname = string.sub(gk, 1, gd - 1)
+            local gver = string.sub(gk, gd + 1)
+            -- Never import a local ("local":"t") package under skiplocal: it is the
+            -- source under test and must be built in-tree from the localized source,
+            -- not consumed from a base's PREVIOUS release (which would test stale
+            -- code, and for a base-exclusive namespace like Dk1.Pkg.Dkone_exec is not
+            -- even published under a Dk0.Pkg base). Its external deps still import.
+            local g_is_local = byname[gname] ~= nil and byname[gname]["local"] == "t"
+            if imported[gname] == nil and sbyver[gname] == gver
+               and not (skiplocal ~= nil and g_is_local) then
+              -- `slib` is the full object namespace (ex. CommonsBase_Dk.Dk0.Pkg),
+              -- so the id is `<slib>.<Seg>@<ver>` -- do NOT insert another `.Pkg`.
+              imported[gname] = slib .. "." .. H.modsegment(gname) .. "@" .. sver
+            end
+          end
+          gk = next(lock.packages, gk)
+        end
+      end
+      xi = xi + 1
+    end
+  end
+
   -- Union the topological closure of every root through the shared seen/order
   -- (driver_visit dedups and post-orders, so multiple roots compose correctly).
   local order = {}
@@ -512,7 +588,9 @@ function uirules.GenerateDriver(command, request)
   while order[eo] ~= nil do
     local nm = order[eo]
     local is_local = byname[nm] ~= nil and byname[nm]["local"] == "t"
-    if not (skiplocal ~= nil and is_local) then table.insert(emit, nm) end
+    -- Imported packages are consumed as prebuilt objects, never emitted as a local
+    -- build form (their install.zip is merged in below via get-object instead).
+    if imported[nm] == nil and not (skiplocal ~= nil and is_local) then table.insert(emit, nm) end
     eo = eo + 1
   end
   assert(emit[1] ~= nil, "nothing to build after skiplocal dropped the local packages")
@@ -573,9 +651,13 @@ function uirules.GenerateDriver(command, request)
       -- unchanged. The rule defaults to this same wildcard, so drivers generated
       -- before this field still cross-compile correctly.
       .. " targetabi=Release.target_abi"
+      -- The OCaml compiler this lock is built with: the rule stages this toolchain,
+      -- and it is the compatibility key for consuming the imported deps below.
+      .. " ocaml=" .. gate_ocaml
     if parallel ~= nil then
       -- Direct build edges: pass each in-closure direct dependency so the rule's
-      -- declareinput turns them into input_objects (the true DAG).
+      -- declareinput turns them into input_objects (the true DAG). Imported deps are
+      -- not emitted Pkg objects, so inorder[] excludes them; they stage via impdep_.
       local e = byname[name]
       local ei = 1
       while e ~= nil and e.depends ~= nil and e.depends[ei] ~= nil do
@@ -583,6 +665,19 @@ function uirules.GenerateDriver(command, request)
         if inorder[d] ~= nil and d ~= name then rf = rf .. " deps[]=" .. d end
         ei = ei + 1
       end
+    end
+    -- Import staging: for every imported package in THIS package's closure, hand the
+    -- rule the foreign object id (impdep_<Seg>=<id>) so it stages the prebuilt object
+    -- instead of building a local sibling. The rule stages only its own closure, so
+    -- ids for packages outside it are never looked up.
+    local iseen = {}
+    local iord = {}
+    H.driver_visit(byname, provided, name, iseen, iord)
+    local ij = 1
+    while iord[ij] ~= nil do
+      local dn = iord[ij]
+      if imported[dn] ~= nil then rf = rf .. " impdep_" .. H.modsegment(dn) .. "=" .. imported[dn] end
+      ij = ij + 1
     end
     table.insert(lines, rf .. "\"")
     oi = oi + 1
@@ -619,6 +714,17 @@ function uirules.GenerateDriver(command, request)
     while emit[pj] ~= nil do
       table.insert(fcmds, "          [" .. nl .. "            " .. zz .. ", \"x\", \"-y\", \"-op\", \"p" .. H.numstr(pj - 1) .. "/install.zip\"" .. nl .. "          ]")
       pj = pj + 1
+    end
+    -- Imported packages are not built here, so they produce no p<i>/install.zip;
+    -- fetch each one's prebuilt install.zip and extract it into the same merged p/
+    -- prefix, so prefix.zip carries the whole closure (imported + locally built).
+    local qj = 1
+    while order[qj] ~= nil do
+      local qn = order[qj]
+      if imported[qn] ~= nil then
+        table.insert(fcmds, "          [" .. nl .. "            " .. zz .. ", \"x\", \"-y\", \"-op\", \"$(get-object " .. imported[qn] .. " -s ${SLOTNAME.request} -m ./install.zip -f imp-" .. H.numstr(qj) .. ".zip)\"" .. nl .. "          ]")
+      end
+      qj = qj + 1
     end
     table.insert(fcmds, "          [" .. nl .. "            " .. zz .. ", \"a\", \"-tzip\", \"${SLOT.request}/prefix.zip\", \"./p/*\"" .. nl .. "          ]")
   else

@@ -139,7 +139,7 @@
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
-                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./cygpath -f cygpath)",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.1 -p assets/s -m ./cygpath -f cygpath)",
                         "${CACHEABS}/lookup-s/cygpath"
                     ],
                     [
@@ -153,7 +153,7 @@
                     [
                         "--cmd.exe",
                         "/c",
-                        "\"`\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWinVcvars@1.0.0 -p assets/opam/opam-build-win-vcvars.bat -f opam-build-win-vcvars.bat)`\" `\"$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe`\" x64 `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWin@1.0.0 -p assets/opam/opam-build-win.sh -f opam-build-win.sh)`\" `\"${SLOTABS.Release.Windows_x86_64}${/}bin`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMsvsDetectStub@1.0.0 -p assets/opam/msvs-detect-stub.sh -f msvs-detect-stub.sh)`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMccsGlpkStub@1.0.0 -p assets/opam/mccs-glpk-wrmip-stub.c -f mccs-glpk-wrmip-stub.c)`\" `\"${SLOTABS.Release.Windows_x86_64}`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Opam.Menhir.Bundle@2025.9.3 -p menhir-20250903-no-symlinks.tar -f menhir-20250903-no-symlinks.tar)`\"\""
+                        "\"`\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWinVcvars@1.0.1 -p assets/opam/opam-build-win-vcvars.bat -f opam-build-win-vcvars.bat)`\" `\"$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe`\" x64 `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWin@1.0.1 -p assets/opam/opam-build-win.sh -f opam-build-win.sh)`\" `\"${SLOTABS.Release.Windows_x86_64}${/}bin`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMsvsDetectStub@1.0.1 -p assets/opam/msvs-detect-stub.sh -f msvs-detect-stub.sh)`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMccsGlpkStub@1.0.1 -p assets/opam/mccs-glpk-wrmip-stub.c -f mccs-glpk-wrmip-stub.c)`\" `\"${SLOTABS.Release.Windows_x86_64}`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Opam.Menhir.Bundle@2025.9.3 -p menhir-20250903-no-symlinks.tar -f menhir-20250903-no-symlinks.tar)`\"\""
                     ]
                 ]
             },
@@ -200,7 +200,7 @@
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
-                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.0 -p assets/s -m ./cygpath -f cygpath)",
+                        "$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.1 -p assets/s -m ./cygpath -f cygpath)",
                         "${CACHEABS}/lookup-s/cygpath"
                     ],
                     [
@@ -214,7 +214,7 @@
                     [
                         "--cmd.exe",
                         "/c",
-                        "\"`\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWinVcvars@1.0.0 -p assets/opam/opam-build-win-vcvars.bat -f opam-build-win-vcvars.bat)`\" `\"$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe`\" x86 `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWin@1.0.0 -p assets/opam/opam-build-win.sh -f opam-build-win.sh)`\" `\"${SLOTABS.Release.Windows_x86}${/}bin`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMsvsDetectStub@1.0.0 -p assets/opam/msvs-detect-stub.sh -f msvs-detect-stub.sh)`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMccsGlpkStub@1.0.0 -p assets/opam/mccs-glpk-wrmip-stub.c -f mccs-glpk-wrmip-stub.c)`\" `\"${SLOTABS.Release.Windows_x86}`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Opam.Menhir.Bundle@2025.9.3 -p menhir-20250903-no-symlinks.tar -f menhir-20250903-no-symlinks.tar)`\"\""
+                        "\"`\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWinVcvars@1.0.1 -p assets/opam/opam-build-win-vcvars.bat -f opam-build-win-vcvars.bat)`\" `\"$(--path=absnative get-object CommonsBase_Build.VSWhere@3.1.7 -s Release.execution_abi -e bin/vswhere.exe -d :)${/}bin${/}vswhere.exe`\" x86 `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamBuildWin@1.0.1 -p assets/opam/opam-build-win.sh -f opam-build-win.sh)`\" `\"${SLOTABS.Release.Windows_x86}${/}bin`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMsvsDetectStub@1.0.1 -p assets/opam/msvs-detect-stub.sh -f msvs-detect-stub.sh)`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Apparatus.OpamMccsGlpkStub@1.0.1 -p assets/opam/mccs-glpk-wrmip-stub.c -f mccs-glpk-wrmip-stub.c)`\" `\"${SLOTABS.Release.Windows_x86}`\" `\"$(--path=absnative get-asset CommonsLang_OCaml.Opam.Menhir.Bundle@2025.9.3 -p menhir-20250903-no-symlinks.tar -f menhir-20250903-no-symlinks.tar)`\"\""
                     ]
                 ]
             },
