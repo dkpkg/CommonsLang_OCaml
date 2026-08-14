@@ -221,6 +221,11 @@ sources in precedence order.
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
   \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
 
+### CommonsLang_OCaml.Apparatus@1.0.9
+
+  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v6.sh" }
+  \dk.asset(byteSize: "21145", checksum: (sha256: "4384eb0ea7844c5fccff0bd306fe33dd55b49912e21a2c6cc815bc44fa8dd1f6"))\;
+
 ## Dk.OpamLock
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
@@ -354,3 +359,17 @@ that is dead once the object is imported into another build tree. All three
 variables are required together; the imported Dk0.Pkg.Ocamlfind object itself is
 correct and unchanged. @1.0.7 is a new asset module; the Export marker value-id
 stays shared.
+
+The @1.0.15 revision fetches Apparatus.OpamBuildWrapper@1.0.9
+(build-locked-package-v6.sh), which additionally rewrites the imported
+findlib.conf's `stdlib=` (and `ldconf=`) to the running compiler's lib/ocaml.
+@1.0.11's OCAMLFIND_LDCONF fixed `ocamlfind list`, but findlib_config's baked
+`ocaml_stdlib` still pointed at the dead compile-time path, so `-package
+compiler-libs.toplevel` (findlib expands it to `<ocaml_stdlib>/compiler-libs`)
+resolved into that dead directory and any consumer of the toplevel libraries
+failed with `Unbound module Toploop` -- first hit compiling astring's
+`src/astring_top.ml`. findlib exposes no environment override for `stdlib`
+(unlike ldconf), so the wrapper must rewrite findlib.conf itself; the DkML
+compiler does ship compiler-libs/toploop.cmi + ocamltoplevel.cma, so once
+`stdlib` points at it the toplevel packages resolve. @1.0.9 is a new asset
+module; the Export marker value-id stays shared.

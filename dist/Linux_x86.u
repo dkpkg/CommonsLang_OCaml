@@ -88,3 +88,6 @@ Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean.
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.14 -f ${RUNTIME}/OpamBuild.Export-1.0.14.zip
   \test(pass)
   \dk.object(abi: "Release.Linux_x86_64", value-id: "ox2yguwbuo7ev3o5ovs5vcjgsljpqjev73hi6ze6isy6mmksrfasq")\;
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.15 -f ${RUNTIME}/OpamBuild.Export-1.0.15.zip
+  \test(pass)
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "ox2yguwbuo7ev3o5ovs5vcjgsljpqjev73hi6ze6isy6mmksrfasq")\;
