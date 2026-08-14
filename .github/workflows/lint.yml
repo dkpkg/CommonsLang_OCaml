@@ -1,0 +1,22 @@
+on:
+  push: # catch drift on every push, long before a release tag
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner # Optional but recommended
+        continue-on-error: true
+        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        with: { egress-policy: audit }
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      # The lint enforces the keep-latest-only asset policy in dk.u "## Assets":
+      # dk.u checksums match the bytes on disk, every values.lua get-asset
+      # resolves to a declaration, no per-version file-name variants exist, and
+      # the current rule versions are covered by every active dist self-test.
+      - name: Lint Apparatus assets
+        run: |
+          pwsh tools/lint-apparatus-assets.ps1 -SelfTest
+          pwsh tools/lint-apparatus-assets.ps1

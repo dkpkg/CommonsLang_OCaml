@@ -1,26 +1,30 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.5"
+  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.6"
 }
 
--- 1.1.5 drops the dependencies opam gates behind with-test, with-doc or
+-- 1.1.6 is behaviorally identical to 1.1.5; it exists because the helper
+-- assets were collapsed onto stable file names (Apparatus.OpamLockHelper@1.0.10
+-- at assets/opam-lock/dk_opam_lock.ml) when the old per-version file variants
+-- were retired. See dk.u "## Assets" for the policy.
+--
+-- 1.1.5 dropped the dependencies opam gates behind with-test, with-doc or
 -- with-dev-setup from each package's `depends`. Through 1.1.4 the lock recorded
 -- them as build edges, which made the graph CYCLIC -- re depends on ppx_expect
 -- only to run its tests while ppx_expect really depends on re -- and a cycle
 -- has no build order, so a consuming build could not finish. The filtering
--- lives in the OCaml helper (Apparatus.OpamLockHelper@1.0.8), which is where
--- `depends` is computed.
+-- lives in the OCaml helper, which is where `depends` is computed.
 
 -- lua-ml does not support local functions, and a "local" variable would be nil
 -- inside the rules/uirules function bodies. So a should-be-unique global table
 -- holds the helpers, matching the house style in CommonsBase_Std.Extract and
 -- CommonsBase_Remote.GitHub.
-CommonsLang_OCaml__Dk_OpamLock__1_1_5 = {}
+CommonsLang_OCaml__Dk_OpamLock__1_1_6 = {}
 
 rules, uirules = build.newrules(M)
 
 -- lua-ml's string library does not implement gsub, so trim by scanning for the
 -- first/last non-space with find (which does support patterns).
-function CommonsLang_OCaml__Dk_OpamLock__1_1_5.iswhite(c)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_6.iswhite(c)
   local b = string.byte(c)
   return b == 32 or b == 9 or b == 13 or b == 10
 end
@@ -31,14 +35,14 @@ end
 -- opam output on Windows (ex. the
 -- switch-exists check compared name-plus-CR ~= name and re-created the
 -- switch).
-function CommonsLang_OCaml__Dk_OpamLock__1_1_5.trim(s)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_6.trim(s)
   if s == nil then return "" end
   local n = string.len(s)
   local a = 1
-  while a <= n and CommonsLang_OCaml__Dk_OpamLock__1_1_5.iswhite(string.sub(s, a, a)) do a = a + 1 end
+  while a <= n and CommonsLang_OCaml__Dk_OpamLock__1_1_6.iswhite(string.sub(s, a, a)) do a = a + 1 end
   if a > n then return "" end
   local b = n
-  while b >= 1 and CommonsLang_OCaml__Dk_OpamLock__1_1_5.iswhite(string.sub(s, b, b)) do b = b - 1 end
+  while b >= 1 and CommonsLang_OCaml__Dk_OpamLock__1_1_6.iswhite(string.sub(s, b, b)) do b = b - 1 end
   return string.sub(s, a, b)
 end
 
@@ -46,7 +50,7 @@ end
 -- version did) walks lua-ml's arbitrary hash order, which silently scrambled the
 -- order of every joined array -- including the JSON encoder's `parts`, so a
 -- sorted key list still emitted unsorted. Walk 1..n instead.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_5.join(tbl, sep)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_6.join(tbl, sep)
   local r = nil
   local i = 1
   while tbl[i] ~= nil do
@@ -61,7 +65,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_5.join(tbl, sep)
   return r
 end
 
-function CommonsLang_OCaml__Dk_OpamLock__1_1_5.set_from_list(tbl)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_6.set_from_list(tbl)
   local set = {}
   if tbl == nil then return set end
   -- Store the value itself (not the boolean true): lua-ml does not reliably
@@ -74,7 +78,7 @@ end
 -- Directory part of a path (everything before the last '/' or '\'), or "." if
 -- the path has no separator. Byte-based (47='/', 92='\\') so it is correct for
 -- both the POSIX and Windows realpath forms request.io.realpath can return.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_5.dirname(p)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_6.dirname(p)
   local i = string.len(p)
   while i >= 1 do
     local b = string.byte(p, i)
@@ -102,7 +106,7 @@ function rules.Export(command, request)
     return {
       declareoutput = {
         return_objects = {
-          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.5",
+          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.6",
           slots = slots,
           execution_slot = "Release.execution_abi"
         }
@@ -143,9 +147,9 @@ end
 -- runs the helper, and publishes its stdout as the lock. Mirrors the thin
 -- CommonsLang_Python.UvLock.Solve design.
 function uirules.Solve(command, request, continue_)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_5
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_6
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.5: lock written.")
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.6: lock written.")
     return
   end
   if command ~= "submit" then return end
@@ -169,8 +173,8 @@ function uirules.Solve(command, request, continue_)
       end
     end
     local files = {
-      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.8 -p assets/opam-lock/dk_opam_lock_filtered.ml -f dk_opam_lock.ml)",
-      amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.8 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
+      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.10 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
+      amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.1 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
     }
     return {
       submit = {
@@ -253,7 +257,7 @@ function uirules.Solve(command, request, continue_)
 
   -- Build the helper argv.
   local args = { bc, "solve", "--opam", opamexe, "--work-dir", workdir, "--pins-file", pinsfile,
-    "--tool", "CommonsLang_OCaml.Dk.OpamLock@1.1.5" }
+    "--tool", "CommonsLang_OCaml.Dk.OpamLock@1.1.6" }
   local out = request.user.out or "dk.opam-lock.jsonc"
   if request.user.switch then table.insert(args, "--switch"); table.insert(args, request.user.switch) end
   if request.user.local_opam_dir then table.insert(args, "--local-opam-dir"); table.insert(args, request.user.local_opam_dir) end
@@ -322,7 +326,7 @@ end
 
 -- Index of the first occurrence of the single character `ch` in `s`, or nil.
 -- (string.find treats `.` as a pattern wildcard, so scan by byte instead.)
-function CommonsLang_OCaml__Dk_OpamLock__1_1_5.indexof_char(s, ch)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_6.indexof_char(s, ch)
   local i = 1
   local n = string.len(s)
   while i <= n do
@@ -334,7 +338,7 @@ end
 
 -- Decimal digits of a lua-ml number (no string.format; concat of a number is
 -- unreliable). Mirrors CommonsBase_Dk.Dk0Build.numstr.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_5.numstr(v)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_6.numstr(v)
   if type(v) == "string" then return v end
   if type(v) ~= "number" then return tostring(v) end
   if v == 0 then return "0" end
@@ -354,7 +358,7 @@ end
 -- lowercased. MUST match the modsegment transform in the per-package build
 -- rule (CommonsBase_Dk.Dk0Build), which derives sibling Pkg object ids from
 -- dependency names with the same function.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_5.modsegment(name)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_6.modsegment(name)
   local out = ""
   local i = 1
   local n = string.len(name)
@@ -376,7 +380,7 @@ end
 -- producing a host-unrunnable binary that -- because the opam-build form is
 -- host-keyed with the `target_abi` wildcard in its value-id -- is then shared to
 -- every slot. GenerateDriver pins these to `Release.execution_abi`.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_5.is_host_tool(name)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_6.is_host_tool(name)
   return name == "ocamlfind" or name == "ocamlbuild"
 end
 
@@ -384,7 +388,7 @@ end
 -- built as Pkg objects, so the driver never chains them. The default for
 -- GenerateDriver's provided[] parameter; a project on another toolchain
 -- passes its own list. Mirrors PROVIDED in CommonsBase_Dk.Dk0Build.
-CommonsLang_OCaml__Dk_OpamLock__1_1_5.DKML_PROVIDED = {
+CommonsLang_OCaml__Dk_OpamLock__1_1_6.DKML_PROVIDED = {
   "ocaml", "ocaml-base-compiler", "ocaml-config", "ocaml-options-vanilla",
   "base-unix", "base-threads", "base-bigarray", "dune", "flexdll",
   "conf-mingw-w64-gcc-x86_64", "host-arch-x86_64", "host-arch-x86_32",
@@ -392,7 +396,7 @@ CommonsLang_OCaml__Dk_OpamLock__1_1_5.DKML_PROVIDED = {
 }
 
 -- The 8 DkML slots; the default for GenerateDriver's slots[] parameter.
-CommonsLang_OCaml__Dk_OpamLock__1_1_5.DKML_SLOTS = {
+CommonsLang_OCaml__Dk_OpamLock__1_1_6.DKML_SLOTS = {
   "Release.Windows_x86_64", "Release.Windows_x86",
   "Release.Linux_x86_64", "Release.Linux_x86_64_musl", "Release.Linux_x86",
   "Release.Linux_arm64",
@@ -404,8 +408,8 @@ CommonsLang_OCaml__Dk_OpamLock__1_1_5.DKML_SLOTS = {
 -- before recursing (opam dependency graphs are acyclic, so no cycle check).
 -- A dependency with neither a source nor the local mark (a virtual package
 -- such as `seq`) is skipped; a dependency absent from the lock is an error.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_5.driver_visit(byname, provided, name, seen, order)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_5
+function CommonsLang_OCaml__Dk_OpamLock__1_1_6.driver_visit(byname, provided, name, seen, order)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_6
   if seen[name] ~= nil or provided[name] ~= nil then return end
   local e = byname[name]
   assert(e ~= nil, "dependency `" .. name .. "` is not in the lock")
@@ -465,9 +469,9 @@ end
 --   'parallel=t'       optional: emit unordered precommands + per-package deps[]
 --                      edges for concurrent builds (default: a sequential chain)
 function uirules.GenerateDriver(command, request)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_5
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_6
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.5: driver written.")
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.6: driver written.")
     return
   end
   if command ~= "submit" then return end

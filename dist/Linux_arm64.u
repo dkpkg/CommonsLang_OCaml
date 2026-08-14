@@ -30,30 +30,20 @@
 
 ## Dk.OpamLock
 
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
-  \test(pass)
+Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.5
+ladder lives in pre-2026-08 release tags and git history (see dk.u
+"## Assets" for the keep-latest-only policy). As before on this arm64 slot
+the marker output is unused (no object value-id is recorded).
 
-The @1.1.0 revision ships alongside @1.0.0: its Solve rule delegates the lock
-logic to a compiled OCaml helper (dk_opam_lock.ml + a vendored opam-file-format
-amalgam), fixing the lua-ml depends-order scramble and the dropped
-Linux_x86_64_musl slot. @1.1.0 is a fresh id; as with @1.0.0 on this arm64 slot
-its marker output is unused (no object value-id is recorded).
-
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.0 -f ${RUNTIME}/OpamLock.Export-1.1.0.zip
-  \test(pass)
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.3 -f ${RUNTIME}/OpamLock.Export-1.1.3.zip
-  \test(pass)
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.4 -f ${RUNTIME}/OpamLock.Export-1.1.4.zip
-  \test(pass)
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.5 -f ${RUNTIME}/OpamLock.Export-1.1.5.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.6 -f ${RUNTIME}/OpamLock.Export-1.1.6.zip
   \test(pass)
 
 ## Dk.OpamBuild
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
-  \test(pass)
-  \dk.object(abi: "Release.Linux_arm64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;
+Only the current OpamBuild revision ships. The retired Export@1.0.0-@1.0.15
+ladder lives in pre-2026-08 release tags and git history (see dk.u
+"## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.6 -f ${RUNTIME}/OpamBuild.Export-1.0.6.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.16 -f ${RUNTIME}/OpamBuild.Export-1.0.16.zip
   \test(pass)
   \dk.object(abi: "Release.Linux_arm64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;

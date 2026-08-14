@@ -35,66 +35,21 @@
 
 ## Dk.OpamLock
 
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.0.0 -f ${RUNTIME}/OpamLock.Export.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ow6itgcoxmhhcyhnh76cz576ptu3t6xpuyghxqtyki7ixhykaltka")\;
+Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.5
+ladder lives in pre-2026-08 release tags and git history (see dk.u
+"## Assets" for the keep-latest-only policy).
 
-The @1.1.0 revision ships alongside @1.0.0: its Solve rule delegates the lock
-logic to a compiled OCaml helper (dk_opam_lock.ml + a vendored opam-file-format
-amalgam), fixing the lua-ml depends-order scramble and the dropped
-Linux_x86_64_musl slot. @1.1.0 is a fresh id, so it builds clean.
-
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.0 -f ${RUNTIME}/OpamLock.Export-1.1.0.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.6 -f ${RUNTIME}/OpamLock.Export-1.1.6.zip
   \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "octcalpyeaaiqncvkpconxvvmixwwp4u4xbmsdttvl52qq6cihpja")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.1 -f ${RUNTIME}/OpamLock.Export-1.1.1.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "oma43p2og3vrhmcz4jsgaxweklqvnswu2mprqosiihii4plq6rlea")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.3 -f ${RUNTIME}/OpamLock.Export-1.1.3.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ou3pkuybcjwbjyz2ellj34pvuk6tqfqub3x6xviajaml5kd3dlphq")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.4 -f ${RUNTIME}/OpamLock.Export-1.1.4.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "oeethfxa3ucmndd5s24n6cypsjflzbzpsf7rlq2hpbky4jutaky5q")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.5 -f ${RUNTIME}/OpamLock.Export-1.1.5.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "oe2mrignxu6gudpft2kw735jgajlekfe5l4nff7jjonivwlsh7vxq")\;
+  \dk.object(abi: "Release.Darwin_arm64", value-id: "o00000000000000000000000000000000000000000000000000000")\;
 
 
 ## Dk.OpamBuild
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.0 -f ${RUNTIME}/OpamBuild.Export.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")
-  \dk.object(abi: "Release.Darwin_x86_64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;
+Only the current OpamBuild revision ships. The retired Export@1.0.0-@1.0.15
+ladder lives in pre-2026-08 release tags and git history (see dk.u
+"## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.6 -f ${RUNTIME}/OpamBuild.Export-1.0.6.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.7 -f ${RUNTIME}/OpamBuild.Export-1.0.7.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.8 -f ${RUNTIME}/OpamBuild.Export-1.0.8.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.9 -f ${RUNTIME}/OpamBuild.Export-1.0.9.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.10 -f ${RUNTIME}/OpamBuild.Export-1.0.10.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.11 -f ${RUNTIME}/OpamBuild.Export-1.0.11.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.12 -f ${RUNTIME}/OpamBuild.Export-1.0.12.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.13 -f ${RUNTIME}/OpamBuild.Export-1.0.13.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.14 -f ${RUNTIME}/OpamBuild.Export-1.0.14.zip
-  \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.15 -f ${RUNTIME}/OpamBuild.Export-1.0.15.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.16 -f ${RUNTIME}/OpamBuild.Export-1.0.16.zip
   \test(pass)
   \dk.object(abi: "Release.Darwin_arm64", value-id: "ot36qu3466etoe2n4fwegx5oven5jtringcjn4njmy7n4ayspxb6q")\;

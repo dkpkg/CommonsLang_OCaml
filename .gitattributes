@@ -21,6 +21,7 @@ dk1 text eol=lf
 assets/table/** text eol=lf
 assets/wine-hostshim/* text eol=lf
 assets/s/cygpath text eol=lf
+assets/opam/seq-META text eol=lf
 
 *.bat text eol=crlf
 *.cmd text eol=crlf

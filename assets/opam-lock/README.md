@@ -10,7 +10,12 @@ stdout as the lock — mirroring `CommonsLang_Python`'s
 
 ## Files
 
-- `dk_opam_lock.ml` — hand-written helper (this is the source of truth).
+- `dk_opam_lock.ml` — hand-written helper (this is the source of truth). Its
+  content is versioned by the `CommonsLang_OCaml.Apparatus.OpamLockHelper`
+  module version in `dk.u` alone: edit this file in place and add a new
+  `Apparatus@1.0.<next>` section (never create a variant file such as
+  `dk_opam_lock_something.ml` — see the `## Assets` policy in `dk.u`; the
+  retired `_reloc`/`_filtered` variants live in pre-2026-08 release tags).
 - `opam_file_format.ml` — a **generated** single-file amalgam of
   [opam-file-format](https://github.com/ocaml/opam-file-format) 2.2.0. Do not
   edit by hand; regenerate with `tools/update-opam-file-format.ps1`. Used to

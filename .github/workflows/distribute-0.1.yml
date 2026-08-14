@@ -5,7 +5,26 @@ on:
   workflow_dispatch: # allow manual triggering from GitHub page
 
 jobs:
+  # Cheap fail-fast gate: the asset declarations, the values.lua get-asset
+  # references, and the dist self-test coverage must be consistent before any
+  # of the seven distribute slots spends CI time. Runs on the plain runner
+  # (the manylinux containers used by the Linux matrix jobs have no pwsh).
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner # Optional but recommended
+        continue-on-error: true
+        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        with: { egress-policy: audit }
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Lint Apparatus assets
+        run: |
+          pwsh tools/lint-apparatus-assets.ps1 -SelfTest
+          pwsh tools/lint-apparatus-assets.ps1
+
   distribute:
+    needs: lint
     # The secrets created by `./dk0 prepare-version --ci github VERSION`
     # are tied to this environment only.
     environment: dk-distribution

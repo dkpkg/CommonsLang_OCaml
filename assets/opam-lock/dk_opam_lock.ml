@@ -127,6 +127,66 @@ let top_level_quoted s =
   done;
   List.rev !names
 
+(* The same scan, pairing each depth-0 name with the {filter} that follows it
+   ("" when it has none). Positions, not a name-keyed map: opam may name a
+   package twice with different filters (ppxlib lists sexplib0 as a real
+   dependency AND under with-test), and collapsing by name would let the
+   test-only occurrence mask the real one. *)
+let top_level_quoted_filtered s =
+  let out = ref [] in
+  let n = String.length s in
+  let i = ref 0 and depth = ref 0 in
+  (* Index in [out] of the name awaiting its filter, if the scan is still in
+     the whitespace directly after it. *)
+  let pending = ref None in
+  while !i < n do
+    let c = s.[!i] in
+    if c = '{' then begin
+      match !pending with
+      | Some idx when !depth = 0 ->
+          let j = ref (!i + 1) and d2 = ref 1 in
+          while !j < n && !d2 > 0 do
+            (if s.[!j] = '{' then incr d2 else if s.[!j] = '}' then decr d2);
+            if !d2 > 0 then incr j
+          done;
+          let filt = String.sub s (!i + 1) (!j - !i - 1) in
+          out := List.mapi (fun k (nm, f) -> if k = idx then (nm, filt) else (nm, f)) !out;
+          pending := None;
+          i := !j + 1
+      | _ -> incr depth; incr i
+    end
+    else if c = '}' then (decr depth; incr i)
+    else if c = '"' then begin
+      let j = ref (!i + 1) in
+      while !j < n && s.[!j] <> '"' do incr j done;
+      if !depth = 0 then begin
+        out := !out @ [ (String.sub s (!i + 1) (!j - !i - 1), "") ];
+        pending := Some (List.length !out - 1)
+      end;
+      i := !j + 1
+    end
+    else begin
+      (if c <> ' ' && c <> '\t' && c <> '\n' && c <> '\r' then pending := None);
+      incr i
+    end
+  done;
+  !out
+
+(* Is this dependency needed only to TEST or DOCUMENT its package? opam gates
+   such an edge behind with-test, with-doc or with-dev-setup, all false for the
+   builds this lock drives. Recording one as a build edge makes the graph
+   CYCLIC -- re depends on ppx_expect only to run its tests while ppx_expect
+   really depends on re -- and no build order satisfies a cycle. An alternation
+   ("|") may still hold when the gate variable is false, so it stays required. *)
+let is_test_only_filter f =
+  let has sub =
+    let n = String.length f and m = String.length sub in
+    let rec go i = i + m <= n && (String.sub f i m = sub || go (i + 1)) in
+    m > 0 && go 0
+  in
+  f <> "" && (not (String.contains f '|'))
+  && (has "with-test" || has "with-doc" || has "with-dev-setup")
+
 (* Checksums ("<algo>=<hex>") from a url.checksum: field: any quoted token
    containing '='; else the whole field unquoted if it contains '='. *)
 let checksums s =
@@ -870,6 +930,69 @@ type opts = {
   tool : string;
 }
 
+(* --------------------------------------------------------------------- *)
+(* Relocatable override for ocamlfind and ocamlbuild.                     *)
+(*                                                                        *)
+(* The lock-solver force-overrides these two packages to relocatable      *)
+(* builds regardless of what the opam solve resolves, so a prebuilt       *)
+(* CommonsBase_Dk.Dk0.Pkg.Ocamlfind / Pkg.Ocamlbuild object carries       *)
+(* RELATIVE topfind/findlib.conf (and a relative ocamlbuild libdir) and   *)
+(* is consumable when imported into a different build tree. The opam      *)
+(* solve still runs (so the closure resolves and both packages still      *)
+(* satisfy their dependents at the resolved version), but when the helper *)
+(* EMITS these two entries it substitutes the source (dra27's relocatable *)
+(* forks, content-addressed by git commit so no moving ref), the build    *)
+(* flags (-sitelib "." / OCAMLBUILD_LIBDIR=..) and the install commands    *)
+(* from the table below. See CommonsLang_OCaml `dk.u`. *)
+type reloc = {
+  r_url : string;
+  r_sums : string list;   (* at least one sha256= entry (dk bundle checksum) *)
+  r_size : int;
+  r_archive : string;     (* tgz | txz | tbz | tar | zip *)
+  r_build : string;       (* opam `build:` list syntax, as `opam show` emits it *)
+  r_install : string;     (* opam `install:` list syntax; "" => no install stanza *)
+}
+
+let reloc_override name =
+  match name with
+  | "ocamlfind" ->
+      (* jonahbeckford/ocamlfind = dra27 relocatable (1faecd40, v1.9.8) plus a
+         dk-per-package patch that cygpath-normalizes the -with-relative-paths-at
+         prefix. Built with -sitelib "." + -with-relative-paths-at %{prefix}%,
+         findlib writes a relocatable topfind (findlib_directory = location) and a
+         relative findlib.conf (destdir = "$PREFIX/lib"). *)
+      Some {
+        r_url = "https://github.com/jonahbeckford/ocamlfind/releases/download/1.9.8+reloc+dk/src.tar.gz";
+        r_sums = [ "sha256=e47b7711420a5edbd95765ea8a6867bd2f2146f8ee461ac18a6b26d890d762d8" ];
+        r_size = 176531;
+        r_archive = "tgz";
+        (* -sitelib "." makes findlib.conf relative; -with-relative-paths-at
+           %{prefix}% makes topfind relocatable (findlib_directory = location)
+           and findlib.conf destdir = "$PREFIX/lib" (findlib expands $PREFIX to
+           the runtime install location). Both together make the prebuilt
+           findlib consumable in another build tree. *)
+        r_build =
+          "[\n  \"./configure\"\n  \"-bindir\" bin\n  \"-sitelib\" \".\"\n  \"-mandir\" man\n  \"-config\" \"%{lib}%/findlib.conf\"\n  \"-with-relative-paths-at\" \"%{prefix}%\"\n  \"-no-custom\"\n  \"-no-camlp4\" {!ocaml:preinstalled & ocaml:version >= \"4.02.0\"}\n  \"-no-topfind\" {ocaml:preinstalled}\n]\n[make \"all\"]\n[make \"opt\"] {ocaml:native}";
+        r_install =
+          "[make \"install\"]\n[\"install\" \"-m\" \"0755\" \"ocaml-stub\" \"%{bin}%/ocaml\"] {ocaml:preinstalled}";
+      }
+  | "ocamlbuild" ->
+      (* jonahbeckford/ocamlbuild = dra27 relocatable-0.14.3 (5a1529c3) plus a
+         dk-per-package patch that drops configure.make's bindir==compiler-bindir
+         gate so relocation engages. Built via configure.make with
+         OCAMLBUILD_LIBDIR=.., ocamlbuild_config bakes bindir="." libdir=".." and
+         computes the absolute dirs at runtime. *)
+      Some {
+        r_url = "https://github.com/jonahbeckford/ocamlbuild/releases/download/0.14.3+reloc+dk/src.tar.gz";
+        r_sums = [ "sha256=c7cb4009e475f0d08f7b278e651f6d1240cc98597d36c06636efcef54d994e9e" ];
+        r_size = 204019;
+        r_archive = "tgz";
+        r_build =
+          "[\n  make \"-f\" \"configure.make\" \"all\"\n  \"OCAMLBUILD_PREFIX=%{prefix}%\"\n  \"OCAMLBUILD_BINDIR=%{bin}%\"\n  \"OCAMLBUILD_LIBDIR=..\"\n  \"OCAMLBUILD_MANDIR=%{man}%\"\n  \"OCAML_NATIVE=%{ocaml:native}%\"\n  \"OCAML_NATIVE_TOOLS=%{ocaml:native}%\"\n]\n[make \"check-if-preinstalled\" \"all\" \"opam-install\"]";
+        r_install = "";
+      }
+  | _ -> None
+
 let do_solve o =
   let workdir = o.workdir in
   let switch, ephemeral =
@@ -964,8 +1087,16 @@ let do_solve o =
         let build_raw = field "build:" in
         let install_raw = field "install:" in
         let depopts_raw = field "depopts:" in
+        (* Relocatable override: force ocamlfind/ocamlbuild to the pinned
+           relocatable forks + build flags, keeping the solved version/depends. *)
+        let ovr = reloc_override name in
+        let url = match ovr with Some r -> r.r_url | None -> url in
+        let build_raw = match ovr with Some r -> r.r_build | None -> build_raw in
+        let install_raw = match ovr with Some r -> r.r_install | None -> install_raw in
+        (match ovr with Some r -> sums := r.r_sums | None -> ());
         (* direct deps in closure, discovery order, deduped; then depopts *)
-        let depnames = top_level_quoted depends_raw in
+        let depfiltered = top_level_quoted_filtered depends_raw in
+        let depnames = List.map fst depfiltered in
         let optnames = top_level_quoted depopts_raw in
         Validator.check ~pkg:ak ~field:"depends" ~scanner:depnames depends_raw;
         if S.trim depopts_raw <> "" then Validator.check ~pkg:ak ~field:"depopts" ~scanner:optnames depopts_raw;
@@ -976,10 +1107,27 @@ let do_solve o =
             Hashtbl.add seen d (); depends := d :: !depends
           end
         in
-        List.iter consider depnames;
+        (* A test-only edge is dropped, except for a LOCAL package: this closure
+           may actually run its tests, so its own with-test dependencies are
+           staged. Each occurrence carries its own filter, so a name listed both
+           with and without a test filter keeps the edge. *)
+        List.iter
+          (fun (d, filt) -> if is_local name || not (is_test_only_filter filt) then consider d)
+          depfiltered;
         List.iter consider optnames;
         let depends = List.rev !depends in
         let source =
+          match ovr with
+          | Some r ->
+            (* Fixed relocatable source: direct URL (incache=0), pinned
+               checksum + size; no cache probing. *)
+            Json.Obj
+              [ ("url", Json.Str r.r_url);
+                ("checksums", Json.Arr (List.map (fun s -> Json.Str s) r.r_sums));
+                ("archive", Json.Str r.r_archive);
+                ("incache", Json.Int 0);
+                ("size", Json.Int r.r_size) ]
+          | None ->
           if is_local name || url = "" || !sums = [] then Json.Null
           else begin
             let incache = ref 1 in
@@ -1096,6 +1244,23 @@ let selftest () =
   check "pins pin" (String.concat "," (List.map fst pf.pinned)) "p1";
   check "pins float" (String.concat "," pf.floats) "f1";
   check "pins arch" (String.concat "," (List.map snd pf.archexcludes)) "x86_32";
+  (* relocatable override: both packages resolve and carry the relocation
+     flags; a non-overridden package returns None *)
+  let has_sub hay needle =
+    let lh = String.length hay and ln = String.length needle in
+    let rec go i = i + ln <= lh && (String.sub hay i ln = needle || go (i + 1)) in
+    ln = 0 || go 0
+  in
+  (match reloc_override "ocamlfind" with
+   | Some r ->
+     check "reloc ocamlfind sitelib" (if has_sub r.r_build "\"-sitelib\" \".\"" then "y" else "n") "y";
+     check "reloc ocamlfind url" (if has_sub r.r_url "jonahbeckford/ocamlfind" then "y" else "n") "y"
+   | None -> ok := false; Printf.eprintf "FAIL reloc ocamlfind: None\n");
+  (match reloc_override "ocamlbuild" with
+   | Some r ->
+     check "reloc ocamlbuild libdir" (if has_sub r.r_build "OCAMLBUILD_LIBDIR=.." then "y" else "n") "y"
+   | None -> ok := false; Printf.eprintf "FAIL reloc ocamlbuild: None\n");
+  check "reloc passthrough" (match reloc_override "fmt" with Some _ -> "some" | None -> "none") "none";
   if !ok then (Printf.eprintf "selftest: PASS\n"; exit 0)
   else (Printf.eprintf "selftest: FAIL\n"; exit 1)
 

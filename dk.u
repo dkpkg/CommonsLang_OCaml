@@ -117,6 +117,30 @@ sources in precedence order.
 
 ## Assets
 
+Assets are versioned by their Apparatus module id alone: one stable file path
+per logical asset, whose content changes ride an Apparatus patch bump (the
+`\dk.asset` checksum moves with the bytes). Do not create per-version file-name
+variants (a `-v2.sh` or `_reloc.ml` sibling): a released version's bytes are
+snapshotted into that release's valuestore zip, so old release tags stay
+reproducible without a copy at HEAD. Only the latest versions are declared at
+HEAD (keep-latest-only). A wrapper/helper bump is therefore: edit the stable
+file in place; add a new `### CommonsLang_OCaml.Apparatus@1.0.<next>` section
+declaring it (`./dk0 update --no-imports` recomputes byteSize/sha256); add the
+new rule version's values.lua fetching that Apparatus version; and retire the
+previous rule version's values.lua and dist Export lines in the same change.
+`tools/lint-apparatus-assets.ps1` (CI runs it on every push and before every
+distribute) enforces that declarations match the bytes on disk, that every
+get-asset reference resolves, and that no file-name variants reappear.
+
+Retired on 2026-08-14 (available in earlier 0.1.* release tags and git
+history, never at HEAD): Apparatus.OpamBuildWrapper@1.0.1/@1.0.4-@1.0.7/@1.0.9
+(build-locked-package.sh v1 and -v2.sh through -v6.sh),
+Apparatus.OpamLockHelper@1.0.1/@1.0.3/@1.0.8 (dk_opam_lock.ml v1,
+dk_opam_lock_reloc.ml, dk_opam_lock_filtered.ml), the byte-identical
+OpamFileFormat@1.0.3/@1.0.8 redeclarations, rule versions
+Dk.OpamBuild@1.0.0-@1.0.15 and Dk.OpamLock@1.0.0/@1.1.0-@1.1.5, and their
+dist/*.u Export ladders.
+
 ### CommonsLang_OCaml.Apparatus@1.0.1
 
   % unified.asset { name="Patches", dir="assets/p" }
@@ -173,58 +197,19 @@ sources in precedence order.
   % unified.asset { name="OpamMccsGlpkStub", file="assets/opam/mccs-glpk-wrmip-stub.c" }
   \dk.asset(byteSize: "726", checksum: (sha256: "ce730a5008fd4f856e01ea02a62c9e17a8adcb272ca91679ecc413a2e17672a9"))\;
 
-  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
-  \dk.asset(byteSize: "16817", checksum: (sha256: "e84dd69f4276ead99b010eb29a8b9668de7989eed903f118c34b25c4591f56a1"))\;
-
   % unified.asset { name="OpamBuildSeqMeta", file="assets/opam/seq-META" }
   \dk.asset(byteSize: "137", checksum: (sha256: "e95062b4d0519ef8335c02f7d0f1952d11b814c7ab7e6d566a206116162fa2be"))\;
 
-  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "49078", checksum: (sha256: "e095fbc4f828a5a002a9b53298185c7a9b336ce8d08688e6f5172dc3ea8426da"))\;
-
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
   \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
 
-### CommonsLang_OCaml.Apparatus@1.0.3
+### CommonsLang_OCaml.Apparatus@1.0.10
 
-  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock_reloc.ml" }
-  \dk.asset(byteSize: "55123", checksum: (sha256: "ad43377930ba4d0a0e9045997f7281361153dde1c611afa35ce931352b69e79e"))\;
-
-  % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
-  \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
-
-### CommonsLang_OCaml.Apparatus@1.0.4
-
-  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v2.sh" }
-  \dk.asset(byteSize: "17346", checksum: (sha256: "8837c8c4c7a2245780c23df816a0adfa09fb55eba0b22144e6ec9b2ab2c877c3"))\;
-
-### CommonsLang_OCaml.Apparatus@1.0.5
-
-  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v3.sh" }
-  \dk.asset(byteSize: "17536", checksum: (sha256: "efa8e8424d7049f1a2efbef495ec6c61f346ce22b9a5ef3811a4f78bfbd20007"))\;
-
-### CommonsLang_OCaml.Apparatus@1.0.6
-
-  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v4.sh" }
-  \dk.asset(byteSize: "18144", checksum: (sha256: "5b055288d4d7fa3d8dddb3a7d130ce57a20ef7ff658bcab253e5567e7bfc4cdc"))\;
-
-### CommonsLang_OCaml.Apparatus@1.0.7
-
-  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v5.sh" }
-  \dk.asset(byteSize: "19901", checksum: (sha256: "6ef6c47e35a896410e25a1a1294bfe6ef08cca9797248bc44a3bf9eeaedcf8e6"))\;
-
-### CommonsLang_OCaml.Apparatus@1.0.8
-
-  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock_filtered.ml" }
-  \dk.asset(byteSize: "58039", checksum: (sha256: "a269fd6934451377bca85f5a73d177481be801a5cdcbffbded982ad7c2cfd9d4"))\;
-
-  % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
-  \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
-
-### CommonsLang_OCaml.Apparatus@1.0.9
-
-  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package-v6.sh" }
+  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
   \dk.asset(byteSize: "21145", checksum: (sha256: "4384eb0ea7844c5fccff0bd306fe33dd55b49912e21a2c6cc815bc44fa8dd1f6"))\;
+
+  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
+  \dk.asset(byteSize: "58039", checksum: (sha256: "a269fd6934451377bca85f5a73d177481be801a5cdcbffbded982ad7c2cfd9d4"))\;
 
 ## Dk.OpamLock
 
@@ -232,6 +217,13 @@ Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
 author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+The @1.1.6 revision is behaviorally identical to @1.1.5. It exists because the
+lock-helper assets were collapsed onto the stable
+assets/opam-lock/dk_opam_lock.ml path (Apparatus.OpamLockHelper@1.0.10, the
+same bytes as the retired dk_opam_lock_filtered.ml) and every earlier OpamLock
+revision was retired from HEAD; see "## Assets". Its Export value-id is
+per-version and is harvested from CI as usual.
 
 How the lock is produced: the OpamLock.Solve uirule launches `opam` to SOLVE
 the dependency closure -- it runs `opam list --resolve` to compute the closure
@@ -373,3 +365,12 @@ failed with `Unbound module Toploop` -- first hit compiling astring's
 compiler does ship compiler-libs/toploop.cmi + ocamltoplevel.cma, so once
 `stdlib` points at it the toplevel packages resolve. @1.0.9 is a new asset
 module; the Export marker value-id stays shared.
+
+The @1.0.16 revision is behaviorally identical to @1.0.15. It exists because
+the wrapper assets were collapsed onto the stable
+assets/opam/build-locked-package.sh path (Apparatus.OpamBuildWrapper@1.0.10,
+the same bytes as the retired build-locked-package-v6.sh) and every earlier
+OpamBuild revision was retired from HEAD; see "## Assets". The revision
+paragraphs above are history: the file names they mention exist only in
+earlier release tags. The Export marker value-id stays shared, so no new
+harvest is needed.
