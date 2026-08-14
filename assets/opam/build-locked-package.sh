@@ -201,6 +201,19 @@ if [ -n "${_ocw:-}" ] && [ -d "$_ocw" ] && [ -f "$conf" ]; then
   printf 'stdlib="%s"\nldconf="%s/ld.conf"\n' "$_std" "$_std" >> "$conf.dk-tmp"
   mv "$conf.dk-tmp" "$conf"
 fi
+# Bytecode helpers a package build runs (e.g. ocamlbuild's man/options_man.byte,
+# which links unix) load stublibs (dllunix-*) at runtime via CAML_LD_LIBRARY_PATH
+# and then the compiler's ld.conf. The DkML relocatable compiler's baked ld.conf
+# lists a dead absolute stublibs dir (the same dead-baked-path root cause as the
+# findlib stdlib above), and the OpamBuild rule strips CAML_LD_LIBRARY_PATH for
+# hermeticity, so ocamlrun cannot find dllunix and the helper aborts (SIGABRT / core
+# dump), failing the build (first hit: ocamlbuild's man-page generator). Point
+# CAML_LD_LIBRARY_PATH at the running compiler's stublibs so such helpers run. Unix
+# only: on Windows the stub DLLs resolve via PATH (the working slot) and Windows' own
+# build failures are unrelated.
+if [ "$arch" = "-" ] && [ -n "${_ocw:-}" ] && [ -d "$_ocw/stublibs" ]; then
+  export CAML_LD_LIBRARY_PATH="$_ocw/stublibs${CAML_LD_LIBRARY_PATH:+:$CAML_LD_LIBRARY_PATH}"
+fi
 PATH="$root/p/bin:$PATH"; export PATH
 # ocamlbuild's configure.make defaults its install dirs to `opam config var bin`
 # (which would leak the host opam switch) and its Windows build passes no prefix.

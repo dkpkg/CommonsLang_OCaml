@@ -133,12 +133,14 @@ distribute) enforces that declarations match the bytes on disk, that every
 get-asset reference resolves, and that no file-name variants reappear.
 
 Retired on 2026-08-14 (available in earlier 0.1.* release tags and git
-history, never at HEAD): Apparatus.OpamBuildWrapper@1.0.1/@1.0.4-@1.0.7/@1.0.9
-(build-locked-package.sh v1 and -v2.sh through -v6.sh),
+history, never at HEAD): Apparatus.OpamBuildWrapper@1.0.1/@1.0.4-@1.0.7/@1.0.9-@1.0.10
+(build-locked-package.sh v1 and -v2.sh through -v6.sh; @1.0.10 carried the v6
+bytes at the stable path, superseded by @1.0.11 which adds the Unix
+CAML_LD_LIBRARY_PATH stublibs export),
 Apparatus.OpamLockHelper@1.0.1/@1.0.3/@1.0.8 (dk_opam_lock.ml v1,
 dk_opam_lock_reloc.ml, dk_opam_lock_filtered.ml), the byte-identical
 OpamFileFormat@1.0.3/@1.0.8 redeclarations, rule versions
-Dk.OpamBuild@1.0.0-@1.0.15 and Dk.OpamLock@1.0.0/@1.1.0-@1.1.5, and their
+Dk.OpamBuild@1.0.0-@1.0.16 and Dk.OpamLock@1.0.0/@1.1.0-@1.1.5, and their
 dist/*.u Export ladders.
 
 ### CommonsLang_OCaml.Apparatus@1.0.1
@@ -205,11 +207,13 @@ dist/*.u Export ladders.
 
 ### CommonsLang_OCaml.Apparatus@1.0.10
 
-  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
-  \dk.asset(byteSize: "21145", checksum: (sha256: "4384eb0ea7844c5fccff0bd306fe33dd55b49912e21a2c6cc815bc44fa8dd1f6"))\;
-
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
   \dk.asset(byteSize: "58039", checksum: (sha256: "a269fd6934451377bca85f5a73d177481be801a5cdcbffbded982ad7c2cfd9d4"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.11
+
+  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
+  \dk.asset(byteSize: "22089", checksum: (sha256: "f441486e4848fde3ff7f5424c11f515e08dd28698fc67f2d9616c3168a15b551"))\;
 
 ## Dk.OpamLock
 
@@ -374,3 +378,16 @@ OpamBuild revision was retired from HEAD; see "## Assets". The revision
 paragraphs above are history: the file names they mention exist only in
 earlier release tags. The Export marker value-id stays shared, so no new
 harvest is needed.
+
+The @1.0.17 revision fetches Apparatus.OpamBuildWrapper@1.0.11, the same
+build-locked-package.sh with one Unix addition: it exports
+`CAML_LD_LIBRARY_PATH` pointing at the running compiler's `stublibs`. A package
+build that runs a bytecode helper linking `unix` -- first hit ocamlbuild's
+`man/options_man.byte`, run during the build to generate a man page -- loads
+`dllunix-*` at runtime via `CAML_LD_LIBRARY_PATH` and then the compiler's
+ld.conf. The DkML relocatable compiler's baked ld.conf lists a dead absolute
+stublibs dir (the same dead-baked-path root cause as the findlib stdlib above)
+and the rule strips `CAML_LD_LIBRARY_PATH` for hermeticity, so `ocamlrun`
+aborted (core dump) and the build failed on every Unix slot. Windows is
+unaffected (the stub DLLs resolve via PATH). @1.0.11 is an OpamBuildWrapper
+patch bump (its bytes changed); the Export marker value-id stays shared.
