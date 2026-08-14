@@ -213,7 +213,7 @@ dist/*.u Export ladders.
 ### CommonsLang_OCaml.Apparatus@1.0.11
 
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
-  \dk.asset(byteSize: "22089", checksum: (sha256: "f441486e4848fde3ff7f5424c11f515e08dd28698fc67f2d9616c3168a15b551"))\;
+  \dk.asset(byteSize: "22097", checksum: (sha256: "3ad50ddcf98aa08a92992226f552449ad555d0a602d74caccdc373b48303d716"))\;
 
 ## Dk.OpamLock
 
@@ -388,6 +388,8 @@ build that runs a bytecode helper linking `unix` -- first hit ocamlbuild's
 ld.conf. The DkML relocatable compiler's baked ld.conf lists a dead absolute
 stublibs dir (the same dead-baked-path root cause as the findlib stdlib above)
 and the rule strips `CAML_LD_LIBRARY_PATH` for hermeticity, so `ocamlrun`
-aborted (core dump) and the build failed on every Unix slot. Windows is
-unaffected (the stub DLLs resolve via PATH). @1.0.11 is an OpamBuildWrapper
-patch bump (its bytes changed); the Export marker value-id stays shared.
+aborted (core dump) and the build failed. It is set on every slot -- as a native
+path (cygpath -m) on Windows, matching OCAMLFIND_LDCONF -- so the stub load path
+is correct regardless of how the host resolves DLLs. @1.0.11 is an
+OpamBuildWrapper patch bump (its bytes changed); the Export marker value-id
+stays shared.

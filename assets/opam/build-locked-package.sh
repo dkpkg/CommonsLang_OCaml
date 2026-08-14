@@ -208,11 +208,14 @@ fi
 # findlib stdlib above), and the OpamBuild rule strips CAML_LD_LIBRARY_PATH for
 # hermeticity, so ocamlrun cannot find dllunix and the helper aborts (SIGABRT / core
 # dump), failing the build (first hit: ocamlbuild's man-page generator). Point
-# CAML_LD_LIBRARY_PATH at the running compiler's stublibs so such helpers run. Unix
-# only: on Windows the stub DLLs resolve via PATH (the working slot) and Windows' own
-# build failures are unrelated.
-if [ "$arch" = "-" ] && [ -n "${_ocw:-}" ] && [ -d "$_ocw/stublibs" ]; then
-  export CAML_LD_LIBRARY_PATH="$_ocw/stublibs${CAML_LD_LIBRARY_PATH:+:$CAML_LD_LIBRARY_PATH}"
+# CAML_LD_LIBRARY_PATH at the running compiler's stublibs so such helpers run. On
+# Windows the value must be a native path (cygpath -m), matching OCAMLFIND_LDCONF above.
+if [ -n "${_ocw:-}" ] && [ -d "$_ocw/stublibs" ]; then
+  if [ "$arch" != "-" ]; then
+    export CAML_LD_LIBRARY_PATH=$(cygpath -m "$_ocw/stublibs")
+  else
+    export CAML_LD_LIBRARY_PATH="$_ocw/stublibs"
+  fi
 fi
 PATH="$root/p/bin:$PATH"; export PATH
 # ocamlbuild's configure.make defaults its install dirs to `opam config var bin`
