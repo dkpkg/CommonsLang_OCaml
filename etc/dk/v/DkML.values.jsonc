@@ -11560,6 +11560,10 @@
                             "Release.Linux_x86"
                         ],
                         "paths": [
+                            "bin/i686-none-linux-gnu-as",
+                            "bin/i686-none-linux-gnu-g++",
+                            "bin/i686-none-linux-gnu-gcc",
+                            "bin/i686-none-linux-gnu-ld",
                             "bin/i686-none-linux-gnu-ocamlrun-v005",
                             "bin/ocaml",
                             "bin/ocamlc",

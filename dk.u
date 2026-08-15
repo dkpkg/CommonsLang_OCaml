@@ -215,6 +215,17 @@ dist/*.u Export ladders.
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
   \dk.asset(byteSize: "22097", checksum: (sha256: "3ad50ddcf98aa08a92992226f552449ad555d0a602d74caccdc373b48303d716"))\;
 
+### CommonsLang_OCaml.Apparatus@1.0.12
+
+  % unified.asset { name="DkMLX86Wrap", file="assets/dkml/x86-tool-wrapper.sh" }
+  \dk.asset(byteSize: "1545", checksum: (sha256: "c7f4eabcc0a23132700748797ba53d18e535badb467f7d788c82e74579cab0ba"))\;
+
+  % unified.asset { name="DkMLX86Env", file="assets/dkml/x86-compiler-env-to-ocaml-configure-env.sh" }
+  \dk.asset(byteSize: "3629", checksum: (sha256: "0d03bdd02aeb31699870db57c13a9214608f3c44504ed73265e3814c76f61935"))\;
+
+  % unified.asset { name="DkMLX86BuildHost", file="assets/dkml/run-x86-build-host.sh" }
+  \dk.asset(byteSize: "3255", checksum: (sha256: "f23b48903331e9eff76134595026a395b6033ebbae30ca416eab37950dda8d3c"))\;
+
 ## Dk.OpamLock
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its

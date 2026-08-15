@@ -80,6 +80,12 @@
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLX86Env@1.0.12 -p assets/dkml/x86-compiler-env-to-ocaml-configure-env.sh -f x86-compiler-env-to-ocaml-configure-env.sh)",
+                        "s/dkmldir/vendor/dkml-compiler/env/x86-compiler-env-to-ocaml-configure-env.sh"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "cp",
                         "-R",
                         "s/src/.",
                         "s/dkmldir/vendor/dkml-compiler/src"
@@ -270,10 +276,47 @@
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "install",
+                        "-D",
+                        "-m",
+                        "755",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLX86Wrap@1.0.12 -p assets/dkml/x86-tool-wrapper.sh -f x86-tool-wrapper.sh)",
+                        "${SLOTABS.Release.Linux_x86}/bin/i686-none-linux-gnu-gcc"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "install",
+                        "-D",
+                        "-m",
+                        "755",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLX86Wrap@1.0.12 -p assets/dkml/x86-tool-wrapper.sh -f x86-tool-wrapper.sh)",
+                        "${SLOTABS.Release.Linux_x86}/bin/i686-none-linux-gnu-g++"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "install",
+                        "-D",
+                        "-m",
+                        "755",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLX86Wrap@1.0.12 -p assets/dkml/x86-tool-wrapper.sh -f x86-tool-wrapper.sh)",
+                        "${SLOTABS.Release.Linux_x86}/bin/i686-none-linux-gnu-as"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
+                        "install",
+                        "-D",
+                        "-m",
+                        "755",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLX86Wrap@1.0.12 -p assets/dkml/x86-tool-wrapper.sh -f x86-tool-wrapper.sh)",
+                        "${SLOTABS.Release.Linux_x86}/bin/i686-none-linux-gnu-ld"
+                    ],
+                    [
+                        "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "env",
                         "--chdir",
                         "s",
                         "\"DKML_HOST_OCAML_CONFIGURE=--disable-ocamltest --enable-runtime-search=always --enable-runtime-search-target=always\"",
+                        "DKML_X86_BINDIR=${SLOTABS.Release.Linux_x86}/bin",
                         "/bin/sh",
                         "-x",
                         "src/r-c-ocaml-1-setup.sh",
@@ -288,7 +331,7 @@
                         "-z",
                         "-elinux_x86",
                         "-k",
-                        "vendor/dkml-compiler/env/standard-compiler-env-to-ocaml-configure-env.sh"
+                        "vendor/dkml-compiler/env/x86-compiler-env-to-ocaml-configure-env.sh"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -303,9 +346,10 @@
                         "--chdir",
                         "${SLOTABS.Release.Linux_x86}",
                         "HOST_LIBDIR=../lib/ocaml",
-                        "\"PARTIALLD=ld -melf_i386 -r\"",
+                        "\"PARTIALLD=i686-none-linux-gnu-ld -r\"",
+                        "DKML_X86_BINDIR=${SLOTABS.Release.Linux_x86}/bin",
                         "/bin/sh",
-                        "share/dkml/repro/100co/vendor/dkml-compiler/src/r-c-ocaml-2-build_host-noargs.sh"
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLX86BuildHost@1.0.12 -p assets/dkml/run-x86-build-host.sh -f run-x86-build-host.sh)"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -7901,6 +7945,10 @@
                             "Release.Linux_x86"
                         ],
                         "paths": [
+                            "bin/i686-none-linux-gnu-as",
+                            "bin/i686-none-linux-gnu-g++",
+                            "bin/i686-none-linux-gnu-gcc",
+                            "bin/i686-none-linux-gnu-ld",
                             "bin/i686-none-linux-gnu-ocamlrun-v005",
                             "bin/ocaml",
                             "bin/ocamlc",
