@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Windows_x86 -d ${RUNTIME}/Windows_x86-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86", value-id: "o56wqacou2uoowgr7jfhskdjodil2ubc4wrk2i54k43okaeeca6ka")\;
+  \dk.object(abi: "Release.Windows_x86", value-id: "otj6lfdhsvf6qonulwtjephn7wu7ow5ocwzkjknfplo2uanj65kya")\;
 
 Release.Windows_x86_64 will be used as Release.execution_abi on normal (64-bit) build + CI machines.
 

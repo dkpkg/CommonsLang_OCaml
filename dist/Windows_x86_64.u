@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Windows_x86_64 -d ${RUNTIME}/Windows_x86_64-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "owlmowkfztyo22bqesxelr2gri5l4wiunqjnulgb7x2gpxmaugouq")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "oxeed6f2bmqzx32bc4f5gy4fdkpmq7qzq7mizyrhlydogzmiaylua")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt.exe

@@ -13,7 +13,7 @@ The value-ids below are harvested from the first CI run (the DkML pattern).
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -d ${RUNTIME}/Linux_x86_64_musl-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "ounhvq6pmc7fsih6j5iirtkgraf56gkk343xdvgvr3zsbemtrobma")\;
+  \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "obazby47qzcgflxlvkysgb7tcxcqfsm5ljhxktojhoui6dmuswzma")\;
 
 The musl ocamlopt is a musl binary (ELF interpreter /lib/ld-musl-x86_64.so.1),
 so it runs wherever the musl loader is present: natively on musl hosts, and on
