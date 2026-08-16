@@ -138,9 +138,20 @@ jobs:
           # store: release restore from 0.1.20260806025427 came back missing
           # bin/ocamlopt + bin/dune.exe (run 31156747482 failed the DkML/Dune
           # run-object version assertions with `command not found`), so it
-          # rebuilds clean until the musl restore integrity is fixed. The other
-          # six slots restore incrementally as before.
-          store: ${{ matrix.distscript == 'dist/Linux_x86_64_musl.u' && 'none' || vars.DK_STORE || 'release' }}
+          # rebuilds clean until the musl restore integrity is fixed.
+          #
+          # The three CROSS slots (Linux_x86, Windows_x86, Darwin_x86_64, where
+          # execution-abi != target-abi) are ALSO pinned to store: none. Since
+          # dk0 2.4.2.323 an object's value-id includes the resolved target ABI
+          # on a cross build, so a store restored from a pre-2.4.2.323 release
+          # (unsuffixed ids) is partially rejected mid-build and can contaminate
+          # the closure with host-ABI content -- the mechanism that shipped a
+          # mislabeled 64-bit binary in the "Linux_x86" and "Windows_x86" stores
+          # of ocamlearlybird 1.3.202608152325. Cold cross builds are verified
+          # correct end to end. Revert these to store: release once the dk engine
+          # cross-id plumbing is unified and one clean suffixed release exists to
+          # restore from. Native slots (execution == target) restore as before.
+          store: ${{ (matrix.distscript == 'dist/Linux_x86_64_musl.u' || matrix.distscript == 'dist/Linux_x86.u' || matrix.distscript == 'dist/Windows_x86.u' || matrix.distscript == 'dist/Darwin_x86_64.u') && 'none' || vars.DK_STORE || 'release' }}
           distscript: ${{ matrix.distscript }}
           execution-abi: ${{ matrix.execution-abi }}
           target-abi: ${{ matrix.target-abi }}
