@@ -132,6 +132,19 @@ previous rule version's values.lua and dist Export lines in the same change.
 distribute) enforces that declarations match the bytes on disk, that every
 get-asset reference resolves, and that no file-name variants reappear.
 
+A content change to an already-published asset (for example
+`assets/opam/build-locked-package.sh`, the OpamBuildWrapper) MUST ride an
+Apparatus version bump; editing the bytes in place at the same version is a
+silent no-op for any consumer with a warm store. An object value id hashes the
+form text that fetches the asset, and that text carries the asset's
+`@<version>`: bump the version and the fetch text changes, so every affected
+object id changes and the fix actually lands; leave the version and the id is
+identical to the pre-edit build, so a `store: release` restore or a warm CI
+cache serves the OLD bytes under a matching (integrity-passing) id. This is the
+mechanism behind the stale v5-ppxlib gate incident. A NEW asset name goes into
+the current `@1.0.<latest>` section (it has no prior published id to collide
+with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
+
 Retired on 2026-08-14 (available in earlier 0.1.* release tags and git
 history, never at HEAD): Apparatus.OpamBuildWrapper@1.0.1/@1.0.4-@1.0.7/@1.0.9-@1.0.10
 (build-locked-package.sh v1 and -v2.sh through -v6.sh; @1.0.10 carried the v6
