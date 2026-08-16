@@ -1,7 +1,18 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.6"
+  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.7"
 }
 
+-- 1.1.7 flips the default host-tool ABI. Through 1.1.6 GenerateDriver pinned
+-- ocamlfind/ocamlbuild to `Release.execution_abi`; that pin never shipped in
+-- any consumed driver, and a cross slot that CAN emulate its target (Windows_x86
+-- under WOW64, Darwin_x86_64 under Rosetta, Linux_x86 under multilib) needs the
+-- host tool's findlib metadata to match the TARGET, so 1.1.7 defaults host tools
+-- to `targetabi=Release.target_abi` (the dual-role convention, SPECIFICATION
+-- "Object Slot ABI"; validated fix ocamlearlybird 57fd802). The new
+-- `hosttoolabi=` GenerateDriver parameter restores `Release.execution_abi` for a
+-- matrix containing a cross slot the host CANNOT emulate (e.g. a glibc host
+-- targeting Linux_x86_64_musl -- the musl hazard the 1.1.4 pin guarded).
+--
 -- 1.1.6 is behaviorally identical to 1.1.5; it exists because the helper
 -- assets were collapsed onto stable file names (Apparatus.OpamLockHelper@1.0.10
 -- at assets/opam-lock/dk_opam_lock.ml) when the old per-version file variants
@@ -18,13 +29,13 @@ local M = {
 -- inside the rules/uirules function bodies. So a should-be-unique global table
 -- holds the helpers, matching the house style in CommonsBase_Std.Extract and
 -- CommonsBase_Remote.GitHub.
-CommonsLang_OCaml__Dk_OpamLock__1_1_6 = {}
+CommonsLang_OCaml__Dk_OpamLock__1_1_7 = {}
 
 rules, uirules = build.newrules(M)
 
 -- lua-ml's string library does not implement gsub, so trim by scanning for the
 -- first/last non-space with find (which does support patterns).
-function CommonsLang_OCaml__Dk_OpamLock__1_1_6.iswhite(c)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_7.iswhite(c)
   local b = string.byte(c)
   return b == 32 or b == 9 or b == 13 or b == 10
 end
@@ -35,14 +46,14 @@ end
 -- opam output on Windows (ex. the
 -- switch-exists check compared name-plus-CR ~= name and re-created the
 -- switch).
-function CommonsLang_OCaml__Dk_OpamLock__1_1_6.trim(s)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_7.trim(s)
   if s == nil then return "" end
   local n = string.len(s)
   local a = 1
-  while a <= n and CommonsLang_OCaml__Dk_OpamLock__1_1_6.iswhite(string.sub(s, a, a)) do a = a + 1 end
+  while a <= n and CommonsLang_OCaml__Dk_OpamLock__1_1_7.iswhite(string.sub(s, a, a)) do a = a + 1 end
   if a > n then return "" end
   local b = n
-  while b >= 1 and CommonsLang_OCaml__Dk_OpamLock__1_1_6.iswhite(string.sub(s, b, b)) do b = b - 1 end
+  while b >= 1 and CommonsLang_OCaml__Dk_OpamLock__1_1_7.iswhite(string.sub(s, b, b)) do b = b - 1 end
   return string.sub(s, a, b)
 end
 
@@ -50,7 +61,7 @@ end
 -- version did) walks lua-ml's arbitrary hash order, which silently scrambled the
 -- order of every joined array -- including the JSON encoder's `parts`, so a
 -- sorted key list still emitted unsorted. Walk 1..n instead.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_6.join(tbl, sep)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_7.join(tbl, sep)
   local r = nil
   local i = 1
   while tbl[i] ~= nil do
@@ -65,7 +76,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_6.join(tbl, sep)
   return r
 end
 
-function CommonsLang_OCaml__Dk_OpamLock__1_1_6.set_from_list(tbl)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_7.set_from_list(tbl)
   local set = {}
   if tbl == nil then return set end
   -- Store the value itself (not the boolean true): lua-ml does not reliably
@@ -78,7 +89,7 @@ end
 -- Directory part of a path (everything before the last '/' or '\'), or "." if
 -- the path has no separator. Byte-based (47='/', 92='\\') so it is correct for
 -- both the POSIX and Windows realpath forms request.io.realpath can return.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_6.dirname(p)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_7.dirname(p)
   local i = string.len(p)
   while i >= 1 do
     local b = string.byte(p, i)
@@ -106,7 +117,7 @@ function rules.Export(command, request)
     return {
       declareoutput = {
         return_objects = {
-          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.6",
+          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.7",
           slots = slots,
           execution_slot = "Release.execution_abi"
         }
@@ -147,9 +158,9 @@ end
 -- runs the helper, and publishes its stdout as the lock. Mirrors the thin
 -- CommonsLang_Python.UvLock.Solve design.
 function uirules.Solve(command, request, continue_)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_6
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_7
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.6: lock written.")
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.7: lock written.")
     return
   end
   if command ~= "submit" then return end
@@ -257,7 +268,7 @@ function uirules.Solve(command, request, continue_)
 
   -- Build the helper argv.
   local args = { bc, "solve", "--opam", opamexe, "--work-dir", workdir, "--pins-file", pinsfile,
-    "--tool", "CommonsLang_OCaml.Dk.OpamLock@1.1.6" }
+    "--tool", "CommonsLang_OCaml.Dk.OpamLock@1.1.7" }
   local out = request.user.out or "dk.opam-lock.jsonc"
   if request.user.switch then table.insert(args, "--switch"); table.insert(args, request.user.switch) end
   if request.user.local_opam_dir then table.insert(args, "--local-opam-dir"); table.insert(args, request.user.local_opam_dir) end
@@ -326,7 +337,7 @@ end
 
 -- Index of the first occurrence of the single character `ch` in `s`, or nil.
 -- (string.find treats `.` as a pattern wildcard, so scan by byte instead.)
-function CommonsLang_OCaml__Dk_OpamLock__1_1_6.indexof_char(s, ch)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_7.indexof_char(s, ch)
   local i = 1
   local n = string.len(s)
   while i <= n do
@@ -338,7 +349,7 @@ end
 
 -- Decimal digits of a lua-ml number (no string.format; concat of a number is
 -- unreliable). Mirrors CommonsBase_Dk.Dk0Build.numstr.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_6.numstr(v)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_7.numstr(v)
   if type(v) == "string" then return v end
   if type(v) ~= "number" then return tostring(v) end
   if v == 0 then return "0" end
@@ -358,7 +369,7 @@ end
 -- lowercased. MUST match the modsegment transform in the per-package build
 -- rule (CommonsBase_Dk.Dk0Build), which derives sibling Pkg object ids from
 -- dependency names with the same function.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_6.modsegment(name)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_7.modsegment(name)
   local out = ""
   local i = 1
   local n = string.len(name)
@@ -372,15 +383,19 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_6.modsegment(name)
   return out
 end
 
--- Host tools: opam packages whose built artifacts are native executables that
--- are RUN on the build host during later package builds (topkg's
--- `ocaml pkg/pkg.ml build` invokes `ocamlfind`/`ocamlbuild`). They must be built
--- for the HOST (execution) ABI, never the target ABI: at the target ABI a cross
--- slot (e.g. Linux_x86_64_musl) links them against the target's musl toolchain,
--- producing a host-unrunnable binary that -- because the opam-build form is
--- host-keyed with the `target_abi` wildcard in its value-id -- is then shared to
--- every slot. GenerateDriver pins these to `Release.execution_abi`.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_6.is_host_tool(name)
+-- Host tools: opam packages whose built artifacts are native executables RUN on
+-- the build host during later package builds (topkg's `ocaml pkg/pkg.ml build`
+-- invokes `ocamlfind`/`ocamlbuild`). They are dual-role: the build must RUN them,
+-- and their findlib metadata (stdlib path, ocamlmklib/ocamlc config, arch flags)
+-- flows into every later package build. On a cross slot whose host can EMULATE
+-- the target (WOW64 / Rosetta / multilib), building them at `target_abi` keeps
+-- that metadata matching the target and still lets them run -- the default. When
+-- the host CANNOT emulate the target (a glibc host targeting Linux_x86_64_musl),
+-- a target-ABI host tool is a host-unrunnable binary, and because the opam-build
+-- form is host-keyed with the `target_abi` WILDCARD in its value-id, that one
+-- musl build is store-shared to every slot; there `hosttoolabi=Release.execution_abi`
+-- pins them back to the host. GenerateDriver emits `hosttoolabi` for these names.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_7.is_host_tool(name)
   return name == "ocamlfind" or name == "ocamlbuild"
 end
 
@@ -388,7 +403,7 @@ end
 -- built as Pkg objects, so the driver never chains them. The default for
 -- GenerateDriver's provided[] parameter; a project on another toolchain
 -- passes its own list. Mirrors PROVIDED in CommonsBase_Dk.Dk0Build.
-CommonsLang_OCaml__Dk_OpamLock__1_1_6.DKML_PROVIDED = {
+CommonsLang_OCaml__Dk_OpamLock__1_1_7.DKML_PROVIDED = {
   "ocaml", "ocaml-base-compiler", "ocaml-config", "ocaml-options-vanilla",
   "base-unix", "base-threads", "base-bigarray", "dune", "flexdll",
   "conf-mingw-w64-gcc-x86_64", "host-arch-x86_64", "host-arch-x86_32",
@@ -396,7 +411,7 @@ CommonsLang_OCaml__Dk_OpamLock__1_1_6.DKML_PROVIDED = {
 }
 
 -- The 8 DkML slots; the default for GenerateDriver's slots[] parameter.
-CommonsLang_OCaml__Dk_OpamLock__1_1_6.DKML_SLOTS = {
+CommonsLang_OCaml__Dk_OpamLock__1_1_7.DKML_SLOTS = {
   "Release.Windows_x86_64", "Release.Windows_x86",
   "Release.Linux_x86_64", "Release.Linux_x86_64_musl", "Release.Linux_x86",
   "Release.Linux_arm64",
@@ -408,8 +423,8 @@ CommonsLang_OCaml__Dk_OpamLock__1_1_6.DKML_SLOTS = {
 -- before recursing (opam dependency graphs are acyclic, so no cycle check).
 -- A dependency with neither a source nor the local mark (a virtual package
 -- such as `seq`) is skipped; a dependency absent from the lock is an error.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_6.driver_visit(byname, provided, name, seen, order)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_6
+function CommonsLang_OCaml__Dk_OpamLock__1_1_7.driver_visit(byname, provided, name, seen, order)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_7
   if seen[name] ~= nil or provided[name] ~= nil then return end
   local e = byname[name]
   assert(e ~= nil, "dependency `" .. name .. "` is not in the lock")
@@ -430,7 +445,7 @@ end
 -- run-function produces the root. Author-time companion to Solve: re-run it
 -- whenever the lock changes.
 --
--- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.1):
+-- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.7):
 --   lock=PATH          project-relative lock file (the Solve output)
 --   out=PATH           project-relative driver values file to write
 --   root=PKG           opam package whose closure is chained (built last,
@@ -468,10 +483,13 @@ end
 --   'slots[]=...'      optional output slots (default: the 7 DkML slots)
 --   'parallel=t'       optional: emit unordered precommands + per-package deps[]
 --                      edges for concurrent builds (default: a sequential chain)
+--   'hosttoolabi=SLOT' optional: the ABI for ocamlfind/ocamlbuild (default:
+--                      Release.target_abi). Pass Release.execution_abi for a
+--                      matrix with a host-unemulatable cross slot (musl hazard).
 function uirules.GenerateDriver(command, request)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_6
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_7
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.6: driver written.")
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.7: driver written.")
     return
   end
   if command ~= "submit" then return end
@@ -513,6 +531,12 @@ function uirules.GenerateDriver(command, request)
   -- packages concurrently. Absent, the driver stays a sequential chain that
   -- needs no edges (the historical default), so existing regens are unchanged.
   local parallel = request.user.parallel
+
+  -- Host-tool ABI (hosttoolabi=SLOT): the ABI for ocamlfind/ocamlbuild. Defaults
+  -- to the target ABI (dual-role convention); pass Release.execution_abi for a
+  -- matrix with a cross slot the host cannot emulate (the musl hazard).
+  local hosttoolabi = request.user.hosttoolabi
+  if hosttoolabi == nil then hosttoolabi = "Release.target_abi" end
 
   local content = assert(request.ui.readfile { path = lockpath },
     "could not read lock `" .. lockpath .. "`")
@@ -675,17 +699,12 @@ function uirules.GenerateDriver(command, request)
       -- unchanged. The rule defaults to this same wildcard, so drivers generated
       -- before this field still cross-compile correctly.
       --
-      -- EXCEPTION -- host tools. `ocamlfind` and `ocamlbuild` ship native
-      -- executables RUN on the build host during every later package build, so
-      -- they must be built for the HOST (execution) ABI. Built at `target_abi` on
-      -- a cross slot (e.g. Linux_x86_64_musl) they link against the target's musl
-      -- toolchain and become host-unrunnable; worse, because the opam-build form is
-      -- host-keyed with the `target_abi` WILDCARD in its value-id, that one musl
-      -- build is store-shared to EVERY slot (including glibc Linux_x86_64), where
-      -- it fails `ENOENT` (no musl loader). Pinning these to `execution_abi`
-      -- isolates the target (musl) toolchain to the actual target artifacts. See
-      -- dk.u "## Host tools built at the host ABI".
-      .. " targetabi=" .. (H.is_host_tool(name) and "Release.execution_abi" or "Release.target_abi")
+      -- Host tools (`ocamlfind`/`ocamlbuild`) default to `target_abi` too so a
+      -- cross slot the host can emulate gets target-matching findlib metadata (see
+      -- is_host_tool). `hosttoolabi=Release.execution_abi` overrides them back to
+      -- the host for a matrix with a host-unemulatable cross slot (the musl
+      -- hazard); see dk.u "## Host tools and the hosttoolabi= escape hatch".
+      .. " targetabi=" .. (H.is_host_tool(name) and hosttoolabi or "Release.target_abi")
       -- The OCaml compiler this lock is built with: the rule stages this toolchain,
       -- and it is the compatibility key for consuming the imported deps below.
       .. " ocaml=" .. gate_ocaml

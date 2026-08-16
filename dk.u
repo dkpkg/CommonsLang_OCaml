@@ -153,7 +153,7 @@ CAML_LD_LIBRARY_PATH stublibs export),
 Apparatus.OpamLockHelper@1.0.1/@1.0.3/@1.0.8 (dk_opam_lock.ml v1,
 dk_opam_lock_reloc.ml, dk_opam_lock_filtered.ml), the byte-identical
 OpamFileFormat@1.0.3/@1.0.8 redeclarations, rule versions
-Dk.OpamBuild@1.0.0-@1.0.16 and Dk.OpamLock@1.0.0/@1.1.0-@1.1.5, and their
+Dk.OpamBuild@1.0.0-@1.0.16 and Dk.OpamLock@1.0.0/@1.1.0-@1.1.6, and their
 dist/*.u Export ladders.
 
 ### CommonsLang_OCaml.Apparatus@1.0.1
@@ -244,6 +244,13 @@ author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
 
+The @1.1.7 revision flips the default host-tool ABI (see "### Host tools and the
+hosttoolabi= escape hatch"): GenerateDriver now emits
+`targetabi=Release.target_abi` for `ocamlfind`/`ocamlbuild` and takes an optional
+`hosttoolabi=SLOT` parameter that restores `Release.execution_abi` for a matrix
+with a host-unemulatable cross slot. Its Export value-id is per-version and is
+harvested from CI as usual.
+
 The @1.1.6 revision is behaviorally identical to @1.1.5. It exists because the
 lock-helper assets were collapsed onto the stable
 assets/opam-lock/dk_opam_lock.ml path (Apparatus.OpamLockHelper@1.0.10, the
@@ -308,24 +315,31 @@ objects stay usable across build trees.
   forks rely on (`standard_library_relative`, `-set-runtime-default`), so no
   compiler change is needed.
 
-### Host tools built at the host ABI
+### Host tools and the hosttoolabi= escape hatch
 
 `ocamlfind` and `ocamlbuild` are host tools: their built artifacts are native
 executables that run on the build host during every later package build (topkg's
-`ocaml pkg/pkg.ml build` invokes `ocamlfind` and `ocamlbuild`). GenerateDriver
-emits `targetabi=Release.execution_abi` for these two, so the per-package rule
-stages the host toolchain to build them, while every other package keeps
-`targetabi=Release.target_abi` and cross-compiles for its slot.
+`ocaml pkg/pkg.ml build` invokes `ocamlfind` and `ocamlbuild`). They are
+dual-role: the build must RUN them, and their findlib metadata (stdlib path,
+`ocamlmklib`/`ocamlc` config, arch flags) flows into every later package build.
+Since @1.1.7 GenerateDriver emits `targetabi=Release.target_abi` for these two by
+default, so on a cross slot whose host can emulate the target (Windows_x86 under
+WOW64, Darwin_x86_64 under Rosetta, Linux_x86 under multilib) the metadata
+matches the target and the tool still runs. This is the dual-role convention in
+SPECIFICATION "Object Slot ABI"; it was validated as the ocamlearlybird 57fd802
+hand edit before it moved into the generator.
 
-Building a host tool at the target ABI produces a binary the host cannot run. On
-a cross slot such as `Release.Linux_x86_64_musl` the tool links against the
-target musl toolchain and becomes a musl-dynamic executable; the glibc host that
-must run it during the build lacks the musl loader. The opam-build form is
-host-keyed and carries the `Release.target_abi` wildcard in its value-id, so a
-single such build is stored under one key and shared to every slot, including the
-glibc `Release.Linux_x86_64` one, where the tool then fails to exec. Pinning host
-tools to the execution ABI keeps the target (for example musl) toolchain scoped
-to the actual target artifacts and keeps the host tools host-native.
+The `hosttoolabi=SLOT` parameter restores `Release.execution_abi` for a matrix
+that contains a cross slot the host CANNOT emulate. Building a host tool at the
+target ABI there produces a binary the host cannot run: on `Release.Linux_x86_64_musl`
+the tool links against the target musl toolchain and becomes a musl-dynamic
+executable, and the glibc host that must run it during the build lacks the musl
+loader. Worse, the opam-build form is host-keyed and carries the
+`Release.target_abi` wildcard in its value-id, so a single such build is stored
+under one key and shared to every slot -- including the glibc `Release.Linux_x86_64`
+one, where the tool then fails to exec. A consumer whose matrix includes such a
+slot passes `hosttoolabi=Release.execution_abi` to keep the host tools host-native;
+that is the musl hazard the @1.1.4 execution-abi pin originally guarded.
 
 ## Dk.OpamBuild
 

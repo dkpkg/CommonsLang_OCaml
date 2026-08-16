@@ -30,12 +30,12 @@
 
 ## Dk.OpamLock
 
-Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.5
+Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.6
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy). As before on this arm64 slot
 the marker output is unused (no object value-id is recorded).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.6 -f ${RUNTIME}/OpamLock.Export-1.1.6.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.7 -f ${RUNTIME}/OpamLock.Export-1.1.7.zip
   \test(pass)
 
 ## Dk.OpamBuild
