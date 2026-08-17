@@ -43,6 +43,20 @@ set -e
 shift             # drop <gate>
 arch=$1; shift    # "-" on Unix, x64/x86 on Windows
 root=$(pwd)
+# sha256 of a file, printed as the bare 64-hex digest (empty on failure). Portable
+# across the manylinux container (coreutils sha256sum) and MSYS2 (coreutils in
+# /usr/bin, on PATH by the time this is called on Windows). Used to fingerprint the
+# DkML compiler-libs an object was built against, so a later consumer can detect an
+# ABI-incompatible compiler-libs skew at staging time (see the two callers below).
+dk_sha256() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" 2>/dev/null | cut -d' ' -f1
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$1" 2>/dev/null | cut -d' ' -f1
+  elif command -v openssl >/dev/null 2>&1; then
+    openssl dgst -sha256 "$1" 2>/dev/null | sed 's/.*= *//'
+  fi
+}
 cd s
 # The source is extracted (by 7zz) without stripping its single top-level
 # directory. Descend into that sole directory when it is the only entry in s/,
@@ -366,6 +380,37 @@ done
 # file at a >260-char path reads back as "No such file"), not sandbox semantics, so
 # dune's default sandbox is used. [wrapper-diag] reports the build cwd + its length
 # so the path-length fix can be confirmed (temporary; removed after confirmation).
+# Toolchain-fingerprint gate (consumer half). Every staged dependency built by a
+# recent wrapper records the sha256 of the DkML compiler-libs it was built against
+# (producer half below), in p/lib/<pkg>/.dk-provenance. If any staged dep's recorded
+# compiler-libs differs from the compiler-libs THIS build links against, their native
+# .cmx CRCs are incompatible and the link fails deep inside the build with the opaque
+# `.cmxa make inconsistent assumptions over implementation <Module>` (first seen as
+# ppxlib's astlib vs a skewed DkML). Fail HERE with an actionable message instead.
+# Fail-open for deps with no fingerprint (pre-this-wrapper objects) so coverage grows
+# as objects are rebuilt; fail-closed only on a fingerprint that is present and differs.
+if [ -n "${_ocw:-}" ] && [ -f "$_ocw/compiler-libs/ocamlcommon.cmxa" ]; then
+  _curtc=$(dk_sha256 "$_ocw/compiler-libs/ocamlcommon.cmxa")
+  if [ -n "$_curtc" ]; then
+    _skew=
+    for _pf in "$root"/p/lib/*/.dk-provenance; do
+      [ -f "$_pf" ] || continue
+      _deptc=$(sed -n 's/^ocaml_compiler_libs_sha256=//p' "$_pf")
+      [ -n "$_deptc" ] || continue
+      if [ "$_deptc" != "$_curtc" ]; then
+        _skew="$_skew $(basename "$(dirname "$_pf")")"
+      fi
+    done
+    if [ -n "$_skew" ]; then
+      printf '[abi-toolchain] FATAL: staged dependency compiler-libs skew.\n' >&2
+      printf '[abi-toolchain] this build links DkML compiler-libs sha256=%s\n' "$_curtc" >&2
+      printf '[abi-toolchain] but these staged deps were built against a DIFFERENT compiler-libs:%s\n' "$_skew" >&2
+      printf '[abi-toolchain] their native .cmx are ABI-incompatible (astlib "inconsistent assumptions").\n' >&2
+      printf '[abi-toolchain] fix: pin the producer of those deps and this consumer to ONE CommonsLang_OCaml release.\n' >&2
+      exit 75
+    fi
+  fi
+fi
 _cwd=$(pwd)
 printf '[wrapper-diag] arch=%s cwd_len=%s cmd0=%s cmd1=%s cwd=%s\n' "$arch" "${#_cwd}" "${1##*/}" "${2:-<none>}" "$_cwd" >&2
 "$@"
@@ -380,6 +425,28 @@ rc=$?
 if [ "$rc" = 0 ] && [ -d "$root/ip/lib/findlib" ] && [ ! -f "$root/ip/lib/findlib/topfind" ]; then
   tf=$(find . -name topfind -type f 2>/dev/null | head -1)
   [ -n "$tf" ] && cp "$tf" "$root/ip/lib/findlib/topfind"
+fi
+# Toolchain-fingerprint gate (producer half). Record the sha256 of the DkML
+# compiler-libs THIS build linked against into every library dir this package
+# produced, as p/lib-mergeable ip/lib/<pkg>/.dk-provenance. A consumer that later
+# stages this object compares that fingerprint against its own compiler-libs
+# (consumer half above) and fails fast on an ABI-incompatible skew rather than at
+# link time. The file is a simple key=value sidecar (also enumerable by a dk sbom
+# command). Per-package (not one shared ip/ root file) so a genuinely INCONSISTENT
+# closure is detectable -- a single merged file would be last-writer-wins and hide
+# the disagreement. Fires only on success; a no-op for packages that install no lib.
+if [ "$rc" = 0 ] && [ -n "${_ocw:-}" ] && [ -f "$_ocw/compiler-libs/ocamlcommon.cmxa" ]; then
+  _tcsha=$(dk_sha256 "$_ocw/compiler-libs/ocamlcommon.cmxa")
+  if [ -n "$_tcsha" ]; then
+    _ov=$([ -n "${_oc:-}" ] && "$_oc" -version 2>/dev/null | tr -d '\r')
+    for _d in "$root"/ip/lib/*/; do
+      [ -d "$_d" ] || continue
+      { printf 'ocaml_compiler_libs_sha256=%s\n' "$_tcsha"
+        printf 'ocaml_version=%s\n' "$_ov"
+        printf 'recorded_by=OpamBuildWrapper@1.0.12\n'
+      } > "$_d.dk-provenance"
+    done
+  fi
 fi
 # Producer half of the dune-package prefix normalization: `dune install` bakes
 # the resolved absolute prefix into the emitted dune-package `sections`, which
