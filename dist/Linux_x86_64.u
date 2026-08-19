@@ -26,6 +26,29 @@ otherwise `ocamlopt -pack` fails off the build machine.
   \test(pass)
   \dk.target(abi: "Linux_x86_64")[ld -r -o ]\;
 
+The baked C toolchain must be bare PATH-resolved single-word names, never the
+absolute /opt/rh/gcc-toolset-14 paths of the manylinux build container
+(issue #2): end-user hosts supply their own PATH toolchain, while the release
+build still resolves the same gcc-toolset-14 first on PATH.
+
+  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -config-var c_compiler
+  \test(pass)
+  \dk.target(abi: "Linux_x86_64")[gcc]\;
+
+  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -config-var asm
+  \test(pass)
+  \dk.target(abi: "Linux_x86_64")[as]\;
+
+The runtime archives must be PIE-safe (issue #3): a link forced to -pie fails
+on a non-PIC libasmrun.a with `relocation R_X86_64_32S ... can not be used
+when making a PIE object`, reproducing on the non-PIE-default gcc-toolset
+builder exactly what PIE-default consumer hosts do by default.
+
+  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt --
+  >   -ccopt -pie -o ${RUNTIME}/pie-check.exe
+  >   $(get-asset CommonsLang_OCaml.Apparatus.DkMLPieCheck@1.0.1 -p assets/dkml/pie-check.ml -f pie-check.ml)
+  \test(pass)
+
 ## Base
 
   $ run-object CommonsLang_OCaml.Base@5.5.0 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -version
