@@ -188,9 +188,6 @@ dist/*.u Export ladders.
   % unified.asset { name="DkMLPatchStandardCompilerEnvWv18", file="assets/dkml/patch-standard-compiler-env-wv18.sh" }
   \dk.asset(byteSize: "629", checksum: (sha256: "f75da7664ac5c78c5e712b4e92555f7031665b9be59c5d0f057d5a397bc0fa6d"))\;
 
-  % unified.asset { name="DkMLMuslEnv", file="assets/dkml/musl-compiler-env-to-ocaml-configure-env.sh" }
-  \dk.asset(byteSize: "3813", checksum: (sha256: "1e1bdba7cc8f84e04f86828d7f9e56b4ec014a3f4d2891ad06e0cdeace5a6a97"))\;
-
   % unified.asset { name="DkMLMuslWrap", file="assets/dkml/musl-tool-wrapper.sh" }
   \dk.asset(byteSize: "483", checksum: (sha256: "590cbc20e4413175bd4827ee7fd81096be3ae520ed2d9a6658ad7276780f65c2"))\;
 
@@ -199,9 +196,6 @@ dist/*.u Export ladders.
 
   % unified.asset { name="DkMLX86Wrap", file="assets/dkml/x86-tool-wrapper.sh" }
   \dk.asset(byteSize: "1545", checksum: (sha256: "c7f4eabcc0a23132700748797ba53d18e535badb467f7d788c82e74579cab0ba"))\;
-
-  % unified.asset { name="DkMLX86Env", file="assets/dkml/x86-compiler-env-to-ocaml-configure-env.sh" }
-  \dk.asset(byteSize: "3629", checksum: (sha256: "0d03bdd02aeb31699870db57c13a9214608f3c44504ed73265e3814c76f61935"))\;
 
   % unified.asset { name="DkMLX86BuildHost", file="assets/dkml/run-x86-build-host.sh" }
   \dk.asset(byteSize: "3255", checksum: (sha256: "f23b48903331e9eff76134595026a395b6033ebbae30ca416eab37950dda8d3c"))\;
@@ -242,6 +236,14 @@ dist/*.u Export ladders.
 
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
   \dk.asset(byteSize: "25912", checksum: (sha256: "a52577de0468c27a6a47b2d083802803fdc3550914cc1aaa01594fb2fb7c78f4"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.13
+
+  % unified.asset { name="DkMLMuslEnv", file="assets/dkml/musl-compiler-env-to-ocaml-configure-env.sh" }
+  \dk.asset(byteSize: "4067", checksum: (sha256: "2bf540ffd302b305e40e400db3d4d87ff4dc5be1c20d8b27029edaf02bf97459"))\;
+
+  % unified.asset { name="DkMLX86Env", file="assets/dkml/x86-compiler-env-to-ocaml-configure-env.sh" }
+  \dk.asset(byteSize: "3883", checksum: (sha256: "ac5ff39f1594ce83e25764085b509192df58adc8fd1ae000e0c5fb0dc472eb0e"))\;
 
 ## Dk.OpamLock
 

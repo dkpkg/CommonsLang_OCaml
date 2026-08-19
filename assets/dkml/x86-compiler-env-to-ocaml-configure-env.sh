@@ -61,10 +61,13 @@ autodetect_compiler_CXX="i686-none-linux-gnu-g++"
 autodetect_compiler_CFLAGS="-Wno-format"
 autodetect_compiler_CXXFLAGS="-Wno-format"
 # ASPP (assembler-with-preprocessor) is the C compiler for a GCC toolchain; AS
-# is the plain assembler.
+# is the plain assembler. ASPP is not in the launcher's fixed variable list,
+# so only export_binding reaches it (a plain ASPP= assignment is a silent
+# no-op that falls back to configure's ASPP="$CC -c" default; the same value
+# here, but by luck, not mechanism).
 autodetect_compiler_AS="i686-none-linux-gnu-as"
 autodetect_compiler_ASFLAGS=""
-ASPP="i686-none-linux-gnu-gcc -c"
+export_binding ASPP "i686-none-linux-gnu-gcc -c"
 # OCaml links executables through $CC; LD/DIRECT_LD are the plain linker used
 # for partial links. PARTIALLD (ld -r) is set by the build command's env.
 autodetect_compiler_LD="i686-none-linux-gnu-ld"
