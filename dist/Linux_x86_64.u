@@ -56,6 +56,15 @@ builder exactly what PIE-default consumer hosts do by default.
   \dk.target(abi: "Linux_x86_64")[5.5.0
   ]\;
 
+The Base runtime archives must be PIE-safe like the DkML ones (issue #3): the
+same forced -pie link exercises the -fPIC CFLAGS/ASPP added to the Base Linux
+glibc configure blocks.
+
+  $ run-object CommonsLang_OCaml.Base@5.5.0 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt --
+  >   -ccopt -pie -o ${RUNTIME}/base-pie-check.exe
+  >   $(get-asset CommonsLang_OCaml.Apparatus.DkMLPieCheck@1.0.1 -p assets/dkml/pie-check.ml -f pie-check.ml)
+  \test(pass)
+
 ## Dune
 
   $ run-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Linux_x86_64 -e 'bin/*' -c bin/dune.exe -- --version
