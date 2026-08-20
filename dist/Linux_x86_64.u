@@ -48,6 +48,7 @@ builder exactly what PIE-default consumer hosts do by default.
   >   -ccopt -pie -o ${RUNTIME}/piecheck.exe
   >   $(get-asset CommonsLang_OCaml.Apparatus.DkMLPieCheck@1.0.1 -p assets/dkml/piecheck.ml -f piecheck.ml)
   \test(pass)
+  \dk.target(abi: "Linux_x86_64")\;
 
 ## Base
 
@@ -64,6 +65,7 @@ glibc configure blocks.
   >   -ccopt -pie -o ${RUNTIME}/basepiecheck.exe
   >   $(get-asset CommonsLang_OCaml.Apparatus.DkMLPieCheck@1.0.1 -p assets/dkml/piecheck.ml -f piecheck.ml)
   \test(pass)
+  \dk.target(abi: "Linux_x86_64")\;
 
 ## Dune
 
