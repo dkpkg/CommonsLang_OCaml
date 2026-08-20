@@ -39,17 +39,17 @@
 # drops the arguments under :standard-overriding stanzas; see
 # x86-compiler-env-to-ocaml-configure-env.sh.
 #
-# Issue #3: gcc-toolset gcc is not --enable-default-pie, so the stock build's
-# libasmrun.a carries R_X86_64_32S relocations and native links fail on
-# PIE-default hosts (Ubuntu 24.04, Debian 12+). OCaml 4.14's runtime/Makefile
-# compiles every runtime C object with $(OC_CFLAGS) $(CFLAGS), so
-# CFLAGS=-fPIC makes libasmrun.a (and all runtime variants) PIE-safe, which
-# is what PIE-default distro compilers do implicitly. Runtime .S files
-# compile with $(ASPP) $(ASPPFLAGS) (CFLAGS does NOT reach them), so -fPIC
-# must ride inside ASPP for amd64.S to take its __PIC__ branches.
-# ocamlopt-generated amd64 code has been PIC since OCaml 4.02. -fPIC (not
-# -fPIE) is a strict superset: the objects stay usable in shared stublibs
-# and -output-obj, matching upstream's _pic runtime variant.
+# Issue #3 is NOT fixed here: gcc-toolset gcc is not --enable-default-pie, so
+# a stock build's default libasmrun.a carries R_X86_64_32S relocations (in
+# amd64.o and the runtime C objects) and native links fail on PIE-default
+# hosts (Ubuntu 24.04, Debian 12+). The r-c-ocaml relocatable build clears
+# CFLAGS before `make`, so a CFLAGS/ASPP -fPIC set here reaches only the
+# installed ocamlc_cflags (user C stubs), never the default runtime objects.
+# The runtime is made PIC by OCaml 4.14's own `./configure --with-pic`
+# (threaded through DKML_HOST_OCAML_CONFIGURE in the Linux_x86_64 slot),
+# which adds -fPIC to internal_cflags (the runtime .c objects) and to
+# default_aspp (amd64.S). CFLAGS=-fPIC below is belt-and-braces so DkML also
+# compiles user C stubs PIC on the non-PIE-default builder.
 set -euf
 
 # Bare, single-word GCC-family host tools (issue #2). No PATH binding and no
@@ -59,14 +59,13 @@ autodetect_compiler_CC="gcc"
 autodetect_compiler_CXX="g++"
 autodetect_compiler_CFLAGS="-fPIC"
 autodetect_compiler_CXXFLAGS="-fPIC"
-# ASPP (assembler-with-preprocessor) is the C compiler for a GCC toolchain;
-# AS is the plain assembler. ASPP is not in the launcher's fixed variable
-# list, so only export_binding reaches it (a plain ASPP= assignment here is
-# a silent no-op that would fall back to configure's ASPP="$CC -c" default,
-# losing -fPIC).
+# ASPP (assembler-with-preprocessor) and AS (plain assembler). ASPP is left to
+# OCaml's configure: with --with-pic it becomes "$default_aspp -fPIC", which
+# is what carries -fPIC into amd64.S. Setting ASPP here would not reach the
+# runtime make anyway (the relocatable build clears the launcher's compiler
+# env before `make`).
 autodetect_compiler_AS="as"
 autodetect_compiler_ASFLAGS=""
-export_binding ASPP "gcc -c -fPIC"
 # OCaml links executables through $CC; LD/DIRECT_LD are the plain linker used
 # for partial links. PARTIALLD (ld -r) is set by the build command's env.
 # The stock autodetection's LDFLAGS=-melf_x86_64 and its absolute .ld64.sh

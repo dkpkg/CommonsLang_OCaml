@@ -45,8 +45,8 @@ when making a PIE object`, reproducing on the non-PIE-default gcc-toolset
 builder exactly what PIE-default consumer hosts do by default.
 
   $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt --
-  >   -ccopt -pie -o ${RUNTIME}/pie-check.exe
-  >   $(get-asset CommonsLang_OCaml.Apparatus.DkMLPieCheck@1.0.1 -p assets/dkml/pie-check.ml -f pie-check.ml)
+  >   -ccopt -pie -o ${RUNTIME}/piecheck.exe
+  >   $(get-asset CommonsLang_OCaml.Apparatus.DkMLPieCheck@1.0.1 -p assets/dkml/piecheck.ml -f piecheck.ml)
   \test(pass)
 
 ## Base
@@ -61,8 +61,8 @@ same forced -pie link exercises the -fPIC CFLAGS/ASPP added to the Base Linux
 glibc configure blocks.
 
   $ run-object CommonsLang_OCaml.Base@5.5.0 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt --
-  >   -ccopt -pie -o ${RUNTIME}/base-pie-check.exe
-  >   $(get-asset CommonsLang_OCaml.Apparatus.DkMLPieCheck@1.0.1 -p assets/dkml/pie-check.ml -f pie-check.ml)
+  >   -ccopt -pie -o ${RUNTIME}/basepiecheck.exe
+  >   $(get-asset CommonsLang_OCaml.Apparatus.DkMLPieCheck@1.0.1 -p assets/dkml/piecheck.ml -f piecheck.ml)
   \test(pass)
 
 ## Dune

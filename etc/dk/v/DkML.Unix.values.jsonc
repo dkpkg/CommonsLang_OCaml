@@ -106,7 +106,7 @@
                         "env",
                         "--chdir",
                         "s",
-                        "\"DKML_HOST_OCAML_CONFIGURE=--disable-ocamltest --enable-runtime-search=always --enable-runtime-search-target=always\"",
+                        "\"DKML_HOST_OCAML_CONFIGURE=--disable-ocamltest --enable-runtime-search=always --enable-runtime-search-target=always --with-pic\"",
                         "/bin/sh",
                         "-x",
                         "src/r-c-ocaml-1-setup.sh",

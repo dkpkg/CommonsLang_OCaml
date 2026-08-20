@@ -201,9 +201,9 @@ dist/*.u Export ladders.
   \dk.asset(byteSize: "3255", checksum: (sha256: "f23b48903331e9eff76134595026a395b6033ebbae30ca416eab37950dda8d3c"))\;
 
   % unified.asset { name="DkMLGlibcEnv", file="assets/dkml/glibc-compiler-env-to-ocaml-configure-env.sh" }
-  \dk.asset(byteSize: "4273", checksum: (sha256: "82e2a25e4cdc5babab88ee65641d88fc0b8a3b201f9232592133df984fe6c655"))\;
+  \dk.asset(byteSize: "4261", checksum: (sha256: "f2f44b72a16a6401a2d3b30a847ecc85eeb54ee40258f7e21469010c83586ee8"))\;
 
-  % unified.asset { name="DkMLPieCheck", file="assets/dkml/pie-check.ml" }
+  % unified.asset { name="DkMLPieCheck", file="assets/dkml/piecheck.ml" }
   \dk.asset(byteSize: "31", checksum: (sha256: "41bf4708b8052709e23fc0c533095696810e4f16f5cdf61c55d701c395e42aae"))\;
 
   % unified.asset { name="DuneBootstrapMsvc", file="assets/dune/bootstrap-msvc.bat" }
