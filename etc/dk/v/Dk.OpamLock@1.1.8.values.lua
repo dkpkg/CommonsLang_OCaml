@@ -1,7 +1,19 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.7"
+  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.8"
 }
 
+-- 1.1.8 makes the two generated artifacts self-describing and adds the Refresh
+-- uirule. Solve now stamps its `roots`/`pins` (and `wtest`/`local_opam_dir` when
+-- set) into the lock's `generated` block, and GenerateDriver stamps its full
+-- parameter set into a top-level `generated` member of the driver values.jsonc
+-- (right after `schema_version`). MlFront's value reader pulls members by name
+-- and ignores unknown top-level members, so no dk-value schema change is needed.
+-- Refresh reads those stamps back to regenerate a driver (default), re-solve the
+-- lock then regenerate (mode=solve), or check a driver against the imported rule
+-- versions and exit nonzero when stale (mode=check). A stampless (pre-1.1.8)
+-- driver is adopted on first Refresh by recovering its parameters from the
+-- generated text. See dk.u "## Dk.OpamLock".
+--
 -- 1.1.7 flips the default host-tool ABI. Through 1.1.6 GenerateDriver pinned
 -- ocamlfind/ocamlbuild to `Release.execution_abi`; that pin never shipped in
 -- any consumed driver, and a cross slot that CAN emulate its target (Windows_x86
@@ -29,13 +41,13 @@ local M = {
 -- inside the rules/uirules function bodies. So a should-be-unique global table
 -- holds the helpers, matching the house style in CommonsBase_Std.Extract and
 -- CommonsBase_Remote.GitHub.
-CommonsLang_OCaml__Dk_OpamLock__1_1_7 = {}
+CommonsLang_OCaml__Dk_OpamLock__1_1_8 = {}
 
 rules, uirules = build.newrules(M)
 
 -- lua-ml's string library does not implement gsub, so trim by scanning for the
 -- first/last non-space with find (which does support patterns).
-function CommonsLang_OCaml__Dk_OpamLock__1_1_7.iswhite(c)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.iswhite(c)
   local b = string.byte(c)
   return b == 32 or b == 9 or b == 13 or b == 10
 end
@@ -46,14 +58,14 @@ end
 -- opam output on Windows (ex. the
 -- switch-exists check compared name-plus-CR ~= name and re-created the
 -- switch).
-function CommonsLang_OCaml__Dk_OpamLock__1_1_7.trim(s)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.trim(s)
   if s == nil then return "" end
   local n = string.len(s)
   local a = 1
-  while a <= n and CommonsLang_OCaml__Dk_OpamLock__1_1_7.iswhite(string.sub(s, a, a)) do a = a + 1 end
+  while a <= n and CommonsLang_OCaml__Dk_OpamLock__1_1_8.iswhite(string.sub(s, a, a)) do a = a + 1 end
   if a > n then return "" end
   local b = n
-  while b >= 1 and CommonsLang_OCaml__Dk_OpamLock__1_1_7.iswhite(string.sub(s, b, b)) do b = b - 1 end
+  while b >= 1 and CommonsLang_OCaml__Dk_OpamLock__1_1_8.iswhite(string.sub(s, b, b)) do b = b - 1 end
   return string.sub(s, a, b)
 end
 
@@ -61,7 +73,7 @@ end
 -- version did) walks lua-ml's arbitrary hash order, which silently scrambled the
 -- order of every joined array -- including the JSON encoder's `parts`, so a
 -- sorted key list still emitted unsorted. Walk 1..n instead.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_7.join(tbl, sep)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.join(tbl, sep)
   local r = nil
   local i = 1
   while tbl[i] ~= nil do
@@ -76,7 +88,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_7.join(tbl, sep)
   return r
 end
 
-function CommonsLang_OCaml__Dk_OpamLock__1_1_7.set_from_list(tbl)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.set_from_list(tbl)
   local set = {}
   if tbl == nil then return set end
   -- Store the value itself (not the boolean true): lua-ml does not reliably
@@ -89,7 +101,7 @@ end
 -- Directory part of a path (everything before the last '/' or '\'), or "." if
 -- the path has no separator. Byte-based (47='/', 92='\\') so it is correct for
 -- both the POSIX and Windows realpath forms request.io.realpath can return.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_7.dirname(p)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.dirname(p)
   local i = string.len(p)
   while i >= 1 do
     local b = string.byte(p, i)
@@ -117,7 +129,7 @@ function rules.Export(command, request)
     return {
       declareoutput = {
         return_objects = {
-          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.7",
+          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.8",
           slots = slots,
           execution_slot = "Release.execution_abi"
         }
@@ -158,9 +170,9 @@ end
 -- runs the helper, and publishes its stdout as the lock. Mirrors the thin
 -- CommonsLang_Python.UvLock.Solve design.
 function uirules.Solve(command, request, continue_)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_7
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.7: lock written.")
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.8: lock written.")
     return
   end
   if command ~= "submit" then return end
@@ -184,7 +196,7 @@ function uirules.Solve(command, request, continue_)
       end
     end
     local files = {
-      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.10 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
+      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.14 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
       amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.1 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
     }
     return {
@@ -268,7 +280,8 @@ function uirules.Solve(command, request, continue_)
 
   -- Build the helper argv.
   local args = { bc, "solve", "--opam", opamexe, "--work-dir", workdir, "--pins-file", pinsfile,
-    "--tool", "CommonsLang_OCaml.Dk.OpamLock@1.1.7" }
+    "--pins-name", pinsproj,
+    "--tool", "CommonsLang_OCaml.Dk.OpamLock@1.1.8" }
   local out = request.user.out or "dk.opam-lock.jsonc"
   if request.user.switch then table.insert(args, "--switch"); table.insert(args, request.user.switch) end
   if request.user.local_opam_dir then table.insert(args, "--local-opam-dir"); table.insert(args, request.user.local_opam_dir) end
@@ -337,7 +350,7 @@ end
 
 -- Index of the first occurrence of the single character `ch` in `s`, or nil.
 -- (string.find treats `.` as a pattern wildcard, so scan by byte instead.)
-function CommonsLang_OCaml__Dk_OpamLock__1_1_7.indexof_char(s, ch)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.indexof_char(s, ch)
   local i = 1
   local n = string.len(s)
   while i <= n do
@@ -349,7 +362,7 @@ end
 
 -- Decimal digits of a lua-ml number (no string.format; concat of a number is
 -- unreliable). Mirrors CommonsBase_Dk.Dk0Build.numstr.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_7.numstr(v)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.numstr(v)
   if type(v) == "string" then return v end
   if type(v) ~= "number" then return tostring(v) end
   if v == 0 then return "0" end
@@ -369,7 +382,7 @@ end
 -- lowercased. MUST match the modsegment transform in the per-package build
 -- rule (CommonsBase_Dk.Dk0Build), which derives sibling Pkg object ids from
 -- dependency names with the same function.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_7.modsegment(name)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.modsegment(name)
   local out = ""
   local i = 1
   local n = string.len(name)
@@ -395,7 +408,7 @@ end
 -- form is host-keyed with the `target_abi` WILDCARD in its value-id, that one
 -- musl build is store-shared to every slot; there `hosttoolabi=Release.execution_abi`
 -- pins them back to the host. GenerateDriver emits `hosttoolabi` for these names.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_7.is_host_tool(name)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.is_host_tool(name)
   return name == "ocamlfind" or name == "ocamlbuild"
 end
 
@@ -403,7 +416,7 @@ end
 -- built as Pkg objects, so the driver never chains them. The default for
 -- GenerateDriver's provided[] parameter; a project on another toolchain
 -- passes its own list. Mirrors PROVIDED in CommonsBase_Dk.Dk0Build.
-CommonsLang_OCaml__Dk_OpamLock__1_1_7.DKML_PROVIDED = {
+CommonsLang_OCaml__Dk_OpamLock__1_1_8.DKML_PROVIDED = {
   "ocaml", "ocaml-base-compiler", "ocaml-config", "ocaml-options-vanilla",
   "base-unix", "base-threads", "base-bigarray", "dune", "flexdll",
   "conf-mingw-w64-gcc-x86_64", "host-arch-x86_64", "host-arch-x86_32",
@@ -411,7 +424,7 @@ CommonsLang_OCaml__Dk_OpamLock__1_1_7.DKML_PROVIDED = {
 }
 
 -- The 8 DkML slots; the default for GenerateDriver's slots[] parameter.
-CommonsLang_OCaml__Dk_OpamLock__1_1_7.DKML_SLOTS = {
+CommonsLang_OCaml__Dk_OpamLock__1_1_8.DKML_SLOTS = {
   "Release.Windows_x86_64", "Release.Windows_x86",
   "Release.Linux_x86_64", "Release.Linux_x86_64_musl", "Release.Linux_x86",
   "Release.Linux_arm64",
@@ -423,8 +436,8 @@ CommonsLang_OCaml__Dk_OpamLock__1_1_7.DKML_SLOTS = {
 -- before recursing (opam dependency graphs are acyclic, so no cycle check).
 -- A dependency with neither a source nor the local mark (a virtual package
 -- such as `seq`) is skipped; a dependency absent from the lock is an error.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_7.driver_visit(byname, provided, name, seen, order)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_7
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.driver_visit(byname, provided, name, seen, order)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
   if seen[name] ~= nil or provided[name] ~= nil then return end
   local e = byname[name]
   assert(e ~= nil, "dependency `" .. name .. "` is not in the lock")
@@ -445,7 +458,7 @@ end
 -- run-function produces the root. Author-time companion to Solve: re-run it
 -- whenever the lock changes.
 --
--- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.7):
+-- Parameters (dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.8):
 --   lock=PATH          project-relative lock file (the Solve output)
 --   out=PATH           project-relative driver values file to write
 --   root=PKG           opam package whose closure is chained (built last,
@@ -487,9 +500,9 @@ end
 --                      Release.target_abi). Pass Release.execution_abi for a
 --                      matrix with a host-unemulatable cross slot (musl hazard).
 function uirules.GenerateDriver(command, request)
-  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_7
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.7: driver written.")
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.8: driver written.")
     return
   end
   if command ~= "submit" then return end
@@ -656,6 +669,44 @@ function uirules.GenerateDriver(command, request)
   local nl = "\n"
   -- Header label works for a single root= or multiple roots[]= (root may be nil).
   local rootlabel = root or H.join(roots, ", ")
+
+  -- Stamp the full parameter set into a top-level `generated` member so Refresh
+  -- (and mode=check) can regenerate or validate this driver without re-deriving
+  -- the ~ten hand-copied parameters. Only out= is omitted (it is this file's own
+  -- path). MlFront's value reader pulls members by name and ignores unknown
+  -- top-level members, so this needs no dk-value schema change. Values here are
+  -- module ids and project-relative paths (no quote/backslash bytes), so they
+  -- are concatenated without JSON escaping, like the rest of this header.
+  local lockmeta = request.ui.checksum { path = lockpath }
+  local locksha = ""
+  if lockmeta and lockmeta.sha256 then locksha = lockmeta.sha256 end
+  local gm = {}
+  table.insert(gm, "\"tool\": \"CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.8\"")
+  table.insert(gm, "\"rulefn\": \"" .. rulefn .. "\"")
+  table.insert(gm, "\"lock\": \"" .. lockpath .. "\"")
+  table.insert(gm, "\"lock-sha256\": \"" .. locksha .. "\"")
+  table.insert(gm, "\"localsrc\": \"" .. localsrc .. "\"")
+  table.insert(gm, "\"locksrcpath\": \"" .. locksrcpath .. "\"")
+  if root ~= nil then
+    table.insert(gm, "\"root\": \"" .. root .. "\"")
+  else
+    table.insert(gm, "\"roots\": [\"" .. H.join(roots, "\", \"") .. "\"]")
+  end
+  table.insert(gm, "\"formid\": \"" .. formid .. "\"")
+  table.insert(gm, "\"pkgpath\": \"" .. pkgpath .. "\"")
+  table.insert(gm, "\"version\": \"" .. version .. "\"")
+  if request.user.skiplocal ~= nil then table.insert(gm, "\"skiplocal\": \"t\"") end
+  if request.user.mergedprefix ~= nil then table.insert(gm, "\"mergedprefix\": \"t\"") end
+  if request.user.parallel ~= nil then table.insert(gm, "\"parallel\": \"t\"") end
+  if request.user.hosttoolabi ~= nil then table.insert(gm, "\"hosttoolabi\": \"" .. request.user.hosttoolabi .. "\"") end
+  if request.user.prelude ~= nil then table.insert(gm, "\"prelude\": [\"" .. H.join(request.user.prelude, "\", \"") .. "\"]") end
+  if request.user.provided ~= nil then table.insert(gm, "\"provided\": [\"" .. H.join(request.user.provided, "\", \"") .. "\"]") end
+  if request.user.slots ~= nil then table.insert(gm, "\"slots\": [\"" .. H.join(request.user.slots, "\", \"") .. "\"]") end
+  if request.user.implib ~= nil then table.insert(gm, "\"implib\": [\"" .. H.join(request.user.implib, "\", \"") .. "\"]") end
+  if request.user.impver ~= nil then table.insert(gm, "\"impver\": [\"" .. H.join(request.user.impver, "\", \"") .. "\"]") end
+  if request.user.impsrclock ~= nil then table.insert(gm, "\"impsrclock\": [\"" .. H.join(request.user.impsrclock, "\", \"") .. "\"]") end
+  local genblock = "  \"generated\": {" .. nl .. "    " .. H.join(gm, "," .. nl .. "    ") .. nl .. "  }," .. nl
+
   local body = "// Driver for the per-package opam build of `" .. rootlabel .. "`: run-functions the" .. nl
     .. "// per-package build rule for every package in the root's dependency closure in" .. nl
     .. "// topological order, so each package is its own content-addressed dk object" .. nl
@@ -666,6 +717,7 @@ function uirules.GenerateDriver(command, request)
     .. "{" .. nl
     .. "  \"$schema\": \"https://diskuv.com/dk/schema/dk-value-1.0.json\"," .. nl
     .. "  \"schema_version\": { \"major\": 1, \"minor\": 0 }," .. nl
+    .. genblock
     .. "  \"forms\": [" .. nl
     .. "    {" .. nl
     .. "      \"id\": \"" .. formid .. "\"," .. nl
@@ -811,6 +863,630 @@ function uirules.GenerateDriver(command, request)
   local ok, written = request.ui.writefile { path = out, content = body, expected_sha256 = expected }
   assert(ok, "could not write driver to `" .. out .. "`: " .. tostring(written))
   print("wrote driver (" .. H.numstr(oi - 1) .. " packages) to " .. tostring(written))
+  return { submit = {} }
+end
+
+-- ---------------------------------------------------------------------------
+-- Refresh: self-describing regeneration of the lock and driver(s).
+--
+-- The lock and driver stamp their inputs (Solve stamps roots/pins into the
+-- lock's `generated` block; GenerateDriver stamps its full parameter set into
+-- the driver's top-level `generated` member). Refresh reads those stamps back
+-- so a routine repin regenerates with a one-liner and CI can detect a stale
+-- driver in seconds instead of hours into a release build.
+-- ---------------------------------------------------------------------------
+
+-- Byte-scan substring search (string.find treats `.`/`-` as pattern magic, so
+-- module ids and version strings must be searched literally). Returns the
+-- 1-based index of `sub` in `s` at or after `from`, or nil.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.indexof_str(s, sub, from)
+  local n = string.len(s)
+  local m = string.len(sub)
+  if m == 0 then if from == nil then return 1 else return from end end
+  local i = from
+  if i == nil then i = 1 end
+  while i + m - 1 <= n do
+    if string.sub(s, i, i + m - 1) == sub then return i end
+    i = i + 1
+  end
+  return nil
+end
+
+-- Replace every literal occurrence of `old` with `new` (lua-ml has no gsub).
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.replace_all(s, old, new)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  if old == "" then return s end
+  local out = ""
+  local i = 1
+  local m = string.len(old)
+  local p = H.indexof_str(s, old, 1)
+  while p ~= nil do
+    out = out .. string.sub(s, i, p - 1) .. new
+    i = p + m
+    p = H.indexof_str(s, old, i)
+  end
+  return out .. string.sub(s, i, string.len(s))
+end
+
+-- Number of leading decimal digits of `s` as an integer (stops at the first
+-- non-digit, so "1.0.18" component "18" -> 18, "2-26" -> 2).
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.toint(s)
+  local n = 0
+  local i = 1
+  local len = string.len(s)
+  while i <= len do
+    local b = string.byte(s, i)
+    if b >= 48 and b <= 57 then n = n * 10 + (b - 48); i = i + 1 else i = len + 1 end
+  end
+  return n
+end
+
+-- Substring after the last '@' of a module id (its version), or the whole id.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.id_ver(id)
+  local i = string.len(id)
+  while i >= 1 do
+    if string.sub(id, i, i) == "@" then return string.sub(id, i + 1) end
+    i = i - 1
+  end
+  return id
+end
+
+-- Split a dotted version into numeric components (numeric while, not next()).
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.vparts(ver)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local parts = {}
+  local cur = ""
+  local i = 1
+  local n = string.len(ver)
+  while i <= n do
+    local c = string.sub(ver, i, i)
+    if c == "." then table.insert(parts, H.toint(cur)); cur = "" else cur = cur .. c end
+    i = i + 1
+  end
+  table.insert(parts, H.toint(cur))
+  return parts
+end
+
+-- Compare two dotted versions: 1 if a>b, -1 if a<b, 0 if equal.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.vcmp(a, b)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local pa = H.vparts(a)
+  local pb = H.vparts(b)
+  local i = 1
+  while pa[i] ~= nil or pb[i] ~= nil do
+    local x = pa[i]; if x == nil then x = 0 end
+    local y = pb[i]; if y == nil then y = 0 end
+    if x > y then return 1 end
+    if x < y then return -1 end
+    i = i + 1
+  end
+  return 0
+end
+
+-- Highest-versioned id in `text` whose form is `<prefix>@<ver>`. The import
+-- values.json can declare several versions of one rule side by side, so this is
+-- a semver max over every occurrence, not "the one entry". nil if none.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.import_max(text, prefix)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local needle = prefix .. "@"
+  local m = string.len(needle)
+  local n = string.len(text)
+  local best = nil
+  local p = H.indexof_str(text, needle, 1)
+  while p ~= nil do
+    local vstart = p + m
+    local q = vstart
+    while q <= n and string.sub(text, q, q) ~= "\"" do q = q + 1 end
+    local ver = string.sub(text, vstart, q - 1)
+    if best == nil or H.vcmp(ver, best) > 0 then best = ver end
+    p = H.indexof_str(text, needle, q)
+  end
+  if best == nil then return nil end
+  return prefix .. "@" .. best
+end
+
+-- The CommonsLang_OCaml import version pinned in dk.u, or nil.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.dku_import_version(text)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local lib = H.indexof_str(text, "library: \"CommonsLang_OCaml\"", 1)
+  if lib == nil then return nil end
+  local key = "version: \""
+  local vk = H.indexof_str(text, key, lib)
+  if vk == nil then return nil end
+  local vstart = vk + string.len(key)
+  local n = string.len(text)
+  local q = vstart
+  while q <= n and string.sub(text, q, q) ~= "\"" do q = q + 1 end
+  return string.sub(text, vstart, q - 1)
+end
+
+-- Read the imported rule versions this workspace declares: { ver, rulefn, tool }
+-- from dk.u's pin + etc/dk/i/CommonsLang_OCaml.<ver>.values.json. nil when there
+-- is no import; rulefn/tool nil when the import file is absent.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.import_wants(request)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local dku = request.ui.readfile { path = "dk.u" }
+  if dku == nil then return nil end
+  local V = H.dku_import_version(dku)
+  if V == nil then return nil end
+  local imp = request.ui.readfile { path = "etc/dk/i/CommonsLang_OCaml." .. V .. ".values.json" }
+  if imp == nil then return { ver = V } end
+  return {
+    ver = V,
+    rulefn = H.import_max(imp, "CommonsLang_OCaml.Dk.OpamBuild.F_BuildLockedPackage"),
+    tool = H.import_max(imp, "CommonsLang_OCaml.Dk.OpamLock.GenerateDriver")
+  }
+end
+
+-- The decoded top-level `generated` stamp of a driver values.jsonc, or nil for
+-- a pre-@1.1.8 (unstamped) driver. Strips the `//` banner (which precedes the
+-- first `{`) before decoding; the JSON body itself has no comments.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.read_stamp(drivertext)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local b = H.indexof_str(drivertext, "{", 1)
+  if b == nil then return nil end
+  local jd = require("jsondk")
+  local obj = jd.decode(string.sub(drivertext, b))
+  if obj == nil then return nil end
+  return obj.generated
+end
+
+-- The full F_BuildLockedPackage id used in a driver's text (for an unstamped
+-- driver: the rulefn is still recoverable even though the stamp is not).
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.first_rulefn(text)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local key = "CommonsLang_OCaml.Dk.OpamBuild.F_BuildLockedPackage@"
+  local p = H.indexof_str(text, key, 1)
+  if p == nil then return nil end
+  local n = string.len(text)
+  local q = p
+  while q <= n do
+    local c = string.sub(text, q, q)
+    if c == " " or c == "\"" then return string.sub(text, p, q - 1) end
+    q = q + 1
+  end
+  return string.sub(text, p, n)
+end
+
+-- Length of a 1-based array (numeric while; next() is unordered).
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.alen(t)
+  local i = 0
+  while t[i + 1] ~= nil do i = i + 1 end
+  return i
+end
+
+-- The value of the `key=` token in a driver precommand line (up to the next
+-- space or quote), or nil.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.kv(line, key)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local p = H.indexof_str(line, key, 1)
+  if p == nil then return nil end
+  local s = p + string.len(key)
+  local n = string.len(line)
+  local q = s
+  while q <= n do
+    local c = string.sub(line, q, q)
+    if c == " " or c == "\"" then return string.sub(line, s, q - 1) end
+    q = q + 1
+  end
+  return string.sub(line, s, n)
+end
+
+-- ocamlfind/ocamlbuild host-tool ABI recovered from the precommand lines, when
+-- it differs from the default Release.target_abi; else nil.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.recover_hosttoolabi(privlist)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local i = 1
+  while privlist[i] ~= nil do
+    local ln = privlist[i]
+    if H.indexof_str(ln, "pkg=ocamlfind") ~= nil or H.indexof_str(ln, "pkg=ocamlbuild") ~= nil then
+      local ta = H.kv(ln, "targetabi=")
+      if ta ~= nil and ta ~= "Release.target_abi" then return ta end
+    end
+    i = i + 1
+  end
+  return nil
+end
+
+-- The set of `pkg=<name>` tokens in a driver's text (multiset membership as a
+-- name->"1" map). Used to verify a stampless regen reproduced the same closure.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.pkgset(text)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local set = {}
+  local n = string.len(text)
+  local p = H.indexof_str(text, "pkg=", 1)
+  while p ~= nil do
+    local s = p + 4
+    local q = s
+    while q <= n and string.sub(text, q, q) ~= " " and string.sub(text, q, q) ~= "\"" do q = q + 1 end
+    set[string.sub(text, s, q - 1)] = "1"
+    p = H.indexof_str(text, "pkg=", q)
+  end
+  return set
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.same_set(a, b)
+  local k = next(a)
+  while k do if b[k] == nil then return nil end; k = next(a, k) end
+  k = next(b)
+  while k do if a[k] == nil then return nil end; k = next(b, k) end
+  return 1
+end
+
+-- Replace the version after the last '@' of a module id.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.reversion(id, newver)
+  local i = string.len(id)
+  while i >= 1 do
+    if string.sub(id, i, i) == "@" then return string.sub(id, 1, i) .. newver end
+    i = i - 1
+  end
+  return id .. "@" .. newver
+end
+
+-- Split a string on newline, dropping CR (byte 13, unrepresentable as a literal).
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.splitlines(s)
+  local lines = {}
+  local cur = ""
+  local i = 1
+  local n = string.len(s)
+  while i <= n do
+    local c = string.sub(s, i, i)
+    if c == "\n" then
+      table.insert(lines, cur); cur = ""
+    else
+      if string.byte(c) ~= 13 then cur = cur .. c end
+    end
+    i = i + 1
+  end
+  table.insert(lines, cur)
+  return lines
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.ends_with(s, suf)
+  local ls = string.len(s)
+  local lf = string.len(suf)
+  if lf > ls then return nil end
+  if string.sub(s, ls - lf + 1, ls) == suf then return 1 end
+  return nil
+end
+
+-- Recover GenerateDriver parameters from a stampless (pre-@1.1.8) driver so its
+-- first Refresh can adopt the stamp. Covers the single-root, non-partitioned
+-- shape (ocamlearlybird); a richer driver (skiplocal/import-partition) predates
+-- this only in CommonsBase_Dk, which adopts by hand-inserting a full stamp.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.fallback_params(text)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local b = H.indexof_str(text, "{", 1)
+  assert(b ~= nil, "driver has no JSON body")
+  local jd = require("jsondk")
+  local obj = jd.decode(string.sub(text, b))
+  assert(obj ~= nil and obj.forms ~= nil and obj.forms[1] ~= nil, "driver has no forms")
+  local f = obj.forms[1]
+  local pc = f.precommands
+  assert(pc ~= nil and pc["private"] ~= nil, "driver has no precommands")
+  local priv = pc["private"]
+  local li = 1
+  while priv[li] ~= nil and H.indexof_str(priv[li], "modver=") == nil do li = li + 1 end
+  assert(priv[li] ~= nil, "driver has no per-package build line")
+  local line = priv[li]
+  local P = {}
+  P.formid = f.id
+  P.localsrc = H.kv(line, "localsrc=")
+  P.locksrcpath = H.kv(line, "locksrcpath=")
+  local modver = H.kv(line, "modver=")
+  assert(modver ~= nil, "cannot recover modver from the driver")
+  P.version = H.id_ver(modver)
+  local pk = H.indexof_str(modver, ".Pkg.")
+  assert(pk ~= nil, "cannot recover pkgpath from modver `" .. modver .. "`")
+  P.pkgpath = string.sub(modver, 1, pk - 1)
+  if H.indexof_str(text, "\"sequential\": false") ~= nil then P.parallel = "t" end
+  if f.outputs ~= nil and f.outputs.assets ~= nil and f.outputs.assets[1] ~= nil then
+    P.slots = f.outputs.assets[1].slots
+    local paths = f.outputs.assets[1].paths
+    if paths ~= nil and paths[1] == "prefix.zip" then P.mergedprefix = "t" end
+  end
+  -- Root: in the single-root model the root builds into `-d built`; read its
+  -- pkg= (mergedprefix drivers have no `built` line and are adopted by hand, so
+  -- fallback recovery does not need to cover them).
+  local bi = 1
+  while priv[bi] ~= nil and H.indexof_str(priv[bi], "-d built ") == nil do bi = bi + 1 end
+  if priv[bi] ~= nil then
+    local rp = H.kv(priv[bi], "pkg=")
+    if rp ~= nil then P.root = rp end
+  end
+  local hta = H.recover_hosttoolabi(priv)
+  if hta ~= nil then P.hosttoolabi = hta end
+  return P
+end
+
+-- Standard STALE message with the actionable fix command.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.stale_msg(D, got, want)
+  return "STALE " .. D .. ":" .. "\n  driver pins  " .. tostring(got)
+    .. "\n  import wants " .. tostring(want)
+    .. "\n  fix: ./dk1 dialog CommonsLang_OCaml.Dk.OpamLock.Refresh@1.1.8 driver=" .. D
+    .. "\n       (dk0 and dkjs take the same arguments)"
+end
+
+-- Discover the generated OpamLock driver(s) under etc/dk/v by running a
+-- hermetic coreutils `ls -R` (there is no directory-listing ui API) and keeping
+-- every *.values.jsonc whose banner names GenerateDriver.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.discover_drivers(request, coreutils)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local res = request.ui.capture {
+    program = coreutils, args = { "ls", "-R", "etc/dk/v" }, max_output_bytes = 4194304
+  }
+  assert(res and res.status == "exit" and res.code == 0,
+    "could not list etc/dk/v: " .. tostring(res and res.stderr))
+  local out = {}
+  local cur = "etc/dk/v"
+  local lines = H.splitlines(res.stdout)
+  local i = 1
+  while lines[i] ~= nil do
+    local ln = H.trim(lines[i])
+    if ln ~= "" then
+      local last = string.sub(ln, string.len(ln), string.len(ln))
+      if last == ":" then
+        cur = string.sub(ln, 1, string.len(ln) - 1)
+      else
+        if H.ends_with(ln, ".values.jsonc") ~= nil then
+          local path = cur .. "/" .. ln
+          local content = request.ui.readfile { path = path }
+          if content ~= nil
+             and H.indexof_str(content, "GENERATED by the CommonsLang_OCaml.Dk.OpamLock.GenerateDriver") ~= nil then
+            table.insert(out, path)
+          end
+        end
+      end
+    end
+    i = i + 1
+  end
+  return out
+end
+
+-- Build the Solve dialog user parameters for mode=solve by reading the lock's
+-- own `generated` stamp (roots/pins/wtest/local_opam_dir), its `ocaml`, its
+-- slots, and the bare names of its "local":"t" packages.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.solve_user(request)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local lockpath = request.user.lock or "dk.opam-lock.jsonc"
+  local content = assert(request.ui.readfile { path = lockpath },
+    "could not read lock `" .. lockpath .. "` for mode=solve")
+  local jd = require("jsondk")
+  local lock = jd.decode(content)
+  assert(lock ~= nil and lock.packages ~= nil, "could not decode lock for mode=solve")
+  local gen = lock.generated
+  assert(gen ~= nil and gen.roots ~= nil,
+    "lock predates @1.1.8 (no generated.roots); run Solve once with explicit roots/pins to adopt the stamp")
+  local u = {}
+  u.roots = gen.roots
+  if gen.pins ~= nil then u.pins = gen.pins end
+  u.out = lockpath
+  if lock.ocaml ~= nil then u.ocaml = lock.ocaml end
+  if gen.wtest ~= nil then u.wtest = gen.wtest end
+  if gen.local_opam_dir ~= nil then u.local_opam_dir = gen.local_opam_dir end
+  local locals = {}
+  local k = next(lock.packages)
+  while k do
+    local e = lock.packages[k]
+    if e ~= nil and e["local"] == "t" then
+      local dot = H.indexof_char(k, ".")
+      if dot ~= nil then table.insert(locals, string.sub(k, 1, dot - 1)) end
+    end
+    k = next(lock.packages, k)
+  end
+  if locals[1] ~= nil then u.locals = locals end
+  local sl = {}
+  if lock.slots ~= nil then
+    local sk = next(lock.slots)
+    while sk do table.insert(sl, sk); sk = next(lock.slots, sk) end
+  end
+  if sl[1] ~= nil then u.slots = sl end
+  return u
+end
+
+-- Regenerate (or, for a lock-less consumer, rulefn-substitute) one driver.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_8.refresh_one(request, D, targetrule, versionoverride)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  local text = assert(request.ui.readfile { path = D }, "could not read driver `" .. D .. "`")
+  local stamp = H.read_stamp(text)
+  local lockpath = nil
+  if stamp ~= nil then lockpath = stamp.lock end
+  if request.user.lock ~= nil then lockpath = request.user.lock end
+  local lockmeta = nil
+  if lockpath ~= nil then lockmeta = request.ui.checksum { path = lockpath } end
+  local haslock = lockmeta ~= nil and lockmeta.sha256 ~= nil
+
+  if versionoverride ~= nil then
+    assert(stamp ~= nil,
+      "version= requires a stamped driver; run Refresh once without version= to adopt the stamp first")
+    assert(haslock, "version= requires the lock on disk (" .. tostring(lockpath) .. ")")
+  end
+
+  if haslock then
+    local P = nil
+    local oldpkgs = nil
+    if stamp ~= nil then
+      P = stamp
+    else
+      P = H.fallback_params(text)
+      oldpkgs = H.pkgset(text)
+    end
+    P.out = D
+    P.rulefn = targetrule
+    P.lock = lockpath
+    if versionoverride ~= nil then
+      P.version = versionoverride
+      P.formid = H.reversion(P.formid, versionoverride)
+      P.localsrc = H.reversion(P.localsrc, versionoverride)
+    end
+    local proxy = {
+      user = P, ui = request.ui, io = request.io,
+      execution = request.execution, continued = request.continued
+    }
+    uirules.GenerateDriver("submit", proxy)
+    if oldpkgs ~= nil then
+      local newtext = request.ui.readfile { path = D }
+      local newpkgs = H.pkgset(newtext)
+      if H.same_set(oldpkgs, newpkgs) == nil then
+        local nm = request.ui.checksum { path = D }
+        local exp = "false"
+        if nm ~= nil and nm.sha256 ~= nil then exp = nm.sha256 end
+        request.ui.writefile { path = D, content = text, expected_sha256 = exp }
+        assert(false, "driver `" .. D
+          .. "` is not reproducible from recovered parameters (package set changed); "
+          .. "adopt it by running GenerateDriver explicitly with the correct parameters")
+      end
+    end
+    print("refreshed " .. D .. " (regenerated from " .. lockpath .. ")")
+  else
+    assert(stamp ~= nil, "driver `" .. D
+      .. "` has no stamp and its lock is not on disk; adopt it by hand-inserting a "
+      .. "generated stamp, or run GenerateDriver explicitly")
+    local old = stamp.rulefn
+    assert(old ~= nil, "stamp for `" .. D .. "` has no rulefn")
+    local newtext = H.replace_all(text, old, targetrule)
+    if newtext == text then
+      print("refreshed " .. D .. " (already current at " .. targetrule .. ")")
+    else
+      local nm = request.ui.checksum { path = D }
+      local exp = "false"
+      if nm ~= nil and nm.sha256 ~= nil then exp = nm.sha256 end
+      local ok, written = request.ui.writefile { path = D, content = newtext, expected_sha256 = exp }
+      assert(ok, "could not write driver `" .. D .. "`: " .. tostring(written))
+      print("refreshed " .. D .. " (rulefn -> " .. targetrule .. ", substitution)")
+    end
+  end
+end
+
+-- Modes: driver (default; regenerate driver from the lock, or substitute the
+-- rulefn when the lock is not checked in), solve (re-solve the lock then
+-- regenerate), check (read-only; nonzero when a driver is stale), and version=
+-- (rewrite the coupled version/formid/localsrc then regenerate).
+function uirules.Refresh(command, request, continue_)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_8
+  if command == "ui" then
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.8: refresh complete.")
+    return
+  end
+  if command ~= "submit" then return end
+
+  local mode = request.user.mode or "driver"
+  local drivers = request.user.drivers
+  if drivers == nil and request.user.driver ~= nil then drivers = { request.user.driver } end
+
+  local need_disco = nil
+  if drivers == nil then need_disco = 1 end
+  local need_solve = nil
+  if mode == "solve" then need_solve = 1 end
+
+  -- Stage 1: materialize coreutils (for zero-argument discovery) and/or the
+  -- Solve toolchain (for mode=solve), then re-enter.
+  if continue_ ~= "refresh2" and (need_disco ~= nil or need_solve ~= nil) then
+    local dirs = {}
+    local files = {}
+    if need_solve ~= nil then
+      local s1 = uirules.Solve("submit", { user = {}, execution = request.execution }, nil)
+      dirs = s1.submit.expressions.directories
+      files = s1.submit.expressions.files
+    end
+    if need_disco ~= nil then
+      dirs.disco = "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s Release.execution_abi -d : -e 'coreutils.exe')"
+    end
+    local expr = { directories = dirs }
+    if next(files) ~= nil then expr.files = files end
+    return { submit = { expressions = expr, andthen = { continue_ = { state = "refresh2" } } } }
+  end
+
+  -- Resolve the discovery object (if materialized) and list the drivers.
+  local coreutils = nil
+  if request.continued ~= nil and request.continued.disco ~= nil then
+    coreutils = H.trim(request.io.realpath(request.continued.disco)) .. "/coreutils.exe"
+    request.io.close(request.continued.disco)
+  end
+  if drivers == nil then
+    assert(coreutils ~= nil, "internal error: discovery requested without coreutils")
+    drivers = H.discover_drivers(request, coreutils)
+    assert(drivers[1] ~= nil,
+      "no generated OpamLock driver found under etc/dk/v (pass driver=PATH or drivers[]=PATH)")
+  end
+
+  local wants = H.import_wants(request)
+
+  if mode == "check" then
+    assert(wants ~= nil, "no CommonsLang_OCaml import found in dk.u")
+    assert(wants.rulefn ~= nil,
+      "import file etc/dk/i/CommonsLang_OCaml." .. wants.ver .. ".values.json missing; run ./dk1 update")
+    local stale = {}
+    local di = 1
+    while drivers[di] ~= nil do
+      local D = drivers[di]
+      local text = assert(request.ui.readfile { path = D }, "could not read driver `" .. D .. "`")
+      local stamp = H.read_stamp(text)
+      if stamp == nil then
+        local rf = H.first_rulefn(text)
+        if rf == nil then
+          table.insert(stale, D .. ": unreadable (no stamp and no F_BuildLockedPackage line)")
+        else
+          if rf ~= wants.rulefn then
+            table.insert(stale, H.stale_msg(D, rf, wants.rulefn))
+          else
+            print("ADVISORY " .. D .. ": unstamped (pre-@1.1.8); run Refresh once to adopt the stamp")
+          end
+        end
+      else
+        if stamp.rulefn ~= wants.rulefn then
+          table.insert(stale, H.stale_msg(D, stamp.rulefn, wants.rulefn))
+        end
+        if wants.tool ~= nil and stamp.tool ~= nil and stamp.tool ~= wants.tool then
+          table.insert(stale, H.stale_msg(D, stamp.tool, wants.tool))
+        end
+        if stamp.lock ~= nil then
+          local lm = request.ui.checksum { path = stamp.lock }
+          if lm ~= nil and lm.sha256 ~= nil then
+            local wsha = stamp["lock-sha256"]
+            if wsha ~= nil and wsha ~= "" and wsha ~= lm.sha256 then
+              table.insert(stale, "STALE " .. D .. ":\n  lock-sha256 stamp " .. wsha
+                .. "\n  current " .. stamp.lock .. " " .. lm.sha256
+                .. "\n  fix: ./dk1 dialog CommonsLang_OCaml.Dk.OpamLock.Refresh@1.1.8 driver=" .. D)
+            end
+          else
+            print("NOTE " .. D .. ": lock `" .. stamp.lock .. "` not checked in; sha256 check skipped")
+          end
+        end
+      end
+      di = di + 1
+    end
+    if stale[1] ~= nil then
+      local sj = 1
+      while stale[sj] ~= nil do print(stale[sj]); sj = sj + 1 end
+      assert(false, "opam lock/driver check FAILED (" .. H.numstr(H.alen(stale))
+        .. " problem(s)); regenerate with the fix command(s) above")
+    end
+    print("check ok (" .. H.numstr(H.alen(drivers)) .. " driver(s), import " .. wants.ver .. ")")
+    return { submit = {} }
+  end
+
+  -- Resolve the target per-package build rule: explicit override, else the
+  -- newest F_BuildLockedPackage the import declares, else the baked default.
+  local targetrule = request.user.rulefn
+  if targetrule == nil and wants ~= nil then targetrule = wants.rulefn end
+  if targetrule == nil then targetrule = "CommonsLang_OCaml.Dk.OpamBuild.F_BuildLockedPackage@1.0.18" end
+
+  if mode == "solve" then
+    local su = H.solve_user(request)
+    local sproxy = {
+      user = su, ui = request.ui, io = request.io,
+      execution = request.execution, continued = request.continued
+    }
+    uirules.Solve("submit", sproxy, "solve")
+  end
+
+  local di = 1
+  while drivers[di] ~= nil do
+    H.refresh_one(request, drivers[di], targetrule, request.user.version)
+    di = di + 1
+  end
+  print("refresh complete (" .. H.numstr(H.alen(drivers)) .. " driver(s), rule " .. targetrule .. ")")
   return { submit = {} }
 end
 

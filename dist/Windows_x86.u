@@ -35,13 +35,13 @@ Release.Windows_x86_64 will be used as Release.execution_abi on normal (64-bit) 
 
 ## Dk.OpamLock
 
-Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.6
+Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.7
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.7 -f ${RUNTIME}/OpamLock.Export-1.1.7.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.8 -f ${RUNTIME}/OpamLock.Export-1.1.8.zip
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "ok4tswge3qkwou6avmugbpd6rbnbohjs2n46rw76uvcrultw5u3kq")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "o0000000000000000000000000000000000000000000000000000")\;
 
 
 ## Dk.OpamBuild

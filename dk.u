@@ -150,10 +150,12 @@ history, never at HEAD): Apparatus.OpamBuildWrapper@1.0.1/@1.0.4-@1.0.7/@1.0.9-@
 (build-locked-package.sh v1 and -v2.sh through -v6.sh; @1.0.10 carried the v6
 bytes at the stable path, superseded by @1.0.11 which adds the Unix
 CAML_LD_LIBRARY_PATH stublibs export),
-Apparatus.OpamLockHelper@1.0.1/@1.0.3/@1.0.8 (dk_opam_lock.ml v1,
-dk_opam_lock_reloc.ml, dk_opam_lock_filtered.ml), the byte-identical
+Apparatus.OpamLockHelper@1.0.1/@1.0.3/@1.0.8/@1.0.10 (dk_opam_lock.ml v1,
+dk_opam_lock_reloc.ml, dk_opam_lock_filtered.ml; @1.0.10 carried the pre-stamp
+bytes at the stable path, superseded by @1.0.14 which stamps roots/pins into the
+lock's generated block), the byte-identical
 OpamFileFormat@1.0.3/@1.0.8 redeclarations, rule versions
-Dk.OpamBuild@1.0.0-@1.0.16 and Dk.OpamLock@1.0.0/@1.1.0-@1.1.6, and their
+Dk.OpamBuild@1.0.0-@1.0.16 and Dk.OpamLock@1.0.0/@1.1.0-@1.1.7, and their
 dist/*.u Export ladders.
 
 ### CommonsLang_OCaml.Apparatus@1.0.1
@@ -227,11 +229,6 @@ dist/*.u Export ladders.
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
   \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
 
-### CommonsLang_OCaml.Apparatus@1.0.10
-
-  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "58039", checksum: (sha256: "a269fd6934451377bca85f5a73d177481be801a5cdcbffbded982ad7c2cfd9d4"))\;
-
 ### CommonsLang_OCaml.Apparatus@1.0.12
 
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
@@ -245,12 +242,27 @@ dist/*.u Export ladders.
   % unified.asset { name="DkMLX86Env", file="assets/dkml/x86-compiler-env-to-ocaml-configure-env.sh" }
   \dk.asset(byteSize: "3883", checksum: (sha256: "ac5ff39f1594ce83e25764085b509192df58adc8fd1ae000e0c5fb0dc472eb0e"))\;
 
+### CommonsLang_OCaml.Apparatus@1.0.14
+
+  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
+  \dk.asset(byteSize: "58738", checksum: (sha256: "5193e79105239b24fc2a157ead4283d684fed4820e5c8edfeb8d3c200469a952"))\;
+
 ## Dk.OpamLock
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
 author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+The @1.1.8 revision makes the two generated artifacts self-describing and adds
+the Refresh uirule (see "### Refresh: self-describing regeneration"). Solve
+stamps its `roots`/`pins` (and `wtest`/`local_opam_dir` when set) into the lock's
+`generated` block, and GenerateDriver stamps its full parameter set into a
+top-level `generated` member of the driver values.jsonc (right after
+`schema_version`). This needs no dk-value schema change: MlFront's value reader
+pulls members by name and ignores unknown top-level members. The helper moves to
+Apparatus.OpamLockHelper@1.0.14. Its Export value-id is per-version and is
+harvested from CI as usual.
 
 The @1.1.7 revision flips the default host-tool ABI (see "### Host tools and the
 hosttoolabi= escape hatch"): GenerateDriver now emits
@@ -348,6 +360,37 @@ under one key and shared to every slot -- including the glibc `Release.Linux_x86
 one, where the tool then fails to exec. A consumer whose matrix includes such a
 slot passes `hosttoolabi=Release.execution_abi` to keep the host tools host-native;
 that is the musl hazard the @1.1.4 execution-abi pin originally guarded.
+
+### Refresh: self-describing regeneration
+
+Since @1.1.8 the lock and the driver stamp their inputs, and the Refresh uirule
+reads those stamps back. Solve records `roots`/`pins` in the lock's `generated`
+block; GenerateDriver records its full parameter set in a top-level `generated`
+member of the driver values.jsonc. A consumer therefore regenerates without
+re-copying the roughly ten parameters that used to live only in prose, and CI
+detects a stale driver in seconds instead of hours into a release build.
+
+Refresh has four modes. Default (`driver`) regenerates the driver from the
+existing lock using the stamped parameters, so a routine repin never silently
+changes solved package versions; when the lock is not checked in (a
+consume-from-archive consumer), it substitutes the target rulefn in place, which
+equals a full regeneration for a rule-version-only move. `mode=solve` fetches
+opam hermetically, re-solves the lock from its stamped `roots`/`pins`, then
+regenerates. `mode=check` is read-only: it compares each driver's stamped
+`rulefn`/`tool` against the newest the imported
+`etc/dk/i/CommonsLang_OCaml.<ver>.values.json` declares (and, when the lock is
+checked in, the stamped `lock-sha256` against the lock on disk), prints the exact
+fix command and exits nonzero when stale. `version=NEW` rewrites the coupled
+`version`/`formid`/`localsrc` and regenerates.
+
+A pre-@1.1.8 driver carries no stamp; the first `driver`-mode Refresh recovers
+its parameters from the generated text and emits the stamped form. `mode=check`
+on such a driver still recovers the rulefn: it fails when that rulefn is stale
+(the check that would have caught the 2026-08-20 stale-driver incident) and
+otherwise prints an "unstamped: run Refresh once to adopt" advisory and exits
+zero, so CI adoption is graceful. Rule versions are co-versioned: Refresh@1.1.8
+bakes in its sibling Solve@1.1.8/GenerateDriver@1.1.8 and the newest
+`F_BuildLockedPackage`; `rulefn=` remains an explicit override.
 
 ## Dk.OpamBuild
 

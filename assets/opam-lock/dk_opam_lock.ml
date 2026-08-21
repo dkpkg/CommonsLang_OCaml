@@ -10,7 +10,7 @@
      ocamlc -w -a unix.cma opam_file_format.ml dk_opam_lock.ml -o dk_opam_lock.bc
    Run:
      ocamlrun dk_opam_lock.bc solve --opam <opam> --work-dir <dir> \
-       --pins-file <pins> --root <pkg> [--slot <slot> ...] [...]
+       --pins-file <pins> [--pins-name <name>] --root <pkg> [--slot <slot> ...] [...]
      ocamlrun dk_opam_lock.bc selftest
 
    stdout carries ONLY the lock JSON (the rule writefiles it verbatim); every
@@ -928,6 +928,7 @@ type opts = {
   repo_commit : string option;
   repo_url : string option;
   tool : string;
+  pins_name : string;             (* project-relative pin table name for the stamp *)
 }
 
 (* --------------------------------------------------------------------- *)
@@ -1190,7 +1191,16 @@ let do_solve o =
     Json.Obj
       [ ("$schema", Json.Str "https://diskuv.com/dk/schema/dk-opam-lock-1.0.json");
         ("schema_version", Json.Obj [ ("major", Json.Int 1); ("minor", Json.Int 0) ]);
-        ("generated", Json.Obj [ ("tool", Json.Str o.tool); ("opam_version", Json.Str opamver) ]);
+        ("generated",
+         Json.Obj
+           ([ ("tool", Json.Str o.tool);
+              ("opam_version", Json.Str opamver);
+              ("roots", Json.Arr (List.map (fun r -> Json.Str r) o.roots));
+              ("pins", Json.Str o.pins_name) ]
+            @ (if o.wtest then [ ("wtest", Json.Str "t") ] else [])
+            @ (match o.local_opam_dir with
+               | Some d -> [ ("local_opam_dir", Json.Str d) ]
+               | None -> [])));
         ("opam_repositories", Json.Arr repos_json);
         ("packages", Json.Obj packages);
         ("slots", Json.Obj slots_json) ]
@@ -1277,6 +1287,7 @@ let () =
   let wtest = ref false and msys2 = ref None and git = ref None in
   let repo_commit = ref None and repo_url = ref None in
   let tool = ref "CommonsLang_OCaml.Dk.OpamLock@1.0.0" in
+  let pins_name = ref "" in
   let add r v = r := !r @ [ v ] in
   let addo r v = r := Some (match !r with Some l -> l @ [ v ] | None -> [ v ]) in
   let spec =
@@ -1293,7 +1304,8 @@ let () =
       ("--git", Arg.String (fun s -> git := Some s), "git cmd dir (Windows hermetic init)");
       ("--repo-commit", Arg.String (fun s -> repo_commit := Some s), "recorded repo commit");
       ("--repo-url", Arg.String (fun s -> repo_url := Some s), "fallback repo url");
-      ("--tool", Arg.Set_string tool, "generated.tool string") ]
+      ("--tool", Arg.Set_string tool, "generated.tool string");
+      ("--pins-name", Arg.Set_string pins_name, "project-relative pin table name (stamped into generated.pins)") ]
   in
   Arg.parse_argv (Array.sub argv 1 (Array.length argv - 1)) spec
     (fun a -> Printf.eprintf "unexpected argument: %s\n" a; exit 2)
@@ -1306,4 +1318,5 @@ let () =
     { opam = !opam; workdir = !workdir; pins_file = !pins_file; switch = !switch;
       slots; roots = !roots; locals = !locals; local_opam_dir = !local_opam_dir;
       wtest = !wtest; msys2 = !msys2; git = !git;
-      repo_commit = !repo_commit; repo_url = !repo_url; tool = !tool }
+      repo_commit = !repo_commit; repo_url = !repo_url; tool = !tool;
+      pins_name = (if !pins_name = "" then Filename.basename !pins_file else !pins_name) }
