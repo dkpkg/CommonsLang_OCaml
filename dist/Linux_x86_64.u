@@ -89,7 +89,7 @@ ladder lives in pre-2026-08 release tags and git history (see dk.u
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.8 -f ${RUNTIME}/OpamLock.Export-1.1.8.zip
   \test(pass)
-  \dk.object(abi: "Release.Linux_x86_64", value-id: "o0000000000000000000000000000000000000000000000000000")\;
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "ofdz6u35qxanoad2v5mpnbzz7mm6ji3y52pxew4b4gfqvnqhm2fka")\;
 
 
 ## Dk.OpamBuild
