@@ -923,6 +923,7 @@ type opts = {
   locals : string list option;    (* None -> auto-discover *)
   local_opam_dir : string option;
   wtest : bool;
+  wdoc : bool;
   msys2 : string option;
   git : string option;
   repo_commit : string option;
@@ -1049,6 +1050,7 @@ let do_solve o =
         let args =
           [ "list"; "--resolve=" ^ slotresolve; "--columns=package"; "--short" ]
           @ (if o.wtest then [ "--with-test" ] else [])
+          @ (if o.wdoc then [ "--with-doc" ] else [])
           @ switchargs
         in
         let r = Proc.run ~adds o.opam args in
@@ -1198,6 +1200,7 @@ let do_solve o =
               ("roots", Json.Arr (List.map (fun r -> Json.Str r) o.roots));
               ("pins", Json.Str o.pins_name) ]
             @ (if o.wtest then [ ("wtest", Json.Str "t") ] else [])
+            @ (if o.wdoc then [ ("wdoc", Json.Str "t") ] else [])
             @ (match o.local_opam_dir with
                | Some d -> [ ("local_opam_dir", Json.Str d) ]
                | None -> [])));
@@ -1284,7 +1287,8 @@ let () =
   let opam = ref "" and workdir = ref "" and pins_file = ref "" in
   let switch = ref None and slots = ref [] and roots = ref [] in
   let locals = ref None and local_opam_dir = ref None in
-  let wtest = ref false and msys2 = ref None and git = ref None in
+  let wtest = ref false and wdoc = ref false in
+  let msys2 = ref None and git = ref None in
   let repo_commit = ref None and repo_url = ref None in
   let tool = ref "CommonsLang_OCaml.Dk.OpamLock@1.0.0" in
   let pins_name = ref "" in
@@ -1300,6 +1304,7 @@ let () =
       ("--local", Arg.String (addo locals), "local package name (repeatable)");
       ("--local-opam-dir", Arg.String (fun s -> local_opam_dir := Some s), "dir of local *.opam");
       ("--wtest", Arg.Set wtest, "include test-only deps");
+      ("--wdoc", Arg.Set wdoc, "include doc-only deps (e.g. odoc for @doc)");
       ("--msys2", Arg.String (fun s -> msys2 := Some s), "MSYS2 dir (Windows hermetic init)");
       ("--git", Arg.String (fun s -> git := Some s), "git cmd dir (Windows hermetic init)");
       ("--repo-commit", Arg.String (fun s -> repo_commit := Some s), "recorded repo commit");
@@ -1317,6 +1322,6 @@ let () =
   do_solve
     { opam = !opam; workdir = !workdir; pins_file = !pins_file; switch = !switch;
       slots; roots = !roots; locals = !locals; local_opam_dir = !local_opam_dir;
-      wtest = !wtest; msys2 = !msys2; git = !git;
+      wtest = !wtest; wdoc = !wdoc; msys2 = !msys2; git = !git;
       repo_commit = !repo_commit; repo_url = !repo_url; tool = !tool;
       pins_name = (if !pins_name = "" then Filename.basename !pins_file else !pins_name) }

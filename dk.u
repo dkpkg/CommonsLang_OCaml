@@ -245,7 +245,7 @@ dist/*.u Export ladders.
 ### CommonsLang_OCaml.Apparatus@1.0.14
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "58738", checksum: (sha256: "5193e79105239b24fc2a157ead4283d684fed4820e5c8edfeb8d3c200469a952"))\;
+  \dk.asset(byteSize: "58991", checksum: (sha256: "569c7e893542054a5a739394110b3d8e06fe482d72ba68cb85912a471045af0e"))\;
 
 ## Dk.OpamLock
 

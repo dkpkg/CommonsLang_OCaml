@@ -3,8 +3,8 @@ local M = {
 }
 
 -- 1.1.8 makes the two generated artifacts self-describing and adds the Refresh
--- uirule. Solve now stamps its `roots`/`pins` (and `wtest`/`local_opam_dir` when
--- set) into the lock's `generated` block, and GenerateDriver stamps its full
+-- uirule. Solve now stamps its `roots`/`pins` (and `wtest`/`wdoc`/`local_opam_dir`
+-- when set) into the lock's `generated` block, and GenerateDriver stamps its full
 -- parameter set into a top-level `generated` member of the driver values.jsonc
 -- (right after `schema_version`). MlFront's value reader pulls members by name
 -- and ignores unknown top-level members, so no dk-value schema change is needed.
@@ -286,6 +286,7 @@ function uirules.Solve(command, request, continue_)
   if request.user.switch then table.insert(args, "--switch"); table.insert(args, request.user.switch) end
   if request.user.local_opam_dir then table.insert(args, "--local-opam-dir"); table.insert(args, request.user.local_opam_dir) end
   if request.user.wtest ~= nil then table.insert(args, "--wtest") end
+  if request.user.wdoc ~= nil then table.insert(args, "--wdoc") end
   if request.user.repo_commit then table.insert(args, "--repo-commit"); table.insert(args, request.user.repo_commit) end
   if request.user.repo_url then table.insert(args, "--repo-url"); table.insert(args, request.user.repo_url) end
   if msys2 then
@@ -1263,6 +1264,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_8.solve_user(request)
   u.out = lockpath
   if lock.ocaml ~= nil then u.ocaml = lock.ocaml end
   if gen.wtest ~= nil then u.wtest = gen.wtest end
+  if gen.wdoc ~= nil then u.wdoc = gen.wdoc end
   if gen.local_opam_dir ~= nil then u.local_opam_dir = gen.local_opam_dir end
   local locals = {}
   local k = next(lock.packages)
