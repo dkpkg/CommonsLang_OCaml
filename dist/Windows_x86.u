@@ -41,7 +41,7 @@ ladder lives in pre-2026-08 release tags and git history (see dk.u
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.9 -f ${RUNTIME}/OpamLock.Export-1.1.9.zip
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "opm5dzsggj4kun4h7yndqym5b7r7y4c52zmqfrqw27py2sqxernla")\;
 
 
 ## Dk.OpamBuild
