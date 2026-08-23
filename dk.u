@@ -258,6 +258,13 @@ author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
 
+The @1.1.10 revision adds the OpamVenv uirule (see "### OpamVenv: a native
+dune inner loop"). It materializes a real, dune-usable opam prefix from a
+GenerateDriver `mergedprefix=t skiplocal=t` closure into the project's
+`opam-venv/` directory, so a developer runs native `dune build -w` against the
+working tree instead of dk's per-edit whole-package rebuild. Its Export value-id
+is per-version and is harvested from CI as usual.
+
 The @1.1.9 revision adds the --wdoc solve: Solve passes --with-doc to opam when
 wdoc is set and stamps wdoc into the lock generated block, so a with-doc lock
 carries odoc (the odoc package that `dune build @doc` needs). The helper moves to
@@ -399,9 +406,40 @@ its parameters from the generated text and emits the stamped form. `mode=check`
 on such a driver still recovers the rulefn: it fails when that rulefn is stale
 (the check that would have caught the 2026-08-20 stale-driver incident) and
 otherwise prints an "unstamped: run Refresh once to adopt" advisory and exits
-zero, so CI adoption is graceful. Rule versions are co-versioned: Refresh@1.1.9
-bakes in its sibling Solve@1.1.9/GenerateDriver@1.1.9 and the newest
-`F_BuildLockedPackage`; `rulefn=` remains an explicit override.
+zero, so CI adoption is graceful. Rule versions are co-versioned: Refresh@1.1.10
+bakes in its sibling Solve@1.1.10/GenerateDriver@1.1.10/OpamVenv@1.1.10 and the
+newest `F_BuildLockedPackage`; `rulefn=` remains an explicit override.
+
+### OpamVenv: a native dune inner loop
+
+dk's incremental unit is the whole package object: editing one source file and
+rebuilding re-stages the localized-source object and rebuilds the entire leaf
+package in a fresh hermetic sandbox, which is minutes even with every dependency
+cached. The OpamVenv uirule hands the inner loop to dune instead. It reuses a
+GenerateDriver `mergedprefix=t skiplocal=t` driver -- the whole non-local
+dependency closure merged into one cached `prefix.zip` object -- and stages that
+prefix, the DkML compiler, and dune into the project's `opam-venv/` directory,
+so `source opam-venv/env.sh && dune build -w` recompiles only the edited module
+and its dependents.
+
+OpamVenv discovers the dev-prefix driver (the sole one whose stamp carries
+`mergedprefix=t`, or an explicit `driver=`), reads its stamp for the `formid`,
+`lock`, and `lock-sha256`, and refuses to run when the lock on disk no longer
+matches that stamp (pointing at the Refresh fix command). It get-objects the
+prefix for the requested `slot=` (default: the host execution ABI), rewrites the
+staged prefix to be relocatable (the `@OPAM_IP@` dune-package sentinel and
+`findlib.conf`), and writes `env.sh`/`env.ps1`/`env.cmd` activators plus a
+`dk-opam-venv.json` stamp. A re-run is a no-op when that stamp still matches
+(`force=t` overrides); after a lock change, Refresh regenerates the dev-prefix
+driver and the next OpamVenv re-materializes.
+
+The opam venv is additive and host-only: `opam-venv/` and dune's `_build/` are
+invisible to git and to dune. dk0 drops a self-ignoring `.gitignore` ("*") and a
+`dune` ("(dirs)") into its `t/` store, and the OpamVenv dialog does the same for
+`opam-venv/`, so a host `dune build` never scans them and the reproducible
+`run-object` release build is unchanged. It resolves to the same dependency
+versions and the same DkML compiler the release build uses, driven from the same
+lock.
 
 ## Dk.OpamBuild
 

@@ -35,7 +35,7 @@ ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy). As before on this arm64 slot
 the marker output is unused (no object value-id is recorded).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.9 -f ${RUNTIME}/OpamLock.Export-1.1.9.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.10 -f ${RUNTIME}/OpamLock.Export-1.1.10.zip
   \test(pass)
 
 ## Dk.OpamBuild
@@ -46,4 +46,4 @@ ladder lives in pre-2026-08 release tags and git history (see dk.u
 
   $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.18 -f ${RUNTIME}/OpamBuild.Export-1.0.18.zip
   \test(pass)
-  \dk.object(abi: "Release.Linux_arm64", value-id: "ow53l5vi6n5qcxrcherm65hd2t3u245u6uthawrgryjjeospk5kjq")\;
+  \dk.object(abi: "Release.Linux_arm64", value-id: "o0000000000000000000000000000000000000000000000000000")\;
