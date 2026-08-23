@@ -158,6 +158,10 @@ OpamFileFormat@1.0.3/@1.0.8 redeclarations, rule versions
 Dk.OpamBuild@1.0.0-@1.0.16 and Dk.OpamLock@1.0.0/@1.1.0-@1.1.7, and their
 dist/*.u Export ladders.
 
+Retired on 2026-08-23 (superseded at HEAD): Dk.OpamLock@1.1.8 and
+Apparatus.OpamLockHelper@1.0.14 (the pre-wdoc helper bytes), superseded by
+Dk.OpamLock@1.1.9 and Apparatus.OpamLockHelper@1.0.15 which add the --wdoc solve.
+
 ### CommonsLang_OCaml.Apparatus@1.0.1
 
   % unified.asset { name="Patches", dir="assets/p" }
@@ -242,7 +246,7 @@ dist/*.u Export ladders.
   % unified.asset { name="DkMLX86Env", file="assets/dkml/x86-compiler-env-to-ocaml-configure-env.sh" }
   \dk.asset(byteSize: "3883", checksum: (sha256: "ac5ff39f1594ce83e25764085b509192df58adc8fd1ae000e0c5fb0dc472eb0e"))\;
 
-### CommonsLang_OCaml.Apparatus@1.0.14
+### CommonsLang_OCaml.Apparatus@1.0.15
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
   \dk.asset(byteSize: "58991", checksum: (sha256: "569c7e893542054a5a739394110b3d8e06fe482d72ba68cb85912a471045af0e"))\;
@@ -253,6 +257,13 @@ Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
 author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+The @1.1.9 revision adds the --wdoc solve: Solve passes --with-doc to opam when
+wdoc is set and stamps wdoc into the lock generated block, so a with-doc lock
+carries odoc (the odoc package that `dune build @doc` needs). The helper moves to
+Apparatus.OpamLockHelper@1.0.15; the --wdoc content edit rides an Apparatus bump
+per "## Assets". Its Export value-id is per-version and is harvested from CI as
+usual.
 
 The @1.1.8 revision makes the two generated artifacts self-describing and adds
 the Refresh uirule (see "### Refresh: self-describing regeneration"). Solve
@@ -388,8 +399,8 @@ its parameters from the generated text and emits the stamped form. `mode=check`
 on such a driver still recovers the rulefn: it fails when that rulefn is stale
 (the check that would have caught the 2026-08-20 stale-driver incident) and
 otherwise prints an "unstamped: run Refresh once to adopt" advisory and exits
-zero, so CI adoption is graceful. Rule versions are co-versioned: Refresh@1.1.8
-bakes in its sibling Solve@1.1.8/GenerateDriver@1.1.8 and the newest
+zero, so CI adoption is graceful. Rule versions are co-versioned: Refresh@1.1.9
+bakes in its sibling Solve@1.1.9/GenerateDriver@1.1.9 and the newest
 `F_BuildLockedPackage`; `rulefn=` remains an explicit override.
 
 ## Dk.OpamBuild
