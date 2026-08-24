@@ -11,6 +11,11 @@ local M = {
 -- rewrites the staged prefix to be relocatable (the @OPAM_IP@ dune-package
 -- sentinel and findlib.conf), and writes env.sh/.ps1/.cmd activators plus a
 -- lock-sha256 stamp for idempotent refresh. See dk.u "## Dk.OpamLock".
+-- 1.1.10 also fixes Refresh on a lockless (consume-from-archive) driver: it now
+-- re-stamps the GenerateDriver tool version, not only the F_BuildLockedPackage
+-- rulefn, so a pure tool-version bump (a scriptmodule rename that mode=check
+-- flags) is cleared by the Refresh command the check prints instead of staying
+-- permanently stale.
 --
 -- 1.1.9 rides the --wdoc content edit to assets/opam-lock/dk_opam_lock.ml on an
 -- Apparatus bump (OpamLockHelper@1.0.14 -> @1.0.15). Solve passes --with-doc to
@@ -1304,7 +1309,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_10.solve_user(request)
 end
 
 -- Regenerate (or, for a lock-less consumer, rulefn-substitute) one driver.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_10.refresh_one(request, D, targetrule, versionoverride)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_10.refresh_one(request, D, targetrule, versionoverride, targettool)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_10
   local text = assert(request.ui.readfile { path = D }, "could not read driver `" .. D .. "`")
   local stamp = H.read_stamp(text)
@@ -1364,15 +1369,23 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_10.refresh_one(request, D, targetru
     local old = stamp.rulefn
     assert(old ~= nil, "stamp for `" .. D .. "` has no rulefn")
     local newtext = H.replace_all(text, old, targetrule)
+    -- Also re-stamp the generator tool version. A pure GenerateDriver bump (for
+    -- example a scriptmodule rename that leaves F_BuildLockedPackage unchanged)
+    -- makes the rulefn substitution above a no-op, yet mode=check still flags the
+    -- stale `tool`; without this the Refresh command it prints could never clear
+    -- the check on a lockless (consume-from-archive) driver.
+    if targettool ~= nil and stamp.tool ~= nil and stamp.tool ~= targettool then
+      newtext = H.replace_all(newtext, stamp.tool, targettool)
+    end
     if newtext == text then
-      print("refreshed " .. D .. " (already current at " .. targetrule .. ")")
+      print("refreshed " .. D .. " (already current)")
     else
       local nm = request.ui.checksum { path = D }
       local exp = "false"
       if nm ~= nil and nm.sha256 ~= nil then exp = nm.sha256 end
       local ok, written = request.ui.writefile { path = D, content = newtext, expected_sha256 = exp }
       assert(ok, "could not write driver `" .. D .. "`: " .. tostring(written))
-      print("refreshed " .. D .. " (rulefn -> " .. targetrule .. ", substitution)")
+      print("refreshed " .. D .. " (version stamps updated in place)")
     end
   end
 end
@@ -1500,9 +1513,11 @@ function uirules.Refresh(command, request, continue_)
     uirules.Solve("submit", sproxy, "solve")
   end
 
+  local targettool = nil
+  if wants ~= nil then targettool = wants.tool end
   local di = 1
   while drivers[di] ~= nil do
-    H.refresh_one(request, drivers[di], targetrule, request.user.version)
+    H.refresh_one(request, drivers[di], targetrule, request.user.version, targettool)
     di = di + 1
   end
   print("refresh complete (" .. H.numstr(H.alen(drivers)) .. " driver(s), rule " .. targetrule .. ")")
