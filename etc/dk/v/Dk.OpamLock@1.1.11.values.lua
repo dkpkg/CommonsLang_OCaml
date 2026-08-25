@@ -1362,6 +1362,205 @@ function uirules.GenerateForms(command, request)
   return { submit = {} }
 end
 
+-- Cross-call binding; see the note at H.Solve.
+CommonsLang_OCaml__Dk_OpamLock__1_1_11.GenerateForms = uirules.GenerateForms
+
+-- The first word after `key` in `text`, stopping at ')' or whitespace; nil
+-- when `key` is absent. Scrapes s-expression fields such as `(name X)` from
+-- dune-project.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_11.scrape_paren(text, key)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
+  local p = H.indexof_str(text, key, 1)
+  if p == nil then return nil end
+  local i = p + string.len(key)
+  local n = string.len(text)
+  while i <= n and string.sub(text, i, i) == " " do i = i + 1 end
+  local s = i
+  local done = nil
+  while i <= n and done == nil do
+    local c = string.sub(text, i, i)
+    if c == ")" or H.iswhite(c) then done = 1 else i = i + 1 end
+  end
+  if i <= s then return nil end
+  return string.sub(text, s, i - 1)
+end
+
+-- The default pin table seeded when dk-opam-pins.txt is absent (the same
+-- bytes the ocaml/opam414 quickstart recipe seeds, so either owner wins).
+function CommonsLang_OCaml__Dk_OpamLock__1_1_11.default_pins()
+  return "# Pin table for CommonsLang_OCaml.Dk.OpamLock.Solve.\n"
+    .. "# Line forms:\n"
+    .. "#   repo NAME URL          opam repository (append #COMMIT to pin a commit)\n"
+    .. "#   pin NAME VERSION       hard version lock for one opam package\n"
+    .. "#   float NAME             remove a pin inherited from an existing switch\n"
+    .. "#   archexclude NAME ARCH  exclude a package on one architecture\n"
+    .. "#\n"
+    .. "# opam-repository. Append #COMMIT to pin a commit for a reproducible closure.\n"
+    .. "repo default git+https://github.com/ocaml/opam-repository.git\n"
+    .. "#\n"
+    .. "# Lock the compiler to the 4.14.3 toolchain (CommonsLang_OCaml.DkML@4.14.3) so\n"
+    .. "# the solved closure compiles under 4.14, not 5.x:\n"
+    .. "pin ocaml 4.14.3\n"
+    .. "pin ocaml-base-compiler 4.14.3\n"
+    .. "#\n"
+    .. "# Pin dune to the toolchain-provided version (CommonsLang_OCaml.Dune@3.23.1):\n"
+    .. "pin dune 3.23.1\n"
+end
+
+-- ---------------------------------------------------------------------------
+-- Adopt: first-time adoption of an opam+dune project in one dialog.
+--
+-- Orchestrates the whole first-time flow: seed dk-opam-pins.txt when absent,
+-- Solve the lock, generate the three build forms (GenerateForms), and
+-- register the workspace assets in dk.u. The maintainer supplies version=VER;
+-- the library namespace comes from the project dk.u's own sections or the git
+-- remote (override ns=), the root opam package from dune-project's (name X)
+-- (override root=), and the module unit defaults to the root's module segment
+-- (override unit=). srcdirs[]/exes[]/sequential pass through the generators.
+--
+-- After Adopt the maintainer runs ./dk1 update (checksum the registered
+-- assets) and the run-object command printed by the completion banner.
+-- ---------------------------------------------------------------------------
+function uirules.Adopt(command, request, continue_)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
+  if command == "ui" then
+    print(H.MODVER .. ": adoption complete (see the printed next steps).")
+    return
+  end
+  if command ~= "submit" then return end
+
+  local version = assert(request.user.version,
+    "please provide 'version=VER' (the version to publish, ex. 1.3.6)")
+
+  -- Round 1: seed the pin table when absent, then stage the Solve toolchain
+  -- expressions and re-enter (the Refresh mode=solve pattern).
+  if continue_ ~= "adopt2" then
+    local pinspath = request.user.pins or "dk-opam-pins.txt"
+    if request.ui.checksum { path = pinspath } == nil then
+      H.write_projfile(request, pinspath, H.default_pins())
+      print("seeded " .. pinspath .. " (edit its pins to match your toolchain)")
+    end
+    local s1 = H.Solve("submit", { user = {}, execution = request.execution }, nil)
+    return {
+      submit = {
+        expressions = s1.submit.expressions,
+        andthen = { continue_ = { state = "adopt2" } }
+      }
+    }
+  end
+
+  -- Round 2. Derive the identifiers.
+  local root = request.user.root
+  if root == nil then
+    local dp = request.ui.readfile { path = "dune-project" }
+    assert(dp ~= nil, "no dune-project in the project root; pass root=OPAM_PACKAGE")
+    root = H.scrape_paren(dp, "(name ")
+    assert(root ~= nil, "dune-project has no (name X); pass root=OPAM_PACKAGE")
+  end
+  local ns = request.user.ns
+  if ns == nil then
+    local dku = require("dku")
+    local dkutext = request.ui.readfile { path = "dk.u" }
+    assert(dkutext ~= nil,
+      "no dk.u in the project root; run `dk1 quickstart ocaml opam414` (or opam550) first")
+    local scan = dku.parse(dkutext)
+    if scan ~= nil and scan.sections ~= nil and scan.sections[1] ~= nil then
+      local first = scan.sections[1]
+      local dot = H.indexof_char(first, ".")
+      if dot ~= nil then ns = string.sub(first, 1, dot - 1) end
+    end
+  end
+  if ns == nil then
+    local gc = request.ui.readfile { path = ".git/config" }
+    if gc ~= nil then
+      local url = H.scrape_paren(gc, "github.com/")
+      if url == nil then
+        local at = H.indexof_str(gc, "github.com:", 1)
+        if at ~= nil then url = H.scrape_paren(gc, "github.com:") end
+      end
+      if url ~= nil then
+        local slash = H.indexof_char(url, "/")
+        if slash ~= nil then
+          local owner = string.sub(url, 1, slash - 1)
+          local repo = string.sub(url, slash + 1)
+          local dotgit = H.indexof_str(repo, ".git", 1)
+          if dotgit ~= nil then repo = string.sub(repo, 1, dotgit - 1) end
+          ns = "Not" .. H.modsegment(owner) .. "_" .. H.modsegment(repo)
+        end
+      end
+    end
+  end
+  assert(ns ~= nil,
+    "could not infer the library namespace from dk.u or .git/config; pass ns=MyOwner_MyRepo")
+  local unit = request.user.unit or H.modsegment(root)
+  local pkg = ns .. "." .. unit .. "@" .. version
+
+  -- Solve the lock (stage 2 resolves and closes the round-1 expressions).
+  local sproxy = {
+    user = { roots = { root }, locals = { root } },
+    ui = request.ui, io = request.io,
+    execution = request.execution, continued = request.continued
+  }
+  H.Solve("submit", sproxy, "solve")
+
+  -- Generate the three build forms from the fresh lock.
+  local fuser = { pkg = pkg }
+  if request.user.srcdirs ~= nil then fuser.srcdirs = request.user.srcdirs end
+  if request.user.exes ~= nil then fuser.exes = request.user.exes end
+  if request.user.sequential ~= nil then fuser.sequential = request.user.sequential end
+  local fproxy = {
+    user = fuser, ui = request.ui, io = request.io,
+    execution = request.execution
+  }
+  H.GenerateForms("submit", fproxy)
+
+  -- Register the workspace assets in dk.u (idempotent: skip when the
+  -- Apparatus section for this version already exists). ./dk1 update
+  -- computes the checksum payloads.
+  local dkutext = assert(request.ui.readfile { path = "dk.u" },
+    "no dk.u in the project root")
+  local marker = "### " .. ns .. ".Apparatus@" .. version
+  if H.indexof_str(dkutext, marker, 1) == nil then
+    local reg = {}
+    if request.ui.checksum { path = "dune" } ~= nil then
+      table.insert(reg, "  % unified.asset { name=\"DuneRoot\", file=\"dune\" }")
+    end
+    if request.ui.checksum { path = "dune-project" } ~= nil then
+      table.insert(reg, "  % unified.asset { name=\"DuneProject\", file=\"dune-project\" }")
+    end
+    if request.ui.checksum { path = root .. ".opam" } ~= nil then
+      table.insert(reg, "  % unified.asset { name=\"Opam\", file=\"" .. root .. ".opam\" }")
+    end
+    local srcdirs = request.user.srcdirs
+    if srcdirs == nil then srcdirs = { "src" } end
+    local sdi = 1
+    while srcdirs[sdi] ~= nil do
+      local aname = "Src"
+      if sdi > 1 then aname = "Src" .. H.numstr(sdi) end
+      table.insert(reg, "  % unified.asset { name=\"" .. aname .. "\", dir=\"" .. srcdirs[sdi] .. "\" }")
+      sdi = sdi + 1
+    end
+    table.insert(reg, "  % unified.asset { name=\"Lock\", file=\"dk.opam-lock.jsonc\" }")
+    local nl = "\n"
+    local tail = dkutext
+    if string.sub(tail, string.len(tail)) ~= nl then tail = tail .. nl end
+    tail = tail .. nl .. marker .. nl .. nl .. H.join(reg, nl .. nl) .. nl
+    H.write_projfile(request, "dk.u", tail)
+    print("registered " .. H.numstr(H.alen(reg)) .. " workspace asset(s) in dk.u under " .. marker)
+  end
+
+  local exe = nil
+  if request.user.exes ~= nil then exe = request.user.exes[1] end
+  if exe == nil then exe = string.lower(unit) end
+  print("adopted " .. pkg .. " (root opam package `" .. root .. "`)")
+  print("Next:")
+  print("  ./dk1 update")
+  print("  ./dk1 run-object " .. ns .. "." .. unit .. "@" .. version
+    .. " -s Release." .. request.execution.ABIv3
+    .. " -m bin/" .. exe .. ".exe -- --help")
+  return { submit = {} }
+end
+
 -- ---------------------------------------------------------------------------
 -- Refresh: self-describing regeneration of the lock and driver(s).
 --
