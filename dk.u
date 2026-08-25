@@ -162,6 +162,10 @@ Retired on 2026-08-23 (superseded at HEAD): Dk.OpamLock@1.1.8 and
 Apparatus.OpamLockHelper@1.0.14 (the pre-wdoc helper bytes), superseded by
 Dk.OpamLock@1.1.9 and Apparatus.OpamLockHelper@1.0.15 which add the --wdoc solve.
 
+Retired on 2026-08-25 (superseded at HEAD): Dk.OpamLock@1.1.10 and its dist/*.u
+Export ladder, superseded by Dk.OpamLock@1.1.11 which derives the GenerateDriver
+arguments from a single `pkg=MODULE@VERSION`.
+
 ### CommonsLang_OCaml.Apparatus@1.0.1
 
   % unified.asset { name="Patches", dir="assets/p" }
