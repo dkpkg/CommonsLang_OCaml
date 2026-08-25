@@ -566,7 +566,7 @@ function uirules.GenerateDriver(command, request)
   if pkg ~= nil then
     local at = H.indexof_char(pkg, "@")
     assert(at ~= nil, "pkg must be MODULE@VERSION, ex. NotHackwaly_Ocamlearlybird.Ocamlearlybird@1.3.6")
-    d_pkgpath = string.sub(pkg, 1, at - 1)
+    d_pkgpath = H.check_modpath(string.sub(pkg, 1, at - 1), "pkg=")
     d_version = string.sub(pkg, at + 1)
   end
 
@@ -1052,7 +1052,7 @@ function uirules.GenerateSrc(command, request)
     "please provide 'pkg=MODULE@VERSION', ex. NotHackwaly_Ocamlearlybird.Ocamlearlybird@1.3.6")
   local at = H.indexof_char(pkg, "@")
   assert(at ~= nil, "pkg must be MODULE@VERSION")
-  local pkgpath = string.sub(pkg, 1, at - 1)
+  local pkgpath = H.check_modpath(string.sub(pkg, 1, at - 1), "pkg=")
   local version = string.sub(pkg, at + 1)
   local dot = H.indexof_char(pkgpath, ".")
   assert(dot ~= nil, "pkg module path must be <Library>.<Unit>")
@@ -1224,7 +1224,7 @@ function uirules.GenerateFinal(command, request)
     "please provide 'pkg=MODULE@VERSION', ex. NotHackwaly_Ocamlearlybird.Ocamlearlybird@1.3.6")
   local at = H.indexof_char(pkg, "@")
   assert(at ~= nil, "pkg must be MODULE@VERSION")
-  local pkgpath = string.sub(pkg, 1, at - 1)
+  local pkgpath = H.check_modpath(string.sub(pkg, 1, at - 1), "pkg=")
   local version = string.sub(pkg, at + 1)
   local dot = H.indexof_char(pkgpath, ".")
   assert(dot ~= nil, "pkg module path must be <Library>.<Unit>")
@@ -1365,6 +1365,48 @@ end
 -- Cross-call binding; see the note at H.Solve.
 CommonsLang_OCaml__Dk_OpamLock__1_1_11.GenerateForms = uirules.GenerateForms
 
+-- Assert that `name` is a valid standard module id segment (an uppercase
+-- letter, then letters, digits, or underscores), failing fast with the
+-- offending parameter named. An invalid segment would otherwise flow into the
+-- generated values files and fail much later, when the engine scans them.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_11.check_segment(name, what)
+  local bad = nil
+  local n = string.len(name)
+  if n == 0 then bad = 1 end
+  local i = 1
+  while bad == nil and i <= n do
+    local b = string.byte(string.sub(name, i, i))
+    if i == 1 then
+      if b < 65 or b > 90 then bad = 1 end
+    else
+      local ok = nil
+      if b >= 65 and b <= 90 then ok = 1 end
+      if b >= 97 and b <= 122 then ok = 1 end
+      if b >= 48 and b <= 57 then ok = 1 end
+      if b == 95 then ok = 1 end
+      if ok == nil then bad = 1 end
+    end
+    i = i + 1
+  end
+  assert(bad == nil, what .. " `" .. name
+    .. "` is not a valid module id segment (an uppercase letter, then letters, digits, or underscores; ex. Ocamlearlybird)")
+  return name
+end
+
+-- Assert that every dot-separated segment of a module path is valid.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_11.check_modpath(path, what)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
+  local rest = path
+  local dot = H.indexof_char(rest, ".")
+  while dot ~= nil do
+    H.check_segment(string.sub(rest, 1, dot - 1), what)
+    rest = string.sub(rest, dot + 1)
+    dot = H.indexof_char(rest, ".")
+  end
+  H.check_segment(rest, what)
+  return path
+end
+
 -- The first word after `key` in `text`, stopping at ')' or whitespace; nil
 -- when `key` is absent. Scrapes s-expression fields such as `(name X)` from
 -- dune-project.
@@ -1431,6 +1473,9 @@ function uirules.Adopt(command, request, continue_)
 
   local version = assert(request.user.version,
     "please provide 'version=VER' (the version to publish, ex. 1.3.6)")
+  -- Fail fast on malformed explicit identifiers, before any solve work.
+  if request.user.unit ~= nil then H.check_segment(request.user.unit, "unit=") end
+  if request.user.ns ~= nil then H.check_modpath(request.user.ns, "ns=") end
 
   -- Round 1: seed the pin table when absent, then stage the Solve toolchain
   -- expressions and re-enter (the Refresh mode=solve pattern).
@@ -1485,14 +1530,20 @@ function uirules.Adopt(command, request, continue_)
           local repo = string.sub(url, slash + 1)
           local dotgit = H.indexof_str(repo, ".git", 1)
           if dotgit ~= nil then repo = string.sub(repo, 1, dotgit - 1) end
-          ns = "Not" .. H.modsegment(owner) .. "_" .. H.modsegment(repo)
+          -- Solo: the maintainer publishing their own project, the typical
+          -- Adopt case. A third party packaging someone else's project uses
+          -- the Not prefix convention instead, via ns= (ex.
+          -- ns=NotHackwaly_Ocamlearlybird).
+          ns = "Solo" .. H.modsegment(owner) .. "_" .. H.modsegment(repo)
         end
       end
     end
   end
   assert(ns ~= nil,
     "could not infer the library namespace from dk.u or .git/config; pass ns=MyOwner_MyRepo")
+  H.check_modpath(ns, "the library namespace")
   local unit = request.user.unit or H.modsegment(root)
+  H.check_segment(unit, "the module unit")
   local pkg = ns .. "." .. unit .. "@" .. version
 
   -- Solve the lock (stage 2 resolves and closes the round-1 expressions).
