@@ -262,6 +262,37 @@ author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
 
+The @1.1.11 revision reduces what a maintainer types to adopt an opam+dune
+project. GenerateDriver derives its nine arguments from one
+`pkg=MODULE@VERSION` (formid, pkgpath, version, localsrc, and the out path;
+the roots from the lock's stamped generated.roots; the rulefn from the
+CommonsLang_OCaml import). GenerateSrc and GenerateFinal generate the
+localized-source and thin final forms a maintainer used to hand-author, and
+GenerateForms runs the fixed trio (Src, driver, Final) from one pkg=. Adopt
+carries a first-time adoption end to end (seed the pin table, solve, generate
+the forms, register the dk.u assets). Parallel scheduling is the default
+(sequential=t opts out); Refresh injects sequential=t when replaying a driver
+that stamped neither, keeping pre-@1.1.11 drivers byte-stable. Every stamped
+tool id and printed message derives from M.id, and in-module cross-calls
+dispatch through version-unique function bindings (H.Solve, H.GenerateDriver,
+...) rather than the rebindable rules/uirules globals.
+
+The generated driver values.jsonc stays a committed, on-disk artifact rather
+than being produced dynamically at build time. Dynamic generation is feasible
+(the engine's x-dynamic-driver-spike cram proves a stub form plus a generator
+function rule emitting the per-package forms via submit.values), but the
+committed driver is kept deliberately: the primary metric is characters TYPED,
+and the driver is machine-generated (GenerateDriver/Adopt write it), so it
+costs the maintainer zero typed characters -- collapsing it to a stub saves
+nothing on that metric. Meanwhile the committed driver earns its place: its
+run-function lines are the auditable build plan a reviewer reads, its
+`generated` stamp powers Refresh mode=check and the CI refresh-check gate
+(which compare the on-disk driver), it is on the include path at scan time so
+a fresh clone builds offline without first running a generator, and its formid
+is a published contract (the thin form and dist/*.u reference Closure@VER by
+name). A dynamic driver would retire that whole subsystem for no gain on the
+headline metric, so the layer is kept and only its authoring was removed.
+
 The @1.1.10 revision adds the OpamVenv uirule (see "### OpamVenv: a native
 dune inner loop"). It materializes a real, dune-usable opam prefix from a
 GenerateDriver `mergedprefix=t skiplocal=t` closure into the project's
