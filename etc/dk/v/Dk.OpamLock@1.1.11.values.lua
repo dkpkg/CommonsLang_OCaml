@@ -66,6 +66,13 @@ local M = {
 CommonsLang_OCaml__Dk_OpamLock__1_1_11 = {}
 
 rules, uirules = build.newrules(M)
+-- Stash THIS module's uirules table under the version-unique global. `uirules`
+-- itself is a plain global, so when two versions of this module are loaded in
+-- one interpreter (a local worktree next to the released import) the
+-- last-evaluated module rebinds the name and an in-module cross-call
+-- (`uirules.X(...)`) silently dispatches into the OTHER version's table. Every
+-- cross-call below goes through H.uirules instead.
+CommonsLang_OCaml__Dk_OpamLock__1_1_11.uirules = uirules
 
 -- lua-ml's string library does not implement gsub, so trim by scanning for the
 -- first/last non-space with find (which does support patterns).
@@ -555,16 +562,21 @@ function uirules.GenerateDriver(command, request)
   local locksrcpath = request.user.locksrcpath or "./dk-opam-lock.jsonc"
   -- out: etc/dk/v/<Library>/<ModuleTail>.values.jsonc, where <Library> is the
   -- first dotted segment of pkgpath and <ModuleTail> is formid's module path
-  -- after that library (ex. Ocamlearlybird.Closure).
-  local out = request.user.out
-  if out == nil then
-    local dot = H.indexof_char(pkgpath, ".")
-    assert(dot ~= nil, "cannot derive 'out=' from a pkgpath with no '.'; pass out=")
-    local library = string.sub(pkgpath, 1, dot - 1)
+  -- after that library (ex. Ocamlearlybird.Closure). The derived value is kept
+  -- for the "Regenerate with:" banner even when out= is explicit.
+  local derived_out = nil
+  local pkdot = H.indexof_char(pkgpath, ".")
+  if pkdot ~= nil then
+    local library = string.sub(pkgpath, 1, pkdot - 1)
     local fbase = formid
     local fat = H.indexof_char(fbase, "@")
     if fat ~= nil then fbase = string.sub(fbase, 1, fat - 1) end
-    out = "etc/dk/v/" .. library .. "/" .. string.sub(fbase, string.len(library) + 2) .. ".values.jsonc"
+    derived_out = "etc/dk/v/" .. library .. "/" .. string.sub(fbase, string.len(library) + 2) .. ".values.jsonc"
+  end
+  local out = request.user.out
+  if out == nil then
+    assert(derived_out ~= nil, "cannot derive 'out=' from a pkgpath with no '.'; pass out=")
+    out = derived_out
   end
   -- rulefn: the newest F_BuildLockedPackage the CommonsLang_OCaml import
   -- declares (import_wants reads dk.u + etc/dk/i), else the baked default.
@@ -771,6 +783,49 @@ function uirules.GenerateDriver(command, request)
   if request.user.impsrclock ~= nil then table.insert(gm, "\"impsrclock\": [\"" .. H.join(request.user.impsrclock, "\", \"") .. "\"]") end
   local genblock = "  \"generated\": {" .. nl .. "    " .. H.join(gm, "," .. nl .. "    ") .. nl .. "  }," .. nl
 
+  -- The minimal command that reproduces this file, for the banner. Derivable
+  -- values are omitted so the command re-derives them (rulefn especially: the
+  -- regen should pick up the newest import, not pin this one).
+  local rb = {}
+  table.insert(rb, "pkg=" .. pkgpath .. "@" .. version)
+  if formid ~= pkgpath .. ".Closure@" .. version then table.insert(rb, "formid=" .. formid) end
+  if localsrc ~= pkgpath .. ".Src@" .. version then table.insert(rb, "localsrc=" .. localsrc) end
+  if locksrcpath ~= "./dk-opam-lock.jsonc" then table.insert(rb, "locksrcpath=" .. locksrcpath) end
+  if lockpath ~= "dk.opam-lock.jsonc" then table.insert(rb, "lock=" .. lockpath) end
+  if derived_out == nil or out ~= derived_out then table.insert(rb, "out=" .. out) end
+  -- roots: omitted when they equal the lock's stamped generated.roots (the
+  -- default source), else restated explicitly.
+  local stamped_roots = nil
+  if lock.generated ~= nil then stamped_roots = lock.generated.roots end
+  local roots_match = nil
+  if stamped_roots ~= nil then
+    roots_match = "t"
+    local rq = 1
+    while roots_match ~= nil and (roots[rq] ~= nil or stamped_roots[rq] ~= nil) do
+      if roots[rq] == nil or stamped_roots[rq] == nil or roots[rq] ~= stamped_roots[rq] then
+        roots_match = nil
+      end
+      rq = rq + 1
+    end
+  end
+  if roots_match == nil then
+    if root ~= nil and roots[2] == nil then
+      table.insert(rb, "root=" .. root)
+    else
+      H.append_list_args(rb, "roots", roots)
+    end
+  end
+  if request.user.skiplocal ~= nil then table.insert(rb, "skiplocal=t") end
+  if request.user.mergedprefix ~= nil then table.insert(rb, "mergedprefix=t") end
+  if request.user.parallel ~= nil then table.insert(rb, "parallel=t") end
+  if request.user.hosttoolabi ~= nil then table.insert(rb, "hosttoolabi=" .. request.user.hosttoolabi) end
+  H.append_list_args(rb, "prelude", request.user.prelude)
+  H.append_list_args(rb, "provided", request.user.provided)
+  H.append_list_args(rb, "slots", request.user.slots)
+  H.append_list_args(rb, "implib", request.user.implib)
+  H.append_list_args(rb, "impver", request.user.impver)
+  H.append_list_args(rb, "impsrclock", request.user.impsrclock)
+
   local body = "// Driver for the per-package opam build of `" .. rootlabel .. "`: run-functions the" .. nl
     .. "// per-package build rule for every package in the root's dependency closure in" .. nl
     .. "// topological order, so each package is its own content-addressed dk object" .. nl
@@ -778,6 +833,9 @@ function uirules.GenerateDriver(command, request)
     .. "//" .. nl
     .. "// GENERATED by the CommonsLang_OCaml.Dk.OpamLock.GenerateDriver dialog from" .. nl
     .. "// `" .. lockpath .. "`. Regenerate (do not hand-edit) when the lock changes." .. nl
+    .. "//" .. nl
+    .. "// Regenerate with:" .. nl
+    .. "//   dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.11 " .. H.join(rb, " ") .. nl
     .. "{" .. nl
     .. "  \"$schema\": \"https://diskuv.com/dk/schema/dk-value-1.0.json\"," .. nl
     .. "  \"schema_version\": { \"major\": 1, \"minor\": 0 }," .. nl
@@ -930,6 +988,16 @@ function uirules.GenerateDriver(command, request)
   return { submit = {} }
 end
 
+-- Append each element of `list` (nil-safe) to the arg list `rb` as
+-- "name[]=value" strings, for the "Regenerate with:" banner.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_11.append_list_args(rb, name, list)
+  local i = 1
+  while list ~= nil and list[i] ~= nil do
+    table.insert(rb, name .. "[]=" .. list[i])
+    i = i + 1
+  end
+end
+
 -- ---------------------------------------------------------------------------
 -- GenerateSrc: the localized-source form for the one in-tree (local) package.
 --
@@ -960,7 +1028,8 @@ function uirules.GenerateSrc(command, request)
   local library = string.sub(pkgpath, 1, dot - 1)
   local unit = string.sub(pkgpath, dot + 1)
   local lockpath = request.user.lock or "dk.opam-lock.jsonc"
-  local out = request.user.out or ("etc/dk/v/" .. library .. "/" .. unit .. ".Src.values.jsonc")
+  local derived_out = "etc/dk/v/" .. library .. "/" .. unit .. ".Src.values.jsonc"
+  local out = request.user.out or derived_out
 
   -- root: the sole local (in-tree) package in the lock, or root= override.
   local root = request.user.root
@@ -1051,12 +1120,23 @@ function uirules.GenerateSrc(command, request)
   while rootfiles[rn] ~= nil do table.insert(rfnames, rootfiles[rn][2]); rn = rn + 1 end
   table.insert(gm, "\"rootfiles\": [\"" .. H.join(rfnames, "\", \"") .. "\"]")
 
+  local rb = {}
+  table.insert(rb, "pkg=" .. pkg)
+  if request.user.root ~= nil then table.insert(rb, "root=" .. root) end
+  if lockpath ~= "dk.opam-lock.jsonc" then table.insert(rb, "lock=" .. lockpath) end
+  if out ~= derived_out then table.insert(rb, "out=" .. out) end
+  H.append_list_args(rb, "srcdirs", request.user.srcdirs)
+  H.append_list_args(rb, "slots", request.user.slots)
+
   local body = "// " .. pkgpath .. ".Src@" .. version .. " -- the localized working tree as one" .. nl
     .. "// content-addressed object (output.zip + dk-opam-lock.jsonc) that the generic" .. nl
     .. "// OpamBuild rule stages via localsrc= as the source for the one local package." .. nl
     .. "//" .. nl
     .. "// GENERATED by the CommonsLang_OCaml.Dk.OpamLock.GenerateSrc dialog. Regenerate" .. nl
     .. "// (do not hand-edit) when the source tree or lock changes." .. nl
+    .. "//" .. nl
+    .. "// Regenerate with:" .. nl
+    .. "//   dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateSrc@1.1.11 " .. H.join(rb, " ") .. nl
     .. "{" .. nl
     .. "  \"$schema\": \"https://diskuv.com/dk/schema/dk-value-1.0.json\"," .. nl
     .. "  \"schema_version\": { \"major\": 1, \"minor\": 0 }," .. nl
@@ -1116,7 +1196,8 @@ function uirules.GenerateFinal(command, request)
   assert(dot ~= nil, "pkg module path must be <Library>.<Unit>")
   local library = string.sub(pkgpath, 1, dot - 1)
   local unit = string.sub(pkgpath, dot + 1)
-  local out = request.user.out or ("etc/dk/v/" .. library .. "/" .. unit .. ".values.jsonc")
+  local derived_out = "etc/dk/v/" .. library .. "/" .. unit .. ".values.jsonc"
+  local out = request.user.out or derived_out
 
   local exes = request.user.exes
   if exes == nil then exes = { string.lower(unit) } end
@@ -1162,12 +1243,21 @@ function uirules.GenerateFinal(command, request)
   table.insert(gm, "\"pkg\": \"" .. pkg .. "\"")
   table.insert(gm, "\"exes\": [\"" .. H.join(exes, "\", \"") .. "\"]")
 
+  local rb = {}
+  table.insert(rb, "pkg=" .. pkg)
+  if out ~= derived_out then table.insert(rb, "out=" .. out) end
+  H.append_list_args(rb, "exes", request.user.exes)
+  H.append_list_args(rb, "slots", request.user.slots)
+
   local body = "// " .. pkgpath .. "@" .. version .. " -- the final per-slot executable(s)." .. nl
     .. "//" .. nl
     .. "// Republishes the " .. pkgpath .. ".Closure@" .. version .. " install prefix's" .. nl
     .. "// executable(s) as bin/<exe>.exe. GENERATED by the" .. nl
     .. "// CommonsLang_OCaml.Dk.OpamLock.GenerateFinal dialog; regenerate (do not" .. nl
     .. "// hand-edit) when the exe set changes." .. nl
+    .. "//" .. nl
+    .. "// Regenerate with:" .. nl
+    .. "//   dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateFinal@1.1.11 " .. H.join(rb, " ") .. nl
     .. "{" .. nl
     .. "  \"$schema\": \"https://diskuv.com/dk/schema/dk-value-1.0.json\"," .. nl
     .. "  \"schema_version\": { \"major\": 1, \"minor\": 0 }," .. nl
@@ -1198,6 +1288,40 @@ function uirules.GenerateFinal(command, request)
   local ok, written = request.ui.writefile { path = out, content = body, expected_sha256 = expected }
   assert(ok, "could not write final form to `" .. out .. "`: " .. tostring(written))
   print("wrote final form to " .. tostring(written))
+  return { submit = {} }
+end
+
+-- ---------------------------------------------------------------------------
+-- GenerateForms: the three build forms in one invocation.
+--
+-- GenerateSrc, GenerateDriver, and GenerateFinal are a fixed trio for the
+-- standard single-root adoption: the driver's localsrc= names the Src form's
+-- id and the final form's precommand names the driver's id, so they are three
+-- coupled outputs of one operation. This umbrella proxy-calls all three (the
+-- Refresh in-process pattern) from one pkg=MODULE@VERSION; the individual
+-- dialogs remain for the cases that need exactly one (a lockless driver, the
+-- OpamVenv DevPrefix driver). Optional overrides (srcdirs[], exes[], parallel,
+-- slots[], root=, lock=) pass through; out= is per-file, so it is rejected
+-- here and belongs to the individual dialogs.
+-- ---------------------------------------------------------------------------
+function uirules.GenerateForms(command, request)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
+  if command == "ui" then
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.11: source, driver, and final forms written.")
+    return
+  end
+  if command ~= "submit" then return end
+  assert(request.user.pkg ~= nil,
+    "please provide 'pkg=MODULE@VERSION', ex. NotHackwaly_Ocamlearlybird.Ocamlearlybird@1.3.6")
+  assert(request.user.out == nil,
+    "GenerateForms derives each output path; pass out= to the individual GenerateSrc/GenerateDriver/GenerateFinal dialogs instead")
+  local proxy = {
+    user = request.user, ui = request.ui, io = request.io,
+    execution = request.execution, continued = request.continued
+  }
+  H.uirules.GenerateSrc("submit", proxy)
+  H.uirules.GenerateDriver("submit", proxy)
+  H.uirules.GenerateFinal("submit", proxy)
   return { submit = {} }
 end
 
@@ -1659,7 +1783,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_11.refresh_one(request, D, targetru
       user = P, ui = request.ui, io = request.io,
       execution = request.execution, continued = request.continued
     }
-    uirules.GenerateDriver("submit", proxy)
+    H.uirules.GenerateDriver("submit", proxy)
     if oldpkgs ~= nil then
       local newtext = request.ui.readfile { path = D }
       local newpkgs = H.pkgset(newtext)
@@ -1729,7 +1853,7 @@ function uirules.Refresh(command, request, continue_)
     local dirs = {}
     local files = {}
     if need_solve ~= nil then
-      local s1 = uirules.Solve("submit", { user = {}, execution = request.execution }, nil)
+      local s1 = H.uirules.Solve("submit", { user = {}, execution = request.execution }, nil)
       dirs = s1.submit.expressions.directories
       files = s1.submit.expressions.files
     end
@@ -1822,7 +1946,7 @@ function uirules.Refresh(command, request, continue_)
       user = su, ui = request.ui, io = request.io,
       execution = request.execution, continued = request.continued
     }
-    uirules.Solve("submit", sproxy, "solve")
+    H.uirules.Solve("submit", sproxy, "solve")
   end
 
   local targettool = nil
