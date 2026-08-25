@@ -66,13 +66,21 @@ local M = {
 CommonsLang_OCaml__Dk_OpamLock__1_1_11 = {}
 
 rules, uirules = build.newrules(M)
--- Stash THIS module's uirules table under the version-unique global. `uirules`
--- itself is a plain global, so when two versions of this module are loaded in
--- one interpreter (a local worktree next to the released import) the
--- last-evaluated module rebinds the name and an in-module cross-call
--- (`uirules.X(...)`) silently dispatches into the OTHER version's table. Every
--- cross-call below goes through H.uirules instead.
-CommonsLang_OCaml__Dk_OpamLock__1_1_11.uirules = uirules
+
+-- Single source of this module's id and version: every stamped tool id,
+-- "Regenerate with:" banner, and printed message derives from MODVER, MODULE,
+-- and VERSION, so a version bump edits M.id, the file name, and the
+-- version-unique table identifier only (a missed identifier fails loudly;
+-- there is no quoted version string left to drift silently).
+CommonsLang_OCaml__Dk_OpamLock__1_1_11.MODVER = M.id
+local mv_at = nil
+local mv_i = 1
+while mv_i <= string.len(M.id) do
+  if string.sub(M.id, mv_i, mv_i) == "@" then mv_at = mv_i end
+  mv_i = mv_i + 1
+end
+CommonsLang_OCaml__Dk_OpamLock__1_1_11.MODULE = string.sub(M.id, 1, mv_at - 1)
+CommonsLang_OCaml__Dk_OpamLock__1_1_11.VERSION = string.sub(M.id, mv_at + 1)
 
 -- lua-ml's string library does not implement gsub, so trim by scanning for the
 -- first/last non-space with find (which does support patterns).
@@ -148,6 +156,7 @@ end
 -- whole scriptmodule (including uirules.Solve) to ship and be runnable from an
 -- import. Its output is an empty marker; it does nothing else.
 function rules.Export(command, request)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
   local slots = {
     "Release.Windows_x86_64", "Release.Windows_x86", "Release.Windows_arm64",
     "Release.Darwin_x86_64", "Release.Darwin_arm64",
@@ -158,7 +167,7 @@ function rules.Export(command, request)
     return {
       declareoutput = {
         return_objects = {
-          id = "CommonsLang_OCaml.Dk.OpamLock.Export@1.1.11",
+          id = H.MODULE .. ".Export@" .. H.VERSION,
           slots = slots,
           execution_slot = "Release.execution_abi"
         }
@@ -201,7 +210,7 @@ end
 function uirules.Solve(command, request, continue_)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.11: lock written.")
+    print(H.MODVER .. ": lock written.")
     return
   end
   if command ~= "submit" then return end
@@ -310,7 +319,7 @@ function uirules.Solve(command, request, continue_)
   -- Build the helper argv.
   local args = { bc, "solve", "--opam", opamexe, "--work-dir", workdir, "--pins-file", pinsfile,
     "--pins-name", pinsproj,
-    "--tool", "CommonsLang_OCaml.Dk.OpamLock@1.1.11" }
+    "--tool", H.MODVER }
   local out = request.user.out or "dk.opam-lock.jsonc"
   if request.user.switch then table.insert(args, "--switch"); table.insert(args, request.user.switch) end
   if request.user.local_opam_dir then table.insert(args, "--local-opam-dir"); table.insert(args, request.user.local_opam_dir) end
@@ -373,6 +382,14 @@ function uirules.Solve(command, request, continue_)
   print("wrote opam lock to " .. tostring(written))
   return { submit = {} }
 end
+
+-- In-module cross-calls (Refresh, GenerateForms) dispatch through this
+-- version-unique binding of the function VALUE, never through the `uirules`
+-- global: that global name is rebound by whichever module version was
+-- evaluated last when two versions coexist in one interpreter (a local
+-- worktree beside the released import), so a call through it can silently run
+-- the other version's rule.
+CommonsLang_OCaml__Dk_OpamLock__1_1_11.Solve = uirules.Solve
 
 -- ---------------------------------------------------------------------------
 -- GenerateDriver: lock -> driver values file
@@ -524,15 +541,16 @@ end
 --   'provided[]=...'   optional toolchain-provided package names to skip
 --                      (default: the DkML set)
 --   'slots[]=...'      optional output slots (default: the 7 DkML slots)
---   'parallel=t'       optional: emit unordered precommands + per-package deps[]
---                      edges for concurrent builds (default: a sequential chain)
+--   'sequential=t'     optional: emit the ordered pre-@1.1.11 chain with no
+--                      deps[] edges (default: parallel scheduling with
+--                      per-package deps[] edges for concurrent builds)
 --   'hosttoolabi=SLOT' optional: the ABI for ocamlfind/ocamlbuild (default:
 --                      Release.target_abi). Pass Release.execution_abi for a
 --                      matrix with a host-unemulatable cross slot (musl hazard).
 function uirules.GenerateDriver(command, request)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.11: driver written.")
+    print(H.MODVER .. ": driver written.")
     return
   end
   if command ~= "submit" then return end
@@ -601,11 +619,15 @@ function uirules.GenerateDriver(command, request)
   if next(provided) == nil then provided = H.set_from_list(H.DKML_PROVIDED) end
   local slots = request.user.slots
   if slots == nil then slots = H.DKML_SLOTS end
-  -- Parallel mode (parallel=t): emit unordered precommands with per-package
-  -- deps[] edges so the engine's two-pass dispatch schedules independent
-  -- packages concurrently. Absent, the driver stays a sequential chain that
-  -- needs no edges (the historical default), so existing regens are unchanged.
+  -- Parallel scheduling is the default since @1.1.11: emit unordered
+  -- precommands with per-package deps[] edges so the engine's two-pass
+  -- dispatch schedules independent packages concurrently. sequential=t opts
+  -- back into the pre-@1.1.11 ordered chain that needs no edges. The
+  -- effective mode is always stamped; a stamp carrying NEITHER key is a
+  -- pre-@1.1.11 sequential driver, and Refresh injects sequential=t on
+  -- replay so those drivers keep regenerating byte-stable.
   local parallel = request.user.parallel
+  if parallel == nil and request.user.sequential == nil then parallel = "t" end
 
   -- Host-tool ABI (hosttoolabi=SLOT): the ABI for ocamlfind/ocamlbuild. Defaults
   -- to the target ABI (dual-role convention); pass Release.execution_abi for a
@@ -757,7 +779,7 @@ function uirules.GenerateDriver(command, request)
   local locksha = ""
   if lockmeta and lockmeta.sha256 then locksha = lockmeta.sha256 end
   local gm = {}
-  table.insert(gm, "\"tool\": \"CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.11\"")
+  table.insert(gm, "\"tool\": \"" .. H.MODULE .. ".GenerateDriver@" .. H.VERSION .. "\"")
   table.insert(gm, "\"rulefn\": \"" .. rulefn .. "\"")
   table.insert(gm, "\"lock\": \"" .. lockpath .. "\"")
   table.insert(gm, "\"lock-sha256\": \"" .. locksha .. "\"")
@@ -773,7 +795,13 @@ function uirules.GenerateDriver(command, request)
   table.insert(gm, "\"version\": \"" .. version .. "\"")
   if request.user.skiplocal ~= nil then table.insert(gm, "\"skiplocal\": \"t\"") end
   if request.user.mergedprefix ~= nil then table.insert(gm, "\"mergedprefix\": \"t\"") end
-  if request.user.parallel ~= nil then table.insert(gm, "\"parallel\": \"t\"") end
+  -- Always stamp the effective scheduling mode: a stamp with NEITHER key is
+  -- a pre-@1.1.11 sequential driver (see the Refresh replay shim).
+  if parallel ~= nil then
+    table.insert(gm, "\"parallel\": \"t\"")
+  else
+    table.insert(gm, "\"sequential\": \"t\"")
+  end
   if request.user.hosttoolabi ~= nil then table.insert(gm, "\"hosttoolabi\": \"" .. request.user.hosttoolabi .. "\"") end
   if request.user.prelude ~= nil then table.insert(gm, "\"prelude\": [\"" .. H.join(request.user.prelude, "\", \"") .. "\"]") end
   if request.user.provided ~= nil then table.insert(gm, "\"provided\": [\"" .. H.join(request.user.provided, "\", \"") .. "\"]") end
@@ -817,7 +845,7 @@ function uirules.GenerateDriver(command, request)
   end
   if request.user.skiplocal ~= nil then table.insert(rb, "skiplocal=t") end
   if request.user.mergedprefix ~= nil then table.insert(rb, "mergedprefix=t") end
-  if request.user.parallel ~= nil then table.insert(rb, "parallel=t") end
+  if parallel == nil then table.insert(rb, "sequential=t") end
   if request.user.hosttoolabi ~= nil then table.insert(rb, "hosttoolabi=" .. request.user.hosttoolabi) end
   H.append_list_args(rb, "prelude", request.user.prelude)
   H.append_list_args(rb, "provided", request.user.provided)
@@ -835,7 +863,7 @@ function uirules.GenerateDriver(command, request)
     .. "// `" .. lockpath .. "`. Regenerate (do not hand-edit) when the lock changes." .. nl
     .. "//" .. nl
     .. "// Regenerate with:" .. nl
-    .. "//   dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.11 " .. H.join(rb, " ") .. nl
+    .. "//   dk0 dialog " .. H.MODULE .. ".GenerateDriver@" .. H.VERSION .. " " .. H.join(rb, " ") .. nl
     .. "{" .. nl
     .. "  \"$schema\": \"https://diskuv.com/dk/schema/dk-value-1.0.json\"," .. nl
     .. "  \"schema_version\": { \"major\": 1, \"minor\": 0 }," .. nl
@@ -988,6 +1016,9 @@ function uirules.GenerateDriver(command, request)
   return { submit = {} }
 end
 
+-- Cross-call binding; see the note at H.Solve.
+CommonsLang_OCaml__Dk_OpamLock__1_1_11.GenerateDriver = uirules.GenerateDriver
+
 -- Append each element of `list` (nil-safe) to the arg list `rb` as
 -- "name[]=value" strings, for the "Regenerate with:" banner.
 function CommonsLang_OCaml__Dk_OpamLock__1_1_11.append_list_args(rb, name, list)
@@ -1012,7 +1043,7 @@ end
 function uirules.GenerateSrc(command, request)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.11: localized source written.")
+    print(H.MODVER .. ": localized source written.")
     return
   end
   if command ~= "submit" then return end
@@ -1111,7 +1142,7 @@ function uirules.GenerateSrc(command, request)
   end
 
   local gm = {}
-  table.insert(gm, "\"tool\": \"CommonsLang_OCaml.Dk.OpamLock.GenerateSrc@1.1.11\"")
+  table.insert(gm, "\"tool\": \"" .. H.MODULE .. ".GenerateSrc@" .. H.VERSION .. "\"")
   table.insert(gm, "\"pkg\": \"" .. pkg .. "\"")
   table.insert(gm, "\"root\": \"" .. root .. "\"")
   table.insert(gm, "\"srcdirs\": [\"" .. H.join(srcdirs, "\", \"") .. "\"]")
@@ -1136,7 +1167,7 @@ function uirules.GenerateSrc(command, request)
     .. "// (do not hand-edit) when the source tree or lock changes." .. nl
     .. "//" .. nl
     .. "// Regenerate with:" .. nl
-    .. "//   dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateSrc@1.1.11 " .. H.join(rb, " ") .. nl
+    .. "//   dk0 dialog " .. H.MODULE .. ".GenerateSrc@" .. H.VERSION .. " " .. H.join(rb, " ") .. nl
     .. "{" .. nl
     .. "  \"$schema\": \"https://diskuv.com/dk/schema/dk-value-1.0.json\"," .. nl
     .. "  \"schema_version\": { \"major\": 1, \"minor\": 0 }," .. nl
@@ -1168,6 +1199,9 @@ function uirules.GenerateSrc(command, request)
   return { submit = {} }
 end
 
+-- Cross-call binding; see the note at H.Solve.
+CommonsLang_OCaml__Dk_OpamLock__1_1_11.GenerateSrc = uirules.GenerateSrc
+
 -- ---------------------------------------------------------------------------
 -- GenerateFinal: the thin final form that republishes the closure's install
 -- prefix as bin/<exe>.exe per slot.
@@ -1181,7 +1215,7 @@ end
 function uirules.GenerateFinal(command, request)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.11: final form written.")
+    print(H.MODVER .. ": final form written.")
     return
   end
   if command ~= "submit" then return end
@@ -1239,7 +1273,7 @@ function uirules.GenerateFinal(command, request)
   end
 
   local gm = {}
-  table.insert(gm, "\"tool\": \"CommonsLang_OCaml.Dk.OpamLock.GenerateFinal@1.1.11\"")
+  table.insert(gm, "\"tool\": \"" .. H.MODULE .. ".GenerateFinal@" .. H.VERSION .. "\"")
   table.insert(gm, "\"pkg\": \"" .. pkg .. "\"")
   table.insert(gm, "\"exes\": [\"" .. H.join(exes, "\", \"") .. "\"]")
 
@@ -1257,7 +1291,7 @@ function uirules.GenerateFinal(command, request)
     .. "// hand-edit) when the exe set changes." .. nl
     .. "//" .. nl
     .. "// Regenerate with:" .. nl
-    .. "//   dk0 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateFinal@1.1.11 " .. H.join(rb, " ") .. nl
+    .. "//   dk0 dialog " .. H.MODULE .. ".GenerateFinal@" .. H.VERSION .. " " .. H.join(rb, " ") .. nl
     .. "{" .. nl
     .. "  \"$schema\": \"https://diskuv.com/dk/schema/dk-value-1.0.json\"," .. nl
     .. "  \"schema_version\": { \"major\": 1, \"minor\": 0 }," .. nl
@@ -1291,6 +1325,9 @@ function uirules.GenerateFinal(command, request)
   return { submit = {} }
 end
 
+-- Cross-call binding; see the note at H.Solve.
+CommonsLang_OCaml__Dk_OpamLock__1_1_11.GenerateFinal = uirules.GenerateFinal
+
 -- ---------------------------------------------------------------------------
 -- GenerateForms: the three build forms in one invocation.
 --
@@ -1307,7 +1344,7 @@ end
 function uirules.GenerateForms(command, request)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.11: source, driver, and final forms written.")
+    print(H.MODVER .. ": source, driver, and final forms written.")
     return
   end
   if command ~= "submit" then return end
@@ -1319,9 +1356,9 @@ function uirules.GenerateForms(command, request)
     user = request.user, ui = request.ui, io = request.io,
     execution = request.execution, continued = request.continued
   }
-  H.uirules.GenerateSrc("submit", proxy)
-  H.uirules.GenerateDriver("submit", proxy)
-  H.uirules.GenerateFinal("submit", proxy)
+  H.GenerateSrc("submit", proxy)
+  H.GenerateDriver("submit", proxy)
+  H.GenerateFinal("submit", proxy)
   return { submit = {} }
 end
 
@@ -1660,9 +1697,10 @@ end
 
 -- Standard STALE message with the actionable fix command.
 function CommonsLang_OCaml__Dk_OpamLock__1_1_11.stale_msg(D, got, want)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
   return "STALE " .. D .. ":" .. "\n  driver pins  " .. tostring(got)
     .. "\n  import wants " .. tostring(want)
-    .. "\n  fix: ./dk1 dialog CommonsLang_OCaml.Dk.OpamLock.Refresh@1.1.11 driver=" .. D
+    .. "\n  fix: ./dk1 dialog " .. H.MODULE .. ".Refresh@" .. H.VERSION .. " driver=" .. D
     .. "\n       (dk0 and dkjs take the same arguments)"
 end
 
@@ -1774,6 +1812,10 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_11.refresh_one(request, D, targetru
     P.out = D
     P.rulefn = targetrule
     P.lock = lockpath
+    -- Parallel became the @1.1.11 default. A pre-@1.1.11 driver stamped
+    -- neither parallel nor sequential (its chain is sequential), so inject
+    -- sequential=t to keep its regeneration byte-stable.
+    if P.parallel == nil and P.sequential == nil then P.sequential = "t" end
     if versionoverride ~= nil then
       P.version = versionoverride
       P.formid = H.reversion(P.formid, versionoverride)
@@ -1783,7 +1825,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_11.refresh_one(request, D, targetru
       user = P, ui = request.ui, io = request.io,
       execution = request.execution, continued = request.continued
     }
-    H.uirules.GenerateDriver("submit", proxy)
+    H.GenerateDriver("submit", proxy)
     if oldpkgs ~= nil then
       local newtext = request.ui.readfile { path = D }
       local newpkgs = H.pkgset(newtext)
@@ -1833,7 +1875,7 @@ end
 function uirules.Refresh(command, request, continue_)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.11: refresh complete.")
+    print(H.MODVER .. ": refresh complete.")
     return
   end
   if command ~= "submit" then return end
@@ -1853,7 +1895,7 @@ function uirules.Refresh(command, request, continue_)
     local dirs = {}
     local files = {}
     if need_solve ~= nil then
-      local s1 = H.uirules.Solve("submit", { user = {}, execution = request.execution }, nil)
+      local s1 = H.Solve("submit", { user = {}, execution = request.execution }, nil)
       dirs = s1.submit.expressions.directories
       files = s1.submit.expressions.files
     end
@@ -1915,7 +1957,7 @@ function uirules.Refresh(command, request, continue_)
             if wsha ~= nil and wsha ~= "" and wsha ~= lm.sha256 then
               table.insert(stale, "STALE " .. D .. ":\n  lock-sha256 stamp " .. wsha
                 .. "\n  current " .. stamp.lock .. " " .. lm.sha256
-                .. "\n  fix: ./dk1 dialog CommonsLang_OCaml.Dk.OpamLock.Refresh@1.1.11 driver=" .. D)
+                .. "\n  fix: ./dk1 dialog " .. H.MODULE .. ".Refresh@" .. H.VERSION .. " driver=" .. D)
             end
           else
             print("NOTE " .. D .. ": lock `" .. stamp.lock .. "` not checked in; sha256 check skipped")
@@ -1946,7 +1988,7 @@ function uirules.Refresh(command, request, continue_)
       user = su, ui = request.ui, io = request.io,
       execution = request.execution, continued = request.continued
     }
-    H.uirules.Solve("submit", sproxy, "solve")
+    H.Solve("submit", sproxy, "solve")
   end
 
   local targettool = nil
@@ -2026,7 +2068,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_11.opamvenv_plan(request, coreutils
     end
     assert(drivers[1] ~= nil,
       "no dev-prefix driver found under etc/dk/v. Generate one first:\n"
-      .. "  ./dk1 dialog CommonsLang_OCaml.Dk.OpamLock.GenerateDriver@1.1.11 lock=<LOCK>"
+      .. "  ./dk1 dialog " .. H.MODULE .. ".GenerateDriver@" .. H.VERSION .. " lock=<LOCK>"
       .. " out=etc/dk/v/<Lib>/<Root>.DevPrefix.values.jsonc root=<ROOT> skiplocal=t"
       .. " mergedprefix=t parallel=t formid=<Lib>.<Root>.DevPrefix@<VER> pkgpath=<Lib>.<Root>"
       .. " version=<VER> rulefn=CommonsLang_OCaml.Dk.OpamBuild.F_BuildLockedPackage@1.0.18"
@@ -2038,10 +2080,10 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_11.opamvenv_plan(request, coreutils
   local text = assert(request.ui.readfile { path = D }, "could not read driver `" .. D .. "`")
   local stamp = H.read_stamp(text)
   assert(stamp ~= nil,
-    "driver `" .. D .. "` has no generated stamp; regenerate it with GenerateDriver@1.1.11")
+    "driver `" .. D .. "` has no generated stamp; regenerate it with GenerateDriver@" .. H.VERSION)
   assert(stamp.mergedprefix == "t",
     "driver `" .. D .. "` is not a dev-prefix driver (mergedprefix != t). Regenerate it with"
-    .. " GenerateDriver@1.1.11 ... skiplocal=t mergedprefix=t")
+    .. " GenerateDriver@" .. H.VERSION .. " ... skiplocal=t mergedprefix=t")
   local P = {}
   P.driver = D
   P.formid = assert(stamp.formid, "driver `" .. D .. "` stamp has no formid")
@@ -2080,10 +2122,10 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_11.emit_env_ps1(absprefix, absdkml)
   local dbin = H.to_back(absdkml) .. "\\bin"
   local stub = absprefix .. "/lib/stublibs;" .. absdkml .. "/lib/ocaml/stublibs"
   local L = {}
-  table.insert(L, "# Generated by CommonsLang_OCaml.Dk.OpamLock.OpamVenv@1.1.11 -- do not edit.")
+  table.insert(L, "# Generated by " .. H.MODULE .. ".OpamVenv@" .. H.VERSION .. " -- do not edit.")
   table.insert(L, "# Dot-source to activate:   . .\\opam-venv\\env.ps1")
   table.insert(L, "if (-not (Test-Path '" .. pbin .. "')) {")
-  table.insert(L, "  Write-Error 'opam-venv prefix missing (" .. pbin .. "). Re-run: ./dk1 dialog CommonsLang_OCaml.Dk.OpamLock.OpamVenv@1.1.11'; return")
+  table.insert(L, "  Write-Error 'opam-venv prefix missing (" .. pbin .. "). Re-run: ./dk1 dialog " .. H.MODULE .. ".OpamVenv@" .. H.VERSION .. "'; return")
   table.insert(L, "}")
   table.insert(L, "if ($env:DK_OPAM_VENV -eq '" .. absprefix .. "') { Write-Host 'opam venv already active'; return }")
   table.insert(L, "if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {")
@@ -2122,7 +2164,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_11.emit_env_cmd(absprefix, absdkml)
   local stub = absprefix .. "/lib/stublibs;" .. absdkml .. "/lib/ocaml/stublibs"
   local L = {}
   table.insert(L, "@echo off")
-  table.insert(L, "rem Generated by CommonsLang_OCaml.Dk.OpamLock.OpamVenv@1.1.11 -- do not edit.")
+  table.insert(L, "rem Generated by " .. H.MODULE .. ".OpamVenv@" .. H.VERSION .. " -- do not edit.")
   table.insert(L, "rem Run:  opam-venv\\env.cmd   (for native builds, run inside a x64 Native Tools prompt)")
   table.insert(L, "if not exist \"" .. pbin .. "\\\" echo opam-venv prefix missing; re-run the OpamVenv dialog.")
   table.insert(L, "set \"OCAMLPATH=" .. absprefix .. "/lib\"")
@@ -2147,7 +2189,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_11.emit_env_sh(absprefix, absdkml, 
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
   local L = {}
   table.insert(L, "#!/bin/sh")
-  table.insert(L, "# Generated by CommonsLang_OCaml.Dk.OpamLock.OpamVenv@1.1.11 -- do not edit.")
+  table.insert(L, "# Generated by " .. H.MODULE .. ".OpamVenv@" .. H.VERSION .. " -- do not edit.")
   table.insert(L, "# Activate:  source opam-venv/env.sh")
   table.insert(L, "DK_PREFIX=\"" .. absprefix .. "\"")
   table.insert(L, "DK_DKML=\"" .. absdkml .. "\"")
@@ -2204,7 +2246,7 @@ end
 function uirules.OpamVenv(command, request, continue_)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
   if command == "ui" then
-    print("CommonsLang_OCaml.Dk.OpamLock@1.1.11: opam venv ready. Activate with:")
+    print(H.MODVER .. ": opam venv ready. Activate with:")
     print("  Windows PowerShell:  . .\\opam-venv\\env.ps1")
     print("  Windows cmd:         opam-venv\\env.cmd")
     print("  Unix / Git Bash:     source opam-venv/env.sh")
@@ -2244,7 +2286,7 @@ function uirules.OpamVenv(command, request, continue_)
       local jd = require("jsondk")
       local po = jd.decode(prev)
       if po ~= nil and po["lock-sha256"] == P.locksha and po.slot == P.slot
-         and po.tool == "CommonsLang_OCaml.Dk.OpamLock.OpamVenv@1.1.11" then
+         and po.tool == H.MODULE .. ".OpamVenv@" .. H.VERSION then
         request.io.close(request.continued.co)
         print("opam venv is up to date (" .. stamppath .. "); pass force=t to rebuild it")
         return { submit = {} }
@@ -2257,7 +2299,7 @@ function uirules.OpamVenv(command, request, continue_)
         "driver lock `" .. tostring(P.lock) .. "` is not on disk")
       assert(lm.sha256 == P.locksha,
         "lock `" .. P.lock .. "` changed since the dev-prefix driver was generated.\n"
-        .. "  fix: ./dk1 dialog CommonsLang_OCaml.Dk.OpamLock.Refresh@1.1.11 driver=" .. P.driver
+        .. "  fix: ./dk1 dialog " .. H.MODULE .. ".Refresh@" .. H.VERSION .. " driver=" .. P.driver
         .. "\n       then re-run this dialog")
     end
 
@@ -2350,7 +2392,7 @@ function uirules.OpamVenv(command, request, continue_)
 
   -- Stamp for the up-to-date short-circuit and for humans.
   local stamp = "{\n"
-    .. "  \"tool\": \"CommonsLang_OCaml.Dk.OpamLock.OpamVenv@1.1.11\",\n"
+    .. "  \"tool\": \"" .. H.MODULE .. ".OpamVenv@" .. H.VERSION .. "\",\n"
     .. "  \"driver\": \"" .. H.json_esc(P.driver) .. "\",\n"
     .. "  \"lock\": \"" .. H.json_esc(tostring(P.lock)) .. "\",\n"
     .. "  \"lock-sha256\": \"" .. tostring(P.locksha) .. "\",\n"
