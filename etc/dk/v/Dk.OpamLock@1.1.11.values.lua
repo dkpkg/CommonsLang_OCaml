@@ -931,6 +931,277 @@ function uirules.GenerateDriver(command, request)
 end
 
 -- ---------------------------------------------------------------------------
+-- GenerateSrc: the localized-source form for the one in-tree (local) package.
+--
+-- Assembles the working tree (src dir(s) + dune/dune-project/<root>.opam) plus
+-- the checked-in lock into one content-addressed object (output.zip +
+-- dk-opam-lock.jsonc) that F_BuildLockedPackage stages via localsrc=. Derives
+-- everything from pkg=MODULE@VERSION and the lock's sole local package, so the
+-- maintainer no longer hand-authors this file. The <root>.opam supplies the
+-- package's own dune-workspace at build time (build-locked-package.sh writes
+-- `(lang dune 3.0)` when absent), so no DuneWorkspace asset is staged here.
+-- ---------------------------------------------------------------------------
+function uirules.GenerateSrc(command, request)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
+  if command == "ui" then
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.11: localized source written.")
+    return
+  end
+  if command ~= "submit" then return end
+
+  local pkg = assert(request.user.pkg,
+    "please provide 'pkg=MODULE@VERSION', ex. NotHackwaly_Ocamlearlybird.Ocamlearlybird@1.3.6")
+  local at = H.indexof_char(pkg, "@")
+  assert(at ~= nil, "pkg must be MODULE@VERSION")
+  local pkgpath = string.sub(pkg, 1, at - 1)
+  local version = string.sub(pkg, at + 1)
+  local dot = H.indexof_char(pkgpath, ".")
+  assert(dot ~= nil, "pkg module path must be <Library>.<Unit>")
+  local library = string.sub(pkgpath, 1, dot - 1)
+  local unit = string.sub(pkgpath, dot + 1)
+  local lockpath = request.user.lock or "dk.opam-lock.jsonc"
+  local out = request.user.out or ("etc/dk/v/" .. library .. "/" .. unit .. ".Src.values.jsonc")
+
+  -- root: the sole local (in-tree) package in the lock, or root= override.
+  local root = request.user.root
+  if root == nil then
+    local content = assert(request.ui.readfile { path = lockpath },
+      "could not read lock `" .. lockpath .. "`")
+    local jd = require("jsondk")
+    local lock = jd.decode(content)
+    assert(lock and lock.packages, "could not decode the lock")
+    local k = next(lock.packages)
+    while k do
+      local p = lock.packages[k]
+      if p ~= nil and p["local"] == "t" then
+        local kd = H.indexof_char(k, ".")
+        if kd ~= nil then
+          local nm = string.sub(k, 1, kd - 1)
+          assert(root == nil or root == nm, "the lock has more than one local package; pass root=PKG")
+          root = nm
+        end
+      end
+      k = next(lock.packages, k)
+    end
+  end
+  assert(root ~= nil, "no local (\"local\":\"t\") package in the lock; pass root=PKG")
+
+  local srcdirs = request.user.srcdirs
+  if srcdirs == nil then srcdirs = { "src" } end
+
+  -- rootfiles: of dune / dune-project / <root>.opam, keep those that exist.
+  local candidates = { { "DuneRoot", "dune" }, { "DuneProject", "dune-project" }, { "Opam", root .. ".opam" } }
+  local rootfiles = {}
+  local ci = 1
+  while candidates[ci] ~= nil do
+    if request.ui.checksum { path = candidates[ci][2] } ~= nil then
+      table.insert(rootfiles, candidates[ci])
+    end
+    ci = ci + 1
+  end
+
+  local assembly = root .. "-" .. version
+  local ap = library .. ".Apparatus"
+  local co = "\"$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')\""
+  local nl = "\n"
+
+  -- precommands: get-asset each src dir into the assembly directory.
+  local pre = {}
+  local psi = 1
+  while srcdirs[psi] ~= nil do
+    table.insert(pre, "          \"get-asset " .. ap .. ".Src@" .. version
+      .. " -p " .. srcdirs[psi] .. " -d " .. assembly .. "\"")
+    psi = psi + 1
+  end
+
+  -- function.commands: mkdir, per-rootfile cp, lock cp, zip.
+  local cmds = {}
+  table.insert(cmds, "          [" .. nl .. "            " .. co .. ", \"mkdir\", \"-p\", \"${SLOT.request}\"" .. nl .. "          ]")
+  local ri = 1
+  while rootfiles[ri] ~= nil do
+    local aname = rootfiles[ri][1]
+    local fname = rootfiles[ri][2]
+    table.insert(cmds, "          [" .. nl .. "            " .. co .. ", \"cp\"," .. nl
+      .. "            \"$(get-asset " .. ap .. "." .. aname .. "@" .. version .. " -p " .. fname .. " -f " .. fname .. ")\"," .. nl
+      .. "            \"" .. assembly .. "/" .. fname .. "\"" .. nl .. "          ]")
+    ri = ri + 1
+  end
+  table.insert(cmds, "          [" .. nl .. "            " .. co .. ", \"cp\"," .. nl
+    .. "            \"$(get-asset " .. ap .. ".Lock@" .. version .. " -p dk.opam-lock.jsonc -f lock.jsonc)\"," .. nl
+    .. "            \"${SLOT.request}/dk-opam-lock.jsonc\"" .. nl .. "          ]")
+  table.insert(cmds, "          [" .. nl .. "            \"$(get-object CommonsBase_Std.S7z@25.1.0 -s Release.execution_abi -e '*' -d :)/7zz.exe\"," .. nl
+    .. "            \"a\", \"-tzip\", \"${SLOT.request}/output.zip\", \"./" .. assembly .. "\"" .. nl .. "          ]")
+
+  local slots = request.user.slots or H.DKML_SLOTS
+  local slotlist = ""
+  local sl = 1
+  while slots[sl] ~= nil do
+    if sl > 1 then slotlist = slotlist .. ", " end
+    slotlist = slotlist .. "\"" .. slots[sl] .. "\""
+    sl = sl + 1
+  end
+
+  local gm = {}
+  table.insert(gm, "\"tool\": \"CommonsLang_OCaml.Dk.OpamLock.GenerateSrc@1.1.11\"")
+  table.insert(gm, "\"pkg\": \"" .. pkg .. "\"")
+  table.insert(gm, "\"root\": \"" .. root .. "\"")
+  table.insert(gm, "\"srcdirs\": [\"" .. H.join(srcdirs, "\", \"") .. "\"]")
+  local rfnames = {}
+  local rn = 1
+  while rootfiles[rn] ~= nil do table.insert(rfnames, rootfiles[rn][2]); rn = rn + 1 end
+  table.insert(gm, "\"rootfiles\": [\"" .. H.join(rfnames, "\", \"") .. "\"]")
+
+  local body = "// " .. pkgpath .. ".Src@" .. version .. " -- the localized working tree as one" .. nl
+    .. "// content-addressed object (output.zip + dk-opam-lock.jsonc) that the generic" .. nl
+    .. "// OpamBuild rule stages via localsrc= as the source for the one local package." .. nl
+    .. "//" .. nl
+    .. "// GENERATED by the CommonsLang_OCaml.Dk.OpamLock.GenerateSrc dialog. Regenerate" .. nl
+    .. "// (do not hand-edit) when the source tree or lock changes." .. nl
+    .. "{" .. nl
+    .. "  \"$schema\": \"https://diskuv.com/dk/schema/dk-value-1.0.json\"," .. nl
+    .. "  \"schema_version\": { \"major\": 1, \"minor\": 0 }," .. nl
+    .. "  \"generated\": {" .. nl .. "    " .. H.join(gm, "," .. nl .. "    ") .. nl .. "  }," .. nl
+    .. "  \"forms\": [" .. nl
+    .. "    {" .. nl
+    .. "      \"id\": \"" .. pkgpath .. ".Src@" .. version .. "\"," .. nl
+    .. "      \"precommands\": {" .. nl
+    .. "        \"private\": [" .. nl
+    .. H.join(pre, "," .. nl) .. nl
+    .. "        ]" .. nl
+    .. "      }," .. nl
+    .. "      \"function\": {" .. nl
+    .. "        \"commands\": [" .. nl
+    .. H.join(cmds, "," .. nl) .. nl
+    .. "        ]" .. nl
+    .. "      }," .. nl
+    .. "      \"outputs\": { \"assets\": [ { \"slots\": [" .. slotlist .. "], \"paths\": [\"output.zip\", \"dk-opam-lock.jsonc\"] } ] }" .. nl
+    .. "    }" .. nl
+    .. "  ]" .. nl
+    .. "}" .. nl
+
+  local meta = request.ui.checksum { path = out }
+  local expected = "false"
+  if meta and meta.sha256 then expected = meta.sha256 end
+  local ok, written = request.ui.writefile { path = out, content = body, expected_sha256 = expected }
+  assert(ok, "could not write localized source to `" .. out .. "`: " .. tostring(written))
+  print("wrote localized source to " .. tostring(written))
+  return { submit = {} }
+end
+
+-- ---------------------------------------------------------------------------
+-- GenerateFinal: the thin final form that republishes the closure's install
+-- prefix as bin/<exe>.exe per slot.
+--
+-- The Closure build installs each executable under its dune public_name, so the
+-- prefix carries bin/<exe>.exe on Windows and bin/<exe> on Unix; each slot
+-- copies its variant to the uniform output bin/<exe>.exe (the env -u trick drops
+-- the command whose referenced slot is not the one being built). Derives
+-- everything from pkg=MODULE@VERSION; exes[] defaults to the lowercased unit.
+-- ---------------------------------------------------------------------------
+function uirules.GenerateFinal(command, request)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
+  if command == "ui" then
+    print("CommonsLang_OCaml.Dk.OpamLock@1.1.11: final form written.")
+    return
+  end
+  if command ~= "submit" then return end
+
+  local pkg = assert(request.user.pkg,
+    "please provide 'pkg=MODULE@VERSION', ex. NotHackwaly_Ocamlearlybird.Ocamlearlybird@1.3.6")
+  local at = H.indexof_char(pkg, "@")
+  assert(at ~= nil, "pkg must be MODULE@VERSION")
+  local pkgpath = string.sub(pkg, 1, at - 1)
+  local version = string.sub(pkg, at + 1)
+  local dot = H.indexof_char(pkgpath, ".")
+  assert(dot ~= nil, "pkg module path must be <Library>.<Unit>")
+  local library = string.sub(pkgpath, 1, dot - 1)
+  local unit = string.sub(pkgpath, dot + 1)
+  local out = request.user.out or ("etc/dk/v/" .. library .. "/" .. unit .. ".values.jsonc")
+
+  local exes = request.user.exes
+  if exes == nil then exes = { string.lower(unit) } end
+  local slots = request.user.slots or H.DKML_SLOTS
+
+  local co = "\"$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')\""
+  local nl = "\n"
+
+  -- function.commands: mkdir bin, then per (slot, exe) a slot-gated cp. Windows
+  -- prefixes ship bin/<exe>.exe; Unix prefixes ship bin/<exe>.
+  local cmds = {}
+  table.insert(cmds, "          [" .. nl .. "            " .. co .. ", \"mkdir\", \"-p\", \"${SLOT.request}/bin\"" .. nl .. "          ]")
+  local si = 1
+  while slots[si] ~= nil do
+    local s = slots[si]
+    local ext = ""
+    if H.indexof_str(s, "Release.Windows") == 1 then ext = ".exe" end
+    local ei = 1
+    while exes[ei] ~= nil do
+      local e = exes[ei]
+      table.insert(cmds, "          [" .. nl
+        .. "            " .. co .. ", \"env\", \"-u\", \"${SLOT." .. s .. "}\", \"--\"," .. nl
+        .. "            " .. co .. ", \"cp\", \"ip/bin/" .. e .. ext .. "\", \"${SLOT.request}/bin/" .. e .. ".exe\"" .. nl
+        .. "          ]")
+      ei = ei + 1
+    end
+    si = si + 1
+  end
+
+  -- outputs: one asset per slot naming every exe.
+  local outs = {}
+  local oi = 1
+  while slots[oi] ~= nil do
+    local paths = {}
+    local pi = 1
+    while exes[pi] ~= nil do table.insert(paths, "\"bin/" .. exes[pi] .. ".exe\""); pi = pi + 1 end
+    table.insert(outs, "        { \"slots\": [\"" .. slots[oi] .. "\"], \"paths\": [" .. H.join(paths, ", ") .. "] }")
+    oi = oi + 1
+  end
+
+  local gm = {}
+  table.insert(gm, "\"tool\": \"CommonsLang_OCaml.Dk.OpamLock.GenerateFinal@1.1.11\"")
+  table.insert(gm, "\"pkg\": \"" .. pkg .. "\"")
+  table.insert(gm, "\"exes\": [\"" .. H.join(exes, "\", \"") .. "\"]")
+
+  local body = "// " .. pkgpath .. "@" .. version .. " -- the final per-slot executable(s)." .. nl
+    .. "//" .. nl
+    .. "// Republishes the " .. pkgpath .. ".Closure@" .. version .. " install prefix's" .. nl
+    .. "// executable(s) as bin/<exe>.exe. GENERATED by the" .. nl
+    .. "// CommonsLang_OCaml.Dk.OpamLock.GenerateFinal dialog; regenerate (do not" .. nl
+    .. "// hand-edit) when the exe set changes." .. nl
+    .. "{" .. nl
+    .. "  \"$schema\": \"https://diskuv.com/dk/schema/dk-value-1.0.json\"," .. nl
+    .. "  \"schema_version\": { \"major\": 1, \"minor\": 0 }," .. nl
+    .. "  \"generated\": {" .. nl .. "    " .. H.join(gm, "," .. nl .. "    ") .. nl .. "  }," .. nl
+    .. "  \"forms\": [" .. nl
+    .. "    {" .. nl
+    .. "      \"id\": \"" .. pkgpath .. "@" .. version .. "\"," .. nl
+    .. "      \"precommands\": {" .. nl
+    .. "        \"private\": [" .. nl
+    .. "          \"get-object " .. pkgpath .. ".Closure@" .. version .. " -s ${SLOTNAME.request} -m ./install.zip -d ip\"" .. nl
+    .. "        ]" .. nl
+    .. "      }," .. nl
+    .. "      \"function\": {" .. nl
+    .. "        \"commands\": [" .. nl
+    .. H.join(cmds, "," .. nl) .. nl
+    .. "        ]" .. nl
+    .. "      }," .. nl
+    .. "      \"outputs\": { \"assets\": [" .. nl
+    .. H.join(outs, "," .. nl) .. nl
+    .. "      ] }" .. nl
+    .. "    }" .. nl
+    .. "  ]" .. nl
+    .. "}" .. nl
+
+  local meta = request.ui.checksum { path = out }
+  local expected = "false"
+  if meta and meta.sha256 then expected = meta.sha256 end
+  local ok, written = request.ui.writefile { path = out, content = body, expected_sha256 = expected }
+  assert(ok, "could not write final form to `" .. out .. "`: " .. tostring(written))
+  print("wrote final form to " .. tostring(written))
+  return { submit = {} }
+end
+
+-- ---------------------------------------------------------------------------
 -- Refresh: self-describing regeneration of the lock and driver(s).
 --
 -- The lock and driver stamp their inputs (Solve stamps roots/pins into the
