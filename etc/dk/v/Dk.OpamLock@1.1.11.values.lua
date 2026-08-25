@@ -1241,7 +1241,11 @@ function uirules.GenerateFinal(command, request)
   local nl = "\n"
 
   -- function.commands: mkdir bin, then per (slot, exe) a slot-gated cp. Windows
-  -- prefixes ship bin/<exe>.exe; Unix prefixes ship bin/<exe>.
+  -- prefixes ship bin/<exe>.exe; Unix prefixes ship bin/<exe>. A bare exes[]
+  -- entry follows that dune public_name convention; an entry that itself ends
+  -- in .exe names the literal installed file on EVERY slot (dune installs a
+  -- public_name verbatim, so `public_name foo.exe` ships bin/foo.exe on Unix
+  -- too). The output member is uniformly .exe-suffixed either way.
   local cmds = {}
   table.insert(cmds, "          [" .. nl .. "            " .. co .. ", \"mkdir\", \"-p\", \"${SLOT.request}/bin\"" .. nl .. "          ]")
   local si = 1
@@ -1252,9 +1256,11 @@ function uirules.GenerateFinal(command, request)
     local ei = 1
     while exes[ei] ~= nil do
       local e = exes[ei]
+      local srcname = e .. ext
+      if H.is_exe_literal(e) ~= nil then srcname = e end
       table.insert(cmds, "          [" .. nl
         .. "            " .. co .. ", \"env\", \"-u\", \"${SLOT." .. s .. "}\", \"--\"," .. nl
-        .. "            " .. co .. ", \"cp\", \"ip/bin/" .. e .. ext .. "\", \"${SLOT.request}/bin/" .. e .. ".exe\"" .. nl
+        .. "            " .. co .. ", \"cp\", \"ip/bin/" .. srcname .. "\", \"${SLOT.request}/bin/" .. H.exe_outname(e) .. "\"" .. nl
         .. "          ]")
       ei = ei + 1
     end
@@ -1267,7 +1273,7 @@ function uirules.GenerateFinal(command, request)
   while slots[oi] ~= nil do
     local paths = {}
     local pi = 1
-    while exes[pi] ~= nil do table.insert(paths, "\"bin/" .. exes[pi] .. ".exe\""); pi = pi + 1 end
+    while exes[pi] ~= nil do table.insert(paths, "\"bin/" .. H.exe_outname(exes[pi]) .. "\""); pi = pi + 1 end
     table.insert(outs, "        { \"slots\": [\"" .. slots[oi] .. "\"], \"paths\": [" .. H.join(paths, ", ") .. "] }")
     oi = oi + 1
   end
@@ -1364,6 +1370,21 @@ end
 
 -- Cross-call binding; see the note at H.Solve.
 CommonsLang_OCaml__Dk_OpamLock__1_1_11.GenerateForms = uirules.GenerateForms
+
+-- Non-nil when the executable entry `e` already carries the .exe extension,
+-- meaning it names the literal installed file on every slot.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_11.is_exe_literal(e)
+  local n = string.len(e)
+  if n > 4 and string.sub(e, n - 3) == ".exe" then return 1 end
+  return nil
+end
+
+-- The uniform .exe-suffixed output member name for an exes[] entry.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_11.exe_outname(e)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_11
+  if H.is_exe_literal(e) ~= nil then return e end
+  return e .. ".exe"
+end
 
 -- Assert that `name` is a valid standard module id segment (an uppercase
 -- letter, then letters, digits, or underscores), failing fast with the
@@ -1608,7 +1629,7 @@ function uirules.Adopt(command, request, continue_)
   print("  ./dk1 update")
   print("  ./dk1 run-object " .. ns .. "." .. unit .. "@" .. version
     .. " -s Release." .. request.execution.ABIv3
-    .. " -m bin/" .. exe .. ".exe -- --help")
+    .. " -m bin/" .. H.exe_outname(exe) .. " -- --help")
   return { submit = {} }
 end
 
