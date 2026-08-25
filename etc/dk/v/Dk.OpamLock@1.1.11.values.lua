@@ -2039,6 +2039,35 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_11.refresh_one(request, D, targetru
       end
     end
     print("refreshed " .. D .. " (regenerated from " .. lockpath .. ")")
+
+    -- version= is a coupled bump: the Src and Final forms carry the same
+    -- version in their ids, so regenerate them in lockstep. Their paths are the
+    -- driver path with .Closure.values.jsonc -> .Src.values.jsonc / .values.jsonc
+    -- (the GenerateSrc/GenerateFinal out= convention). A driver-only package
+    -- (a lockless CommonsBase_Dk driver) has neither file; skip when absent.
+    -- Each generator's own stamp preserves its overrides (srcdirs, exes).
+    if versionoverride ~= nil and stamp ~= nil and stamp.pkgpath ~= nil then
+      local newpkg = stamp.pkgpath .. "@" .. versionoverride
+      local srcpath = H.replace_all(D, ".Closure.values.jsonc", ".Src.values.jsonc")
+      if request.ui.checksum { path = srcpath } ~= nil then
+        local su = { pkg = newpkg, out = srcpath, lock = lockpath }
+        local sstamp = H.read_stamp(assert(request.ui.readfile { path = srcpath }))
+        if sstamp ~= nil then
+          if sstamp.root ~= nil then su.root = sstamp.root end
+          if sstamp.srcdirs ~= nil then su.srcdirs = sstamp.srcdirs end
+        end
+        H.GenerateSrc("submit", { user = su, ui = request.ui, io = request.io, execution = request.execution })
+        print("refreshed " .. srcpath)
+      end
+      local finalpath = H.replace_all(D, ".Closure.values.jsonc", ".values.jsonc")
+      if request.ui.checksum { path = finalpath } ~= nil then
+        local fu = { pkg = newpkg, out = finalpath }
+        local fstamp = H.read_stamp(assert(request.ui.readfile { path = finalpath }))
+        if fstamp ~= nil and fstamp.exes ~= nil then fu.exes = fstamp.exes end
+        H.GenerateFinal("submit", { user = fu, ui = request.ui, io = request.io, execution = request.execution })
+        print("refreshed " .. finalpath)
+      end
+    end
   else
     assert(stamp ~= nil, "driver `" .. D
       .. "` has no stamp and its lock is not on disk; adopt it by hand-inserting a "
