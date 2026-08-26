@@ -134,6 +134,18 @@ jobs:
           #   git tag 0.1.<ts> && git push origin 0.1.<ts>
           #   gh variable delete DK_STORE   # restore incremental builds
           #
+          # A values.lua-BODY-ONLY edit no longer needs DK_STORE=none as of dk0
+          # 2.4.2.336. Before it, a restored store re-registered the previous
+          # release's script module, so the old body was sealed into
+          # build_script_module_sha256s and shipped, and the consumer's
+          # producer-key attribution silently collapsed to LocalValues (this bit
+          # 0.1.20260826042316: `dk0 trust grant CommonsLang_OCaml --run --write`
+          # went inert and every non-interactive request.ui.capture was denied).
+          # The engine now lets the workspace's current values file supersede the
+          # restored trace, and a distribute that would still seal stale content
+          # fails loudly instead of publishing. Keep the escape hatch above for
+          # OTHER stale-reference classes (such as the two pinned below).
+          #
           # The Linux_x86_64_musl slot is pinned to store: none: its
           # store: release restore from 0.1.20260806025427 came back missing
           # bin/ocamlopt + bin/dune.exe (run 31156747482 failed the DkML/Dune
