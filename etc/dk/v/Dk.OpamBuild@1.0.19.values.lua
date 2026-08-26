@@ -1749,9 +1749,15 @@ function rules.F_BuildLockedClosure(command, request, continue_)
     local dir = "p" .. H.numstr(pi - 1)
     if built_root ~= nil and emit[pi] == built_root then dir = "built" end
     stagedirs[pi] = dir
+    -- Extract the package OBJECT's file tree (its sole member is the file
+    -- install.zip) into <dir>, giving <dir>/install.zip -- the same file the
+    -- per-package driver's `run-function ... -d <dir>` staged. Do NOT pass
+    -- `-m ./install.zip`: that descends INTO the zip and unpacks its contents
+    -- (bin/, lib/, ...) instead, so <dir>/install.zip would not exist and the
+    -- root copy / mergedprefix extraction below would fail (os error 2).
     table.insert(pre,
       "get-object " .. pkgpath .. ".Pkg." .. H.modsegment(emit[pi]) .. "@" .. version
-      .. " -s ${SLOTNAME.request} -m ./install.zip -d " .. dir)
+      .. " -s ${SLOTNAME.request} -d " .. dir)
     pi = pi + 1
   end
   local coreutils = "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')"
