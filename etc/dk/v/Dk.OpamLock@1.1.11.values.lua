@@ -565,7 +565,7 @@ function uirules.GenerateDriver(command, request)
   local d_pkgpath, d_version
   if pkg ~= nil then
     local at = H.indexof_char(pkg, "@")
-    assert(at ~= nil, "pkg must be MODULE@VERSION, ex. NotHackwaly_Ocamlearlybird.Ocamlearlybird@1.3.6")
+    assert(at ~= nil, "pkg must be MODULE@VERSION, ex. <Lib>.<Unit>@<VER>")
     d_pkgpath = H.check_modpath(string.sub(pkg, 1, at - 1), "pkg=")
     d_version = string.sub(pkg, at + 1)
   end
@@ -580,7 +580,7 @@ function uirules.GenerateDriver(command, request)
   local locksrcpath = request.user.locksrcpath or "./dk-opam-lock.jsonc"
   -- out: etc/dk/v/<Library>/<ModuleTail>.values.jsonc, where <Library> is the
   -- first dotted segment of pkgpath and <ModuleTail> is formid's module path
-  -- after that library (ex. Ocamlearlybird.Closure). The derived value is kept
+  -- after that library (ex. <Unit>.Closure). The derived value is kept
   -- for the "Regenerate with:" banner even when out= is explicit.
   local derived_out = nil
   local pkdot = H.indexof_char(pkgpath, ".")
@@ -1049,7 +1049,7 @@ function uirules.GenerateSrc(command, request)
   if command ~= "submit" then return end
 
   local pkg = assert(request.user.pkg,
-    "please provide 'pkg=MODULE@VERSION', ex. NotHackwaly_Ocamlearlybird.Ocamlearlybird@1.3.6")
+    "please provide 'pkg=MODULE@VERSION', ex. <Lib>.<Unit>@<VER>")
   local at = H.indexof_char(pkg, "@")
   assert(at ~= nil, "pkg must be MODULE@VERSION")
   local pkgpath = H.check_modpath(string.sub(pkg, 1, at - 1), "pkg=")
@@ -1221,7 +1221,7 @@ function uirules.GenerateFinal(command, request)
   if command ~= "submit" then return end
 
   local pkg = assert(request.user.pkg,
-    "please provide 'pkg=MODULE@VERSION', ex. NotHackwaly_Ocamlearlybird.Ocamlearlybird@1.3.6")
+    "please provide 'pkg=MODULE@VERSION', ex. <Lib>.<Unit>@<VER>")
   local at = H.indexof_char(pkg, "@")
   assert(at ~= nil, "pkg must be MODULE@VERSION")
   local pkgpath = H.check_modpath(string.sub(pkg, 1, at - 1), "pkg=")
@@ -1355,7 +1355,7 @@ function uirules.GenerateForms(command, request)
   end
   if command ~= "submit" then return end
   assert(request.user.pkg ~= nil,
-    "please provide 'pkg=MODULE@VERSION', ex. NotHackwaly_Ocamlearlybird.Ocamlearlybird@1.3.6")
+    "please provide 'pkg=MODULE@VERSION', ex. <Lib>.<Unit>@<VER>")
   assert(request.user.out == nil,
     "GenerateForms derives each output path; pass out= to the individual GenerateSrc/GenerateDriver/GenerateFinal dialogs instead")
   local proxy = {
@@ -1410,7 +1410,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_11.check_segment(name, what)
     i = i + 1
   end
   assert(bad == nil, what .. " `" .. name
-    .. "` is not a valid module id segment (an uppercase letter, then letters, digits, or underscores; ex. Ocamlearlybird)")
+    .. "` is not a valid module id segment (an uppercase letter, then letters, digits, or underscores; ex. Mypackage)")
   return name
 end
 
@@ -1553,8 +1553,8 @@ function uirules.Adopt(command, request, continue_)
           if dotgit ~= nil then repo = string.sub(repo, 1, dotgit - 1) end
           -- Solo: the maintainer publishing their own project, the typical
           -- Adopt case. A third party packaging someone else's project uses
-          -- the Not prefix convention instead, via ns= (ex.
-          -- ns=NotHackwaly_Ocamlearlybird).
+          -- the Not prefix convention instead, via ns= (ex. for GitHub
+          -- owner Acme and repo Widget, ns=NotAcme_Widget).
           ns = "Solo" .. H.modsegment(owner) .. "_" .. H.modsegment(repo)
         end
       end
