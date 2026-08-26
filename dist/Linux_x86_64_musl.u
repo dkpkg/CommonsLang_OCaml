@@ -66,9 +66,9 @@ Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.7
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.11 -f ${RUNTIME}/OpamLock.Export-1.1.11.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.12 -f ${RUNTIME}/OpamLock.Export-1.1.12.zip
   \test(pass)
-  \dk.object(abi: "Release.Linux_x86_64", value-id: "ovfrdilizyvx7uvgtneocwhddxrlpgpmpsmnd5szpcirkzkrohhsq")\;
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "o0000000000000000000000000000000000000000000000000000")\;
 
 ## Dk.OpamBuild
 
@@ -76,6 +76,6 @@ Only the current OpamBuild revision ships. The retired Export@1.0.0-@1.0.15
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.18 -f ${RUNTIME}/OpamBuild.Export-1.0.18.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.19 -f ${RUNTIME}/OpamBuild.Export-1.0.19.zip
   \test(pass)
   \dk.object(abi: "Release.Linux_x86_64", value-id: "ox2yguwbuo7ev3o5ovs5vcjgsljpqjev73hi6ze6isy6mmksrfasq")\;

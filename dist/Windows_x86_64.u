@@ -55,9 +55,9 @@ Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.7
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.11 -f ${RUNTIME}/OpamLock.Export-1.1.11.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.12 -f ${RUNTIME}/OpamLock.Export-1.1.12.zip
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "onsoatloyjzd4wbqaxqel4yg37gvvqchbrfiafml5h2lh2aqzysdq")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "o0000000000000000000000000000000000000000000000000000")\;
 
 
 ## Dk.OpamBuild
@@ -66,6 +66,6 @@ Only the current OpamBuild revision ships. The retired Export@1.0.0-@1.0.15
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.18 -f ${RUNTIME}/OpamBuild.Export-1.0.18.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.19 -f ${RUNTIME}/OpamBuild.Export-1.0.19.zip
   \test(pass)
   \dk.object(abi: "Release.Windows_x86_64", value-id: "orlivsdhgqn6hmk3yq3gm35adggjgmx3bccn6nyluhahl4wl27cvq")\;

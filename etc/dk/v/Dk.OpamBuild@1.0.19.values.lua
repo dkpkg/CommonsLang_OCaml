@@ -1,9 +1,9 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamBuild@1.0.18"
+  id = "CommonsLang_OCaml.Dk.OpamBuild@1.0.19"
 }
 
 -- ==========================================================================
--- CommonsLang_OCaml.Dk.OpamBuild.F_BuildLockedPackage - per-opam-package build
+-- CommonsLang_OCaml.Dk.OpamBuild - locked opam package builds
 -- ==========================================================================
 --
 -- Generic (project-independent) companion to CommonsLang_OCaml.Dk.OpamLock:
@@ -11,6 +11,16 @@ local M = {
 -- each locked package. Nothing here is specific to any one project - the lock,
 -- the build wrapper, and (for projects with in-tree "local" packages) the
 -- shared localized-source object are all supplied by the driver as parameters.
+--
+-- Two build rules share one per-package form synthesis (H.synth_package):
+--   * F_BuildLockedPackage - ONE package per rule instantiation; driven by one
+--     `run-function` line per package (the pre-@1.0.19 driver shape).
+--   * F_BuildLockedClosure - the WHOLE closure in one instantiation: the lock
+--     is fetched and decoded once, and a single submit registers every
+--     per-package form plus an aggregate `.Built` output form. Driven by ONE
+--     `run-function` line; see the closure rule's own header for why (warm-run
+--     rule instantiations cannot be trace-cached) and for the deliberate
+--     per-package object-id churn this shape carries.
 --
 -- PURPOSE
 -- One instance of this rule builds exactly ONE opam package - one node of the
@@ -113,12 +123,17 @@ local M = {
 -- rule functions, so helpers live in a unique global table; boolean values
 -- (returns, arguments, table values) are unreliable, so flags are numeric and
 -- sets store the key as its own string value.
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18 = {}
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.NULL = {}
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19 = {}
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.NULL = {}
+-- Memo of the per-(ocaml, targetabi) Windows PATH replacement string built in
+-- percommand_abi: a pure string of its inputs, so safe to share. The closure
+-- rule synthesizes every package x 8 abis in one instantiation, where
+-- rebuilding this large concatenation per command is measurable lua-ml work.
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.WINPATHS = {}
 
 rules, _uirules = build.newrules(M)
 
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.SLOTS = {
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.SLOTS = {
   "Release.Windows_x86_64", "Release.Windows_x86",
   "Release.Linux_x86_64", "Release.Linux_x86_64_musl", "Release.Linux_x86",
   "Release.Linux_arm64",
@@ -131,7 +146,7 @@ CommonsLang_OCaml__Dk_OpamBuild__1_0_18.SLOTS = {
 -- dk0 skips the non-matching commands when building a given slot (see
 -- ThunkAst.can_optimize_out_resolved_term). Populate by bracket-index because
 -- slot names contain dots.
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.ABIS = {
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.ABIS = {
   { slot = "Release.Windows_x86_64", msvc = "x64" },
   { slot = "Release.Windows_x86",    msvc = "x86" },
   { slot = "Release.Linux_x86_64",   msvc = "-" },
@@ -147,24 +162,24 @@ CommonsLang_OCaml__Dk_OpamBuild__1_0_18.ABIS = {
 
 -- Packages provided by toolchain objects or purely virtual: never built and
 -- never staged as dependency objects.
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED = {}
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["ocaml"] = "ocaml"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["ocaml-base-compiler"] = "ocaml-base-compiler"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["ocaml-config"] = "ocaml-config"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["ocaml-options-vanilla"] = "ocaml-options-vanilla"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["base-unix"] = "base-unix"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["base-threads"] = "base-threads"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["base-bigarray"] = "base-bigarray"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["dune"] = "dune"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["flexdll"] = "flexdll"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["conf-mingw-w64-gcc-x86_64"] = "conf-mingw-w64-gcc-x86_64"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["host-arch-x86_64"] = "host-arch-x86_64"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["host-arch-x86_32"] = "host-arch-x86_32"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["host-arch-arm64"] = "host-arch-arm64"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["host-system-mingw"] = "host-system-mingw"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_18.PROVIDED["host-system-other"] = "host-system-other"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED = {}
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["ocaml"] = "ocaml"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["ocaml-base-compiler"] = "ocaml-base-compiler"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["ocaml-config"] = "ocaml-config"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["ocaml-options-vanilla"] = "ocaml-options-vanilla"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["base-unix"] = "base-unix"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["base-threads"] = "base-threads"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["base-bigarray"] = "base-bigarray"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["dune"] = "dune"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["flexdll"] = "flexdll"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["conf-mingw-w64-gcc-x86_64"] = "conf-mingw-w64-gcc-x86_64"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["host-arch-x86_64"] = "host-arch-x86_64"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["host-arch-x86_32"] = "host-arch-x86_32"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["host-arch-arm64"] = "host-arch-arm64"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["host-system-mingw"] = "host-system-mingw"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_19.PROVIDED["host-system-other"] = "host-system-other"
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.iswhite(c)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.iswhite(c)
   local b = string.byte(c)
   return b == 32 or b == 9 or b == 13 or b == 10
 end
@@ -176,7 +191,7 @@ end
 -- string.format); non-integral or non-numeric values fall through unchanged.
 -- True when the string is one or more ASCII digits (a value lua-ml would
 -- serialize as a JSON number rather than a string).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.is_pure_int(s)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.is_pure_int(s)
   if type(s) ~= "string" or s == "" then return nil end
   local i = 1
   local n = string.len(s)
@@ -188,7 +203,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.is_pure_int(s)
   return 1
 end
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.numstr(v)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.numstr(v)
   if type(v) == "string" then return v end
   if type(v) ~= "number" then return tostring(v) end
   if v ~= v - (v % 1) then return tostring(v) end   -- non-integral: leave as-is
@@ -207,7 +222,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.numstr(v)
   return digits
 end
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.join(tbl, sep)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.join(tbl, sep)
   -- Iterate by sequential index, not next(): lua-ml `next` visits integer keys
   -- in hash order, which scrambles argv where token order is load-bearing (e.g.
   -- `dune build -p NAME`). lua-ml has no `#`, so walk tbl[1], tbl[2], ... .
@@ -221,7 +236,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.join(tbl, sep)
   return r
 end
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.indexof(s, ch, i)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.indexof(s, ch, i)
   local n = string.len(s)
   local j = i
   while j <= n do
@@ -231,7 +246,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.indexof(s, ch, i)
   return nil
 end
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.lastindexof(s, ch)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.lastindexof(s, ch)
   local n = string.len(s)
   local j = n
   while j >= 1 do
@@ -241,7 +256,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.lastindexof(s, ch)
   return nil
 end
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.endswith(s, suffix)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.endswith(s, suffix)
   local ls = string.len(s)
   local lf = string.len(suffix)
   if lf > ls then return nil end
@@ -254,7 +269,7 @@ end
 -- (an underscore must be followed by lowercase). opam names are already
 -- lowercase, but local package names carry internal capitals (MlFront_Console),
 -- so lowercase every non-initial character.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.modsegment(name)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.modsegment(name)
   local out = ""
   local i = 1
   local n = string.len(name)
@@ -273,8 +288,8 @@ end
 -- tok   = { kind = "str"|"ident", v = TEXT, filter = TEXT or nil }
 -- A field without surrounding brackets is one group (opam collapses
 -- single-command fields when printing).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.tokenize_field(raw)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_18
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.tokenize_field(raw)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_19
   local groups = {}
   local bare = { toks = {} }
   local cur = nil
@@ -357,7 +372,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.tokenize_field(raw)
 end
 
 -- Split a dotted numeric version into an array of integer segments.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.version_parts(v)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.version_parts(v)
   local out = {}
   local seg = ""
   local i = 1
@@ -373,9 +388,9 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.version_parts(v)
 end
 
 -- Compare dotted numeric versions: true when a >= b ("4.14.3" >= "4.02.0").
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.version_ge(a, b)
-  local pa = CommonsLang_OCaml__Dk_OpamBuild__1_0_18.version_parts(a)
-  local pb = CommonsLang_OCaml__Dk_OpamBuild__1_0_18.version_parts(b)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.version_ge(a, b)
+  local pa = CommonsLang_OCaml__Dk_OpamBuild__1_0_19.version_parts(a)
+  local pb = CommonsLang_OCaml__Dk_OpamBuild__1_0_19.version_parts(b)
   local i = 1
   while pa[i] ~= nil or pb[i] ~= nil do
     local xa = pa[i] or 0
@@ -390,8 +405,8 @@ end
 -- Evaluate an opam filter expression. Supports the shapes in the MlFront
 -- lock: IDENT, !IDENT, A & B, A | B, and `ocaml:version OP "str"`.
 -- Errors loudly on anything else so gaps surface per package.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.eval_filter(ftext, fenv, pkg)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_18
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.eval_filter(ftext, fenv, pkg)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_19
   local words = {}
   local i = 1
   local n = string.len(ftext)
@@ -462,8 +477,8 @@ end
 -- `skipeval` (set by eval_filter's short-circuit): still PARSE the atom to advance
 -- st.idx, but return without the fenv lookup -- the atom is in a dead branch, so
 -- an unmodeled variable there must not abort the build.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.filter_atom(words, st, fenv, pkg, ftext, skipeval)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_18
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.filter_atom(words, st, fenv, pkg, ftext, skipeval)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_19
   local negate = nil
   while words[st.idx] ~= nil and words[st.idx].k == "op" and words[st.idx].v == "!" do
     negate = not negate
@@ -517,8 +532,8 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.filter_atom(words, st, fenv, pk
 end
 
 -- Substitute %{var}% interpolations inside a string token.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.interpolate(s, vars, pkg)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_18
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.interpolate(s, vars, pkg)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_19
   local out = ""
   local i = 1
   local n = string.len(s)
@@ -547,8 +562,8 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.interpolate(s, vars, pkg)
 end
 
 -- Interpret an opam build:/install: field into a list of argv arrays.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.field_to_argvs(raw, fenv, vars, pkg)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_18
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.field_to_argvs(raw, fenv, vars, pkg)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_19
   local argvs = {}
   -- An absent build:/install: field arrives as nil, the rule's H.NULL sentinel,
   -- or jsondk's own `json.null` value (a distinct decoded null). opam fields are
@@ -604,7 +619,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.field_to_argvs(raw, fenv, vars,
 end
 
 -- Single-quote a token for /bin/sh.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.shq(s)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.shq(s)
   local out = "'"
   local i = 1
   local n = string.len(s)
@@ -631,7 +646,7 @@ end
 -- The opam `os` filter variable for an abi: `win32` on Windows, otherwise the
 -- kernel name opam uses (`macos` for Darwin, `linux` elsewhere). Lets the field
 -- interpreter select os-conditional build/install commands ({os = "win32"}).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.abi_os(abi)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.abi_os(abi)
   if abi.msvc ~= "-" then return "win32" end
   if string.find(abi.slot, "Darwin") ~= nil then return "macos" end
   return "linux"
@@ -640,7 +655,7 @@ end
 -- The opam `arch` filter variable for a slot (opam's canonical spelling). Derived
 -- from the slot name, like abi_os. x86_64 is checked before x86 (the former
 -- contains the latter).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.abi_arch(abi)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.abi_arch(abi)
   if string.find(abi.slot, "x86_64") ~= nil then return "x86_64" end
   if string.find(abi.slot, "arm64") ~= nil then return "arm64" end
   if string.find(abi.slot, "x86") ~= nil then return "x86_32" end
@@ -656,7 +671,8 @@ end
 -- `Release.target_abi` wildcard): closure package builds materialize at the
 -- HOST key, so `abi` is the executing host's record while the compiler and the
 -- vcvars arch must follow the target (see the PATH note below).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.percommand_abi(coreutils, wrapperfetch, msys2dash, argv, abi, targetabi, ocaml, dune)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.percommand_abi(coreutils, wrapperfetch, msys2dash, argv, abi, targetabi, ocaml, dune)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_19
   local shell = "/bin/sh"
   local cmd = { coreutils, "env" }
   if abi.msvc ~= "-" then
@@ -709,15 +725,19 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.percommand_abi(coreutils, wrapp
     --   * The Windows system directories -- for the OS tools (cmd, where, etc.).
     -- Make and MinGit are the same execution-abi objects OpamLock already
     -- fetches; MSYS2 /usr/bin, which the wrapper prepends, ships neither.
-    table.insert(cmd,
-      "PATH=$(--path=absnative get-object " .. ocaml .. " -s " ..
-      targetabi ..
-      " -d : -e 'bin/*')${/}bin" ..
-      -- make, required by ocamlfind's ./configure
-      ";$(--path=absnative get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -d : -e 'bin/*')${/}bin" ..
-      -- git (MinGit cmd/), required by spawn's dune subst
-      ";$(--path=absnative get-object CommonsBase_Build.Git.MinGit@2.55.0 -s Release.execution_abi -d : -e 'cmd/*')${/}cmd" ..
-      ";C:/Windows/System32;C:/Windows;C:/Windows/System32/Wbem")
+    local wp = H.WINPATHS[ocaml .. "|" .. targetabi]
+    if wp == nil then
+      wp = "PATH=$(--path=absnative get-object " .. ocaml .. " -s " ..
+        targetabi ..
+        " -d : -e 'bin/*')${/}bin" ..
+        -- make, required by ocamlfind's ./configure
+        ";$(--path=absnative get-object CommonsBase_GNU.Make@4.4.1 -s Release.execution_abi -d : -e 'bin/*')${/}bin" ..
+        -- git (MinGit cmd/), required by spawn's dune subst
+        ";$(--path=absnative get-object CommonsBase_Build.Git.MinGit@2.55.0 -s Release.execution_abi -d : -e 'cmd/*')${/}cmd" ..
+        ";C:/Windows/System32;C:/Windows;C:/Windows/System32/Wbem"
+      H.WINPATHS[ocaml .. "|" .. targetabi] = wp
+    end
+    table.insert(cmd, wp)
   end
   if abi.staticgcc ~= nil then
     -- Fully static executables on this abi (see the ABIS table).
@@ -774,7 +794,7 @@ end
 -- exports OCAML_TOPLEVEL_PATH=p/lib/findlib, which the toplevel itself honors
 -- without any init file. Returns rebuilt argv tables (lua-ml: in-place order
 -- rewrites do not reliably propagate, so callers reassign).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.hermeticize_argvs(argvs)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.hermeticize_argvs(argvs)
   local out = {}
   local i = 1
   while argvs[i] ~= nil do
@@ -795,152 +815,64 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_18.hermeticize_argvs(argvs)
   return out
 end
 
--- The rule
--- ---------------------------------------------------------------------------
--- Parameters:
---   modver=MODULE@VERSION        the output object (ex. the module
---                                CommonsBase_Dk.Dk0.Pkg.Csexp at version 2.4.2);
---                                sibling dependency objects derive from its
---                                module path and version
---   pkg=NAME                     the opam package name in the lock
---   localsrc=MODULE@VERSION      the shared localized-source object: it
---                                carries BOTH the lock (read from
---                                a top-level `locksrcpath=` member) and, for a package
---                                the lock marks "local":"t", the in-tree
---                                source. The lock ships as an ordinary member
---                                of the project's source archive (consume-
---                                from-archive: no separate checked-in lock
---                                copy/bundle to keep in sync).
---   locksrcpath=PATH             top-level member path of the lock in
---                                localsrc (ex. "./dk-opam-lock.jsonc", the
---                                lock member MlFrontSource emits)
-function rules.F_BuildLockedPackage(command, request, continue_)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_18
-  if command == "declareoutput" then
-    local modver = assert(request.user.modver, "please provide `modver=MODULE@VERSION`")
-    assert(request.user.localsrc, "please provide `localsrc=MODULE@VERSION`")
-    assert(request.user.locksrcpath, "please provide `locksrcpath=PATH` (the lock's path inside localsrc)")
-    assert(request.user.pkg, "please provide `pkg=OPAM_PACKAGE_NAME`")
-    return {
-      declareoutput = {
-        return_objects = {
-          id = modver,
-          slots = H.SLOTS,
-          execution_slot = "Release.execution_abi"
-        }
-      }
-    }
-  end
-  if command == "declareinput" then
-    local modver = assert(request.user.modver, "please provide `modver=MODULE@VERSION`")
-    assert(request.user.localsrc, "please provide `localsrc=MODULE@VERSION`")
-    assert(request.user.locksrcpath, "please provide `locksrcpath=PATH` (the lock's path inside localsrc)")
-    -- Declare each direct dependency's Pkg object as an input_object edge, so the
-    -- engine holds the true build DAG and can schedule independent packages
-    -- concurrently when the driver submits the per-package run-functions
-    -- unordered rather than in a forced sequential chain. The dependency Pkg ids
-    -- are siblings of this object, so share its `<...>.Pkg.` prefix; the driver
-    -- passes the direct dependency opam names via `deps[]=` because declareinput
-    -- runs before the lock asset is fetched (in submit) and so cannot read the
-    -- depends graph itself. Absent `deps[]` (the sequential driver) none are
-    -- declared and the build relies on sequential precommand ordering.
-    local input_objects = {}
-    local deps = request.user.deps
-    if deps ~= nil then
-      local at = H.lastindexof(modver, "@")
-      local modpath = string.sub(modver, 1, at - 1)
-      local version = string.sub(modver, at + 1)
-      local lastdot = H.lastindexof(modpath, ".")
-      local pkgprefix = string.sub(modpath, 1, lastdot)   -- "<...>.Pkg."
-      local di = 1
-      while deps[di] ~= nil do
-        -- Same import resolution as the staging loop: an imported dep declares its
-        -- foreign object id as the input edge; a local dep declares the sibling Pkg.
-        local impid = request.user["impdep_" .. H.modsegment(deps[di])]
-        local depid = impid
-        if depid == nil then depid = pkgprefix .. H.modsegment(deps[di]) .. "@" .. version end
-        table.insert(input_objects, {
-          id = depid,
-          slots = H.SLOTS,
-          execution_slot = "Release.execution_abi"
-        })
-        di = di + 1
-      end
-    end
-    return {
-      declareinput = {
-        input_objects = input_objects
-      }
-    }
-  end
-  if command ~= "submit" then return end
+-- Host tools (ported from Dk.OpamLock.is_host_tool; see the prose there and in
+-- dk.u "### Host tools and the hosttoolabi= escape hatch"): opam packages whose
+-- built artifacts must RUN on the build host during later package builds. The
+-- closure rule builds them at its `hosttoolabi=` instead of `targetabi=`,
+-- mirroring what GenerateDriver emitted per line for the per-package rule.
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.is_host_tool(name)
+  return name == "ocamlfind" or name == "ocamlbuild"
+end
 
-  if continue_ ~= "build" then
-    local localsrc = request.user.localsrc
-    local locksrcpath = request.user.locksrcpath
-    return {
-      submit = {
-        expressions = {
-          files = {
-            -- The lock is fetched in the submit "state" phase (before the build
-            -- form), where the request slot is not yet bound, so ${SLOTNAME.request}
-            -- is unavailable at this toplevel expression. The localized source
-            -- emits an identical lock member in every slot (it is copied verbatim
-            -- from the source archive, slot-independent), so fetch it at the host
-            -- execution ABI -- always resolvable -- and read the slot-specific data
-            -- from within the one file during the build phase below.
-            lock = "$(get-object " .. localsrc .. " -s Release.execution_abi -m " .. locksrcpath .. " -f dk-opam-lock.jsonc)"
-          }
-        },
-        andthen = { continue_ = { state = "build" } }
-      }
-    }
+-- Depth-first post-order walk of `name`'s dependencies in the lock, appending
+-- each buildable package to `order` after its dependencies (ported from
+-- Dk.OpamLock.driver_visit: the closure rule performs at build time the walk
+-- GenerateDriver performs at author time). `seen` is marked before recursing
+-- (opam dependency graphs are acyclic, so no cycle check). A dependency with
+-- neither a source nor the local mark (a virtual package such as `seq`) is
+-- skipped; a dependency absent from the lock is an error.
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.driver_visit(byname, provided, name, seen, order)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_19
+  if seen[name] ~= nil or provided[name] ~= nil then return end
+  local e = byname[name]
+  assert(e ~= nil, "dependency `" .. name .. "` is not in the lock")
+  seen[name] = name
+  if type(e.source) ~= "table" and e["local"] ~= "t" then return end
+  local i = 1
+  while e.depends ~= nil and e.depends[i] ~= nil do
+    H.driver_visit(byname, provided, e.depends[i], seen, order)
+    i = i + 1
   end
+  table.insert(order, name)
+end
 
-  -- state "build": lock content is available
-  local pkg = request.user.pkg
-  local modver = request.user.modver
-  -- Toolchain objects as arguments (default to the pinned set). The COMPILER
-  -- (ocaml) fixes .cmi/.cmxa magic, so a consumer of an imported package must have
-  -- been built with the same `ocaml`; dune (build orchestrator) and msys2 (build
-  -- shell) leave no trace in the compiled artifacts and are irrelevant to
-  -- consumability. See CommonsLang_OCaml dk.u "## Resolution of imports".
-  local ocaml = request.user.ocaml
-  if ocaml == nil then ocaml = "CommonsLang_OCaml.DkML@4.14.3" end
-  local dune = request.user.dune
-  if dune == nil then dune = "CommonsLang_OCaml.Dune@3.23.1" end
-  local msys2 = request.user.msys2
-  if msys2 == nil then msys2 = "CommonsLang_OCaml.MSYS2@2026.6.11" end
-  -- The ABI this package's OCaml artifacts must be built FOR (the target), as
-  -- opposed to the host ABI the build EXECUTES on. It is plumbed explicitly by the
-  -- driver (Dk.OpamLock emits `targetabi=Release.target_abi`) rather than taken from
-  -- ${SLOTNAME.request}: this rule declares `execution_slot = "Release.execution_abi"`,
-  -- so the opam-build form is materialized at the HOST object key and ${SLOTNAME.request}
-  -- there resolves to the host abi. Using that for the compiler silently cross-mis-built
-  -- every cross slot (target_abi != execution_abi) as host-arch. Only the compiler/Dune
-  -- move to the target; build TOOLS (coreutils, GNU make, s7z) and the output/dep slots
-  -- stay on Release.execution_abi so the value store stays consistent. Defaults to the
-  -- `Release.target_abi` wildcard, which resolves to the execution abi when no
-  -- --target-abi is set, so non-cross slots are unchanged.
-  local targetabi = request.user.targetabi or "Release.target_abi"
-  local lockfile = request.continued.lock
-  local lockjson = request.io.read(lockfile, "a")
-  request.io.close(lockfile)
-  local jd = require("jsondk")
-  local lock = jd.decode(lockjson)
-  assert(lock and lock.packages, "could not decode the lock (no packages)")
-
-  -- find the package entry (lock keys are name.version)
-  local entry = nil
-  local k = next(lock.packages)
-  while k do
-    local dot = H.indexof(k, ".", 1)
-    if dot ~= nil and string.sub(k, 1, dot - 1) == pkg then
-      entry = lock.packages[k]
-    end
-    k = next(lock.packages, k)
-  end
-  assert(entry ~= nil, "package `" .. pkg .. "` is not in the lock")
+-- Synthesize ONE per-package build form (and, for an external package, its
+-- .Src bundle) from a lock entry. Shared by F_BuildLockedPackage (one package
+-- per rule instantiation) and F_BuildLockedClosure (every closure package in
+-- one instantiation), so the two rules cannot drift. `a` carries:
+--   pkg        the opam package name
+--   entry      that package's lock entry (found by the caller)
+--   formid     the form id to register (F_BuildLockedPackage passes its
+--              request.submit.outputid; F_BuildLockedClosure synthesizes
+--              <pkgpath>.Pkg.<Segment>@<version> per package)
+--   modver     the package object MODULE@VERSION (sibling dependency objects
+--              derive from its module path and version)
+--   byname     lock.packages re-indexed by bare name (built once by the
+--              caller; the closure rule shares one index across packages)
+--   user       request.user (the impdep_<Segment> import overrides and the
+--              localsrc for "local":"t" packages)
+--   targetabi, ocaml, dune, msys2
+--              toolchain/abi selection, defaults already applied by the caller
+-- Returns { form = <form table>, src_bundle = <bundle table or nil> }.
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_19.synth_package(a)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_19
+  local pkg = a.pkg
+  local entry = a.entry
+  local modver = a.modver
+  local targetabi = a.targetabi
+  local ocaml = a.ocaml
+  local dune = a.dune
+  local msys2 = a.msys2
 
   -- module naming: modver = <Parent>.<Segment>@<ver>
   local at = H.lastindexof(modver, "@")
@@ -1038,13 +970,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- in its dune-package, so building against it needs those present too. Walk the
   -- lock's depends graph breadth-first, skipping PROVIDED (compiler-supplied)
   -- packages. Each get-object subshell is also the dependency edge.
-  local byname = {}
-  local lnk = next(lock.packages)
-  while lnk do
-    local ld = H.indexof(lnk, ".", 1)
-    if ld ~= nil then byname[string.sub(lnk, 1, ld - 1)] = lock.packages[lnk] end
-    lnk = next(lock.packages, lnk)
-  end
+  local byname = a.byname
   local closure = {}
   local seen = {}
   local queue = {}
@@ -1086,7 +1012,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
     -- import source (an `impdep_<Segment>=<fully-qualified object id>` arg), stage
     -- that imported object verbatim; otherwise stage the local sibling Pkg object
     -- (which the driver also builds). Segment key = H.modsegment(opam name).
-    local impid = request.user["impdep_" .. H.modsegment(dep)]
+    local impid = a.user["impdep_" .. H.modsegment(dep)]
     local depmodver = impid
     if depmodver == nil then depmodver = parent .. H.modsegment(dep) .. "@" .. modversion end
     table.insert(commands, {
@@ -1130,7 +1056,7 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- per-package archive asset from the synthesized .Src bundle (get-asset).
   local srcfetch
   if is_local then
-    local localsrc = assert(request.user.localsrc,
+    local localsrc = assert(a.user.localsrc,
       "package `" .. pkg .. "` is a local package (\"local\":\"t\" in the lock) but no"
       .. " `localsrc=MODULE@VERSION` was provided (the shared localized-source object"
       .. " that supplies the source for every local package)")
@@ -1393,41 +1319,498 @@ function rules.F_BuildLockedPackage(command, request, continue_)
 
   -- External packages get a synthesized .Src bundle carrying their source; a
   -- local package uses the external MlFrontSrc bundle, so synthesizes none.
-  local src_bundles = {}
+  local src_bundle = nil
   if not is_local then
-    src_bundles = {
-      {
-        id = srcbundle,
-        listing = { origins = { { name = "src", mirrors = { srcdir } } } },
-        assets = {
-          {
-            origin = "src",
-            path = srcname,
-            checksum = { sha256 = sha256 },
-            size = entry.source.size
-          }
+    src_bundle = {
+      id = srcbundle,
+      listing = { origins = { { name = "src", mirrors = { srcdir } } } },
+      assets = {
+        {
+          origin = "src",
+          path = srcname,
+          checksum = { sha256 = sha256 },
+          size = entry.source.size
         }
       }
     }
   end
 
   return {
+    form = {
+      id = a.formid,
+      function_ = {
+        envmods = envmods,
+        commands = commands
+      },
+      outputs = {
+        assets = { { slots = H.SLOTS, paths = { "install.zip" } } }
+      }
+    },
+    src_bundle = src_bundle
+  }
+end
+
+-- The rule
+-- ---------------------------------------------------------------------------
+-- Parameters:
+--   modver=MODULE@VERSION        the output object (ex. the module
+--                                CommonsBase_Dk.Dk0.Pkg.Csexp at version 2.4.2);
+--                                sibling dependency objects derive from its
+--                                module path and version
+--   pkg=NAME                     the opam package name in the lock
+--   localsrc=MODULE@VERSION      the shared localized-source object: it
+--                                carries BOTH the lock (read from
+--                                a top-level `locksrcpath=` member) and, for a package
+--                                the lock marks "local":"t", the in-tree
+--                                source. The lock ships as an ordinary member
+--                                of the project's source archive (consume-
+--                                from-archive: no separate checked-in lock
+--                                copy/bundle to keep in sync).
+--   locksrcpath=PATH             top-level member path of the lock in
+--                                localsrc (ex. "./dk-opam-lock.jsonc", the
+--                                lock member MlFrontSource emits)
+function rules.F_BuildLockedPackage(command, request, continue_)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_19
+  if command == "declareoutput" then
+    local modver = assert(request.user.modver, "please provide `modver=MODULE@VERSION`")
+    assert(request.user.localsrc, "please provide `localsrc=MODULE@VERSION`")
+    assert(request.user.locksrcpath, "please provide `locksrcpath=PATH` (the lock's path inside localsrc)")
+    assert(request.user.pkg, "please provide `pkg=OPAM_PACKAGE_NAME`")
+    return {
+      declareoutput = {
+        return_objects = {
+          id = modver,
+          slots = H.SLOTS,
+          execution_slot = "Release.execution_abi"
+        }
+      }
+    }
+  end
+  if command == "declareinput" then
+    local modver = assert(request.user.modver, "please provide `modver=MODULE@VERSION`")
+    assert(request.user.localsrc, "please provide `localsrc=MODULE@VERSION`")
+    assert(request.user.locksrcpath, "please provide `locksrcpath=PATH` (the lock's path inside localsrc)")
+    -- Declare each direct dependency's Pkg object as an input_object edge, so the
+    -- engine holds the true build DAG and can schedule independent packages
+    -- concurrently when the driver submits the per-package run-functions
+    -- unordered rather than in a forced sequential chain. The dependency Pkg ids
+    -- are siblings of this object, so share its `<...>.Pkg.` prefix; the driver
+    -- passes the direct dependency opam names via `deps[]=` because declareinput
+    -- runs before the lock asset is fetched (in submit) and so cannot read the
+    -- depends graph itself. Absent `deps[]` (the sequential driver) none are
+    -- declared and the build relies on sequential precommand ordering.
+    local input_objects = {}
+    local deps = request.user.deps
+    if deps ~= nil then
+      local at = H.lastindexof(modver, "@")
+      local modpath = string.sub(modver, 1, at - 1)
+      local version = string.sub(modver, at + 1)
+      local lastdot = H.lastindexof(modpath, ".")
+      local pkgprefix = string.sub(modpath, 1, lastdot)   -- "<...>.Pkg."
+      local di = 1
+      while deps[di] ~= nil do
+        -- Same import resolution as the staging loop: an imported dep declares its
+        -- foreign object id as the input edge; a local dep declares the sibling Pkg.
+        local impid = request.user["impdep_" .. H.modsegment(deps[di])]
+        local depid = impid
+        if depid == nil then depid = pkgprefix .. H.modsegment(deps[di]) .. "@" .. version end
+        table.insert(input_objects, {
+          id = depid,
+          slots = H.SLOTS,
+          execution_slot = "Release.execution_abi"
+        })
+        di = di + 1
+      end
+    end
+    return {
+      declareinput = {
+        input_objects = input_objects
+      }
+    }
+  end
+  if command ~= "submit" then return end
+
+  if continue_ ~= "build" then
+    local localsrc = request.user.localsrc
+    local locksrcpath = request.user.locksrcpath
+    return {
+      submit = {
+        expressions = {
+          files = {
+            -- The lock is fetched in the submit "state" phase (before the build
+            -- form), where the request slot is not yet bound, so ${SLOTNAME.request}
+            -- is unavailable at this toplevel expression. The localized source
+            -- emits an identical lock member in every slot (it is copied verbatim
+            -- from the source archive, slot-independent), so fetch it at the host
+            -- execution ABI -- always resolvable -- and read the slot-specific data
+            -- from within the one file during the build phase below.
+            lock = "$(get-object " .. localsrc .. " -s Release.execution_abi -m " .. locksrcpath .. " -f dk-opam-lock.jsonc)"
+          }
+        },
+        andthen = { continue_ = { state = "build" } }
+      }
+    }
+  end
+
+  -- state "build": lock content is available
+  local pkg = request.user.pkg
+  local modver = request.user.modver
+  -- Toolchain objects as arguments (default to the pinned set). The COMPILER
+  -- (ocaml) fixes .cmi/.cmxa magic, so a consumer of an imported package must have
+  -- been built with the same `ocaml`; dune (build orchestrator) and msys2 (build
+  -- shell) leave no trace in the compiled artifacts and are irrelevant to
+  -- consumability. See CommonsLang_OCaml dk.u "## Resolution of imports".
+  local ocaml = request.user.ocaml
+  if ocaml == nil then ocaml = "CommonsLang_OCaml.DkML@4.14.3" end
+  local dune = request.user.dune
+  if dune == nil then dune = "CommonsLang_OCaml.Dune@3.23.1" end
+  local msys2 = request.user.msys2
+  if msys2 == nil then msys2 = "CommonsLang_OCaml.MSYS2@2026.6.11" end
+  -- The ABI this package's OCaml artifacts must be built FOR (the target), as
+  -- opposed to the host ABI the build EXECUTES on. It is plumbed explicitly by the
+  -- driver (Dk.OpamLock emits `targetabi=Release.target_abi`) rather than taken from
+  -- ${SLOTNAME.request}: this rule declares `execution_slot = "Release.execution_abi"`,
+  -- so the opam-build form is materialized at the HOST object key and ${SLOTNAME.request}
+  -- there resolves to the host abi. Using that for the compiler silently cross-mis-built
+  -- every cross slot (target_abi != execution_abi) as host-arch. Only the compiler/Dune
+  -- move to the target; build TOOLS (coreutils, GNU make, s7z) and the output/dep slots
+  -- stay on Release.execution_abi so the value store stays consistent. Defaults to the
+  -- `Release.target_abi` wildcard, which resolves to the execution abi when no
+  -- --target-abi is set, so non-cross slots are unchanged.
+  local targetabi = request.user.targetabi or "Release.target_abi"
+  local lockfile = request.continued.lock
+  local lockjson = request.io.read(lockfile, "a")
+  request.io.close(lockfile)
+  local jd = require("jsondk")
+  local lock = jd.decode(lockjson)
+  assert(lock and lock.packages, "could not decode the lock (no packages)")
+
+  -- find the package entry (lock keys are name.version)
+  local entry = nil
+  local k = next(lock.packages)
+  while k do
+    local dot = H.indexof(k, ".", 1)
+    if dot ~= nil and string.sub(k, 1, dot - 1) == pkg then
+      entry = lock.packages[k]
+    end
+    k = next(lock.packages, k)
+  end
+  assert(entry ~= nil, "package `" .. pkg .. "` is not in the lock")
+
+  -- Re-index lock.packages by bare name once (lock keys are name.version). The
+  -- closure rule builds this same index once for every package in the closure.
+  local byname = {}
+  local lnk = next(lock.packages)
+  while lnk do
+    local ld = H.indexof(lnk, ".", 1)
+    if ld ~= nil then byname[string.sub(lnk, 1, ld - 1)] = lock.packages[lnk] end
+    lnk = next(lock.packages, lnk)
+  end
+
+  local r = H.synth_package({
+    pkg = pkg, entry = entry, formid = request.submit.outputid,
+    modver = modver, byname = byname, user = request.user,
+    targetabi = targetabi, ocaml = ocaml, dune = dune, msys2 = msys2
+  })
+  local src_bundles = {}
+  if r.src_bundle ~= nil then table.insert(src_bundles, r.src_bundle) end
+  return {
     submit = {
       values = {
         schema_version = { major = 1, minor = 0 },
         bundles = src_bundles,
-        forms = {
-          {
-            id = request.submit.outputid,
-            function_ = {
-              envmods = envmods,
-              commands = commands
-            },
-            outputs = {
-              assets = { { slots = H.SLOTS, paths = { "install.zip" } } }
-            }
-          }
+        forms = { r.form }
+      }
+    }
+  }
+end
+
+-- The closure rule
+-- ---------------------------------------------------------------------------
+-- Builds the ENTIRE locked closure from ONE rule instantiation: fetch and
+-- decode the lock once, then register every per-package build form (bodies
+-- identical to what one F_BuildLockedPackage submit produces -- both rules call
+-- H.synth_package) plus one aggregate `.Built` form, all in a single submit.
+-- The driver (Dk.OpamLock.GenerateDriver, closure shape) emits ONE
+-- `run-function ...F_BuildLockedClosure...` precommand instead of one per
+-- package. Why: a rule instantiation can never be trace-cached (its
+-- scriptmodule dependency has no cloud-persistent hash, and a submit's
+-- registrations are side effects a cached value could not replay), so a warm
+-- run re-instantiated the per-package rule N times -- ~9 s of a ~14 s warm run
+-- on a 58-package closure, each force re-decoding the whole lock in lua-ml.
+-- This rule pays the instantiation once.
+--
+-- The aggregate `.Built` form is the rule's single declared output (a rule
+-- declares exactly one return object; the per-package forms are reachable by
+-- get-object but not returned). Its precommands -- unordered: a submitted form
+-- with no `sequential` flag schedules its precommands concurrently, and lua-ml
+-- could not write the boolean anyway -- get-object every emitted package,
+-- restoring the concurrent scheduling the per-package driver got from its own
+-- unordered run-function lines. Its function copies the root package's
+-- install.zip out (or, under mergedprefix=t, merges every install.zip into one
+-- prefix.zip). Every aggregate dependency carries a cloud-persistent hash
+-- (package objects, assets, the submitted values), so unlike the driver form
+-- above it the aggregate DOES get a persisted trace: a warm run serves it
+-- without resolving its precommands at all.
+--
+-- OBJECT-ID NOTE (deliberate): per-package object value-ids derive from the
+-- canonical id of the values document that registers them. One closure-level
+-- submit registers every package in ONE document, so all Pkg value-ids differ
+-- from the ids the per-package submits produced, and any lock change that
+-- alters one package's form re-keys the whole closure. Switching a driver to
+-- this rule is therefore a one-time full closure rebuild plus a `\dk.object`
+-- re-harvest in every consumer -- the same churn as a lock change. See dk.u
+-- "## Dk.OpamBuild".
+--
+-- Parameters (one driver line):
+--   modver=MODULE@VERSION        the aggregate output form id (GenerateDriver
+--                                derives `<formid module path>.Built@<version>`)
+--   pkgpath=MODPATH              module path under which Pkg objects live
+--   version=VER                  version of the Pkg objects
+--   root=PKG | 'roots[]=PKG ...' the closure root(s); defaults to the lock's
+--                                stamped generated.roots when absent
+--   localsrc= locksrcpath=       the lock addressing, as F_BuildLockedPackage
+--   targetabi= ocaml= dune= msys2=
+--                                toolchain selection, as F_BuildLockedPackage
+--   'hosttoolabi=SLOT'           ABI for ocamlfind/ocamlbuild (default
+--                                Release.target_abi; see Dk.OpamLock's
+--                                is_host_tool prose)
+--   'provided[]=NAME ...'        toolchain-provided packages to skip (default:
+--                                the built-in PROVIDED set)
+--   'skiplocal=t'                omit "local":"t" packages from the build
+--   'mergedprefix=t'             aggregate output is the merged prefix.zip
+--   'impdep_<Segment>=<id>'      per-package import overrides, resolved at
+--                                author time by GenerateDriver (import gating
+--                                reads project files via request.ui, which a
+--                                build rule does not have)
+-- NOT parameters: deps[] (the build DAG flows through the aggregate's
+-- get-object precommands and each form's own dependency subshells) and
+-- slots[] (the Pkg/aggregate slots are the built-in H.SLOTS).
+function rules.F_BuildLockedClosure(command, request, continue_)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_19
+  if command == "declareoutput" then
+    local modver = assert(request.user.modver, "please provide `modver=MODULE@VERSION` (the aggregate .Built form id)")
+    assert(request.user.pkgpath, "please provide `pkgpath=MODPATH` (the module path for Pkg objects)")
+    assert(request.user.version, "please provide `version=VER` (the Pkg objects' version)")
+    assert(request.user.localsrc, "please provide `localsrc=MODULE@VERSION`")
+    assert(request.user.locksrcpath, "please provide `locksrcpath=PATH` (the lock's path inside localsrc)")
+    return {
+      declareoutput = {
+        return_objects = {
+          id = modver,
+          slots = H.SLOTS,
+          execution_slot = "Release.execution_abi"
         }
+      }
+    }
+  end
+  if command == "declareinput" then
+    -- No declared inputs: every dependency is either a form of this rule's own
+    -- submit or an imported object staged by an emitted form, and the
+    -- scheduling edges are the aggregate's unordered get-object precommands
+    -- plus each form's own dependency subshells.
+    return { declareinput = { input_objects = {} } }
+  end
+  if command ~= "submit" then return end
+
+  if continue_ ~= "build" then
+    local localsrc = request.user.localsrc
+    local locksrcpath = request.user.locksrcpath
+    return {
+      submit = {
+        expressions = {
+          files = {
+            -- Same host-keyed lock fetch as F_BuildLockedPackage (see there).
+            lock = "$(get-object " .. localsrc .. " -s Release.execution_abi -m " .. locksrcpath .. " -f dk-opam-lock.jsonc)"
+          }
+        },
+        andthen = { continue_ = { state = "build" } }
+      }
+    }
+  end
+
+  -- state "build": lock content is available
+  local pkgpath = request.user.pkgpath
+  local version = request.user.version
+  local ocaml = request.user.ocaml
+  if ocaml == nil then ocaml = "CommonsLang_OCaml.DkML@4.14.3" end
+  local dune = request.user.dune
+  if dune == nil then dune = "CommonsLang_OCaml.Dune@3.23.1" end
+  local msys2 = request.user.msys2
+  if msys2 == nil then msys2 = "CommonsLang_OCaml.MSYS2@2026.6.11" end
+  local targetabi = request.user.targetabi or "Release.target_abi"
+  local hosttoolabi = request.user.hosttoolabi
+  if hosttoolabi == nil then hosttoolabi = "Release.target_abi" end
+  local skiplocal = request.user.skiplocal
+  local mergedprefix = request.user.mergedprefix
+
+  local lockfile = request.continued.lock
+  local lockjson = request.io.read(lockfile, "a")
+  request.io.close(lockfile)
+  local jd = require("jsondk")
+  local lock = jd.decode(lockjson)
+  assert(lock and lock.packages, "could not decode the lock (no packages)")
+
+  -- provided[]= names override the built-in set (mirrors GenerateDriver's
+  -- provided[] handling; the set stores each key as its own string value).
+  local provided = H.PROVIDED
+  if request.user.provided ~= nil then
+    provided = {}
+    local pv = 1
+    while request.user.provided[pv] ~= nil do
+      provided[request.user.provided[pv]] = request.user.provided[pv]
+      pv = pv + 1
+    end
+  end
+
+  -- Roots: root= or roots[]=, else the lock's stamped generated.roots (Solve
+  -- @1.1.8+ stamps them). The single-root model copies one built/install.zip,
+  -- so more than one root requires the mergedprefix merge.
+  local root = request.user.root
+  local roots = request.user.roots
+  if roots == nil and root ~= nil then roots = { root } end
+  if roots == nil and lock.generated ~= nil and lock.generated.roots ~= nil then
+    roots = lock.generated.roots
+  end
+  assert(roots ~= nil and roots[1] ~= nil,
+    "please provide `root=PKG` or `roots[]=PKG`, or a lock whose generated.roots is stamped")
+  if mergedprefix == nil and roots[2] ~= nil then
+    assert(false, "roots[] with more than one package requires mergedprefix=t (the single-root model copies one root install.zip)")
+  end
+
+  -- Index by bare name once (lock keys are name.version), then walk the union
+  -- closure of every root in topological post-order (driver_visit dedups
+  -- through the shared seen/order, so multiple roots compose correctly).
+  local byname = {}
+  local lnk = next(lock.packages)
+  while lnk do
+    local ld = H.indexof(lnk, ".", 1)
+    if ld ~= nil then byname[string.sub(lnk, 1, ld - 1)] = lock.packages[lnk] end
+    lnk = next(lock.packages, lnk)
+  end
+  local order = {}
+  local seen = {}
+  local ri = 1
+  while roots[ri] ~= nil do
+    H.driver_visit(byname, provided, roots[ri], seen, order)
+    ri = ri + 1
+  end
+  assert(order[1] ~= nil, "the requested root(s) have no buildable closure in the lock")
+
+  -- Emitted packages: the closure minus imported packages (an impdep_<Segment>
+  -- override marks a package imported -- GenerateDriver resolves imports at
+  -- author time) minus "local":"t" packages when skiplocal=t.
+  local emit = {}
+  local eo = 1
+  while order[eo] ~= nil do
+    local nm = order[eo]
+    local is_local_pkg = byname[nm] ~= nil and byname[nm]["local"] == "t"
+    if request.user["impdep_" .. H.modsegment(nm)] == nil
+       and not (skiplocal ~= nil and is_local_pkg) then
+      table.insert(emit, nm)
+    end
+    eo = eo + 1
+  end
+  assert(emit[1] ~= nil, "nothing to build after imports/skiplocal filtered the closure")
+
+  -- Synthesize every emitted package's form (and .Src bundle) with the shared
+  -- H.synth_package: the same bodies one F_BuildLockedPackage submit produces,
+  -- so the per-package objects stay individually content-addressed, resumable,
+  -- and served by their own traces.
+  local forms = {}
+  local bundles = {}
+  local oi = 1
+  while emit[oi] ~= nil do
+    local name = emit[oi]
+    local pkgformid = pkgpath .. ".Pkg." .. H.modsegment(name) .. "@" .. version
+    local pabi = targetabi
+    if H.is_host_tool(name) then pabi = hosttoolabi end
+    local r = H.synth_package({
+      pkg = name, entry = byname[name], formid = pkgformid,
+      modver = pkgformid, byname = byname, user = request.user,
+      targetabi = pabi, ocaml = ocaml, dune = dune, msys2 = msys2
+    })
+    table.insert(forms, r.form)
+    if r.src_bundle ~= nil then table.insert(bundles, r.src_bundle) end
+    oi = oi + 1
+  end
+
+  -- The aggregate `.Built` form. Unordered get-object precommands demand (and
+  -- stage) every emitted package concurrently -- the parallel build fan-out.
+  -- In the single-root model the root stages at built/ and the function copies
+  -- built/install.zip out; under mergedprefix every install.zip merges into
+  -- one p/ prefix (the same merge the per-package driver's function did).
+  local built_root = nil
+  if mergedprefix == nil then built_root = roots[1] end
+  local pre = {}
+  local stagedirs = {}
+  local pi = 1
+  while emit[pi] ~= nil do
+    local dir = "p" .. H.numstr(pi - 1)
+    if built_root ~= nil and emit[pi] == built_root then dir = "built" end
+    stagedirs[pi] = dir
+    table.insert(pre,
+      "get-object " .. pkgpath .. ".Pkg." .. H.modsegment(emit[pi]) .. "@" .. version
+      .. " -s ${SLOTNAME.request} -m ./install.zip -d " .. dir)
+    pi = pi + 1
+  end
+  local coreutils = "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')"
+  local fcmds = {}
+  local outname = "install.zip"
+  if mergedprefix ~= nil then
+    outname = "prefix.zip"
+    local sevenzz = "$(get-object CommonsBase_Std.S7z@25.1.0 -s Release.execution_abi -e '*' -d :)/7zz.exe"
+    table.insert(fcmds, { coreutils, "mkdir", "-p", "p/lib/seq" })
+    table.insert(fcmds, {
+      coreutils, "cp",
+      "$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildSeqMeta@1.0.1 -p assets/opam/seq-META -f seq-meta-src)",
+      "p/lib/seq/META"
+    })
+    local mj = 1
+    while emit[mj] ~= nil do
+      table.insert(fcmds, { sevenzz, "x", "-y", "-op", stagedirs[mj] .. "/install.zip" })
+      mj = mj + 1
+    end
+    -- Imported packages are not built here, so they staged no p<i>/install.zip;
+    -- fetch each one's prebuilt install.zip and extract it into the same merged
+    -- p/ prefix, so prefix.zip carries the whole closure.
+    local qj = 1
+    while order[qj] ~= nil do
+      local qn = order[qj]
+      local impid = request.user["impdep_" .. H.modsegment(qn)]
+      if impid ~= nil then
+        table.insert(fcmds, {
+          sevenzz, "x", "-y", "-op",
+          "$(get-object " .. impid .. " -s ${SLOTNAME.request} -m ./install.zip -f imp-" .. H.numstr(qj) .. ".zip)"
+        })
+      end
+      qj = qj + 1
+    end
+    table.insert(fcmds, { sevenzz, "a", "-tzip", "${SLOT.request}/prefix.zip", "./p/*" })
+  else
+    local rootok = nil
+    local rk = 1
+    while emit[rk] ~= nil do
+      if emit[rk] == built_root then rootok = "t" end
+      rk = rk + 1
+    end
+    assert(rootok ~= nil,
+      "root `" .. tostring(built_root) .. "` is not an emitted package (an imported or skiplocal-dropped root requires mergedprefix=t)")
+    table.insert(fcmds, { coreutils, "cp", "built/install.zip", "${SLOT.request}/install.zip" })
+  end
+  table.insert(forms, {
+    id = request.user.modver,
+    precommands = { private = pre },
+    function_ = { commands = fcmds },
+    outputs = { assets = { { slots = H.SLOTS, paths = { outname } } } }
+  })
+
+  return {
+    submit = {
+      values = {
+        schema_version = { major = 1, minor = 0 },
+        bundles = bundles,
+        forms = forms
       }
     }
   }
@@ -1435,12 +1818,15 @@ end
 
 -- No-op build rule that ships the scriptmodule. A CommonsLang_OCaml distribution
 -- exports a scriptmodule by running one of its rules ("running one rule brings in
--- the entire script module"). This module otherwise has only F_BuildLockedPackage,
--- which needs real per-package parameters a non-interactive distribution cannot
--- supply, so this trivial function rule gives the distribution something to run,
--- causing the whole OpamBuild scriptmodule (including F_BuildLockedPackage) to
--- ship and be runnable from an import. Its output is an empty marker; it does
--- nothing else.
+-- the entire script module"). This module otherwise has only the build rules
+-- (F_BuildLockedPackage / F_BuildLockedClosure), which need real per-package
+-- parameters a non-interactive distribution cannot supply, so this trivial
+-- function rule gives the distribution something to run, causing the whole
+-- OpamBuild scriptmodule (including both build rules) to ship and be runnable
+-- from an import. Its output is an empty marker; it does nothing else.
+-- Its submitted form is byte-identical across OpamBuild revisions (the declared
+-- id is pinned at Export@1.0.0), so the marker value-ids in dist/*.u stay
+-- shared and a revision bump needs no new harvest.
 function rules.Export(command, request)
   local slots = {
     "Release.Windows_x86_64", "Release.Windows_x86", "Release.Windows_arm64",

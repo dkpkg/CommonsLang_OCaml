@@ -166,6 +166,13 @@ Retired on 2026-08-25 (superseded at HEAD): Dk.OpamLock@1.1.10 and its dist/*.u
 Export ladder, superseded by Dk.OpamLock@1.1.11 which derives the GenerateDriver
 arguments from a single `pkg=MODULE@VERSION`.
 
+Retired on 2026-08-25 (superseded at HEAD): Dk.OpamBuild@1.0.18 and
+Dk.OpamLock@1.1.11, superseded by Dk.OpamBuild@1.0.19 (which adds the
+F_BuildLockedClosure whole-closure build rule) and Dk.OpamLock@1.1.12 (which
+adds the one-line closure driver shape and shape-aware Refresh). The
+OpamBuild Export marker value-id is unchanged (Export@1.0.0 form is
+byte-identical); the OpamLock Export ladder is re-harvested for @1.1.12.
+
 ### CommonsLang_OCaml.Apparatus@1.0.1
 
   % unified.asset { name="Patches", dir="assets/p" }
@@ -262,6 +269,28 @@ author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
 
+The @1.1.12 revision teaches the driver machinery the closure shape that
+pairs with Dk.OpamBuild@1.0.19's F_BuildLockedClosure (see "## Dk.OpamBuild").
+GenerateDriver keys its emission off the rulefn family: an F_BuildLockedClosure
+rulefn -- the default when the import declares one -- emits ONE run-function
+precommand carrying the whole parameter set (the closure rule re-derives the
+per-package plan from the lock at build time), while an F_BuildLockedPackage
+rulefn emits the per-package lines byte-identically to @1.1.11 so existing
+drivers regenerate unchanged. Import resolution stays at author time (the
+emitted line carries resolved impdep_ ids, since a build rule cannot read the
+impsrclock project files), and the line keeps a literal ocaml= token that
+OpamVenv still reads off the raw driver text. Refresh resolves its target per
+driver: an explicit rulefn= wins; with the lock on disk a stamped driver
+upgrades to the newest F_BuildLockedClosure the import declares (a deliberate
+shape change that re-keys every Pkg object id, so it happens only when the
+lock -- the regeneration source -- is present); a stampless driver adopts the
+stamp in the per-package shape first (preserving the pkg=-token reproducibility
+guard, which a shape change would defeat); and a lockless
+(consume-from-archive) driver substitutes only within its stamped rulefn's
+family. mode=check compares within family and flags a per-package driver STALE
+when the import provides the closure rule and the lock is on disk. Its Export
+value-id is per-version and is harvested from CI as usual.
+
 The @1.1.11 revision reduces what a maintainer types to adopt an opam+dune
 project. GenerateDriver derives its nine arguments from one
 `pkg=MODULE@VERSION` (formid, pkgpath, version, localsrc, and the out path;
@@ -285,13 +314,17 @@ committed driver is kept deliberately: the primary metric is characters TYPED,
 and the driver is machine-generated (GenerateDriver/Adopt write it), so it
 costs the maintainer zero typed characters -- collapsing it to a stub saves
 nothing on that metric. Meanwhile the committed driver earns its place: its
-run-function lines are the auditable build plan a reviewer reads, its
 `generated` stamp powers Refresh mode=check and the CI refresh-check gate
 (which compare the on-disk driver), it is on the include path at scan time so
 a fresh clone builds offline without first running a generator, and its formid
 is a published contract (the thin form and dist/*.u reference Closure@VER by
-name). A dynamic driver would retire that whole subsystem for no gain on the
-headline metric, so the layer is kept and only its authoring was removed.
+name). Under the @1.1.12 closure shape the driver is one run-function line, so
+the auditable build plan a reviewer reads is the committed lock plus the
+closure rule rather than the enumerated per-package lines; that trade was made
+for warm-run speed (see "## Dk.OpamBuild"), and the stamp/formid/offline-scan
+reasons are unchanged. A dynamic driver would additionally retire the
+staleness-anchor and published-contract subsystem for no gain on the headline
+metric, so the layer is kept and only its authoring was removed.
 
 The @1.1.10 revision adds the OpamVenv uirule (see "### OpamVenv: a native
 dune inner loop"). It materializes a real, dune-usable opam prefix from a
@@ -441,9 +474,11 @@ its parameters from the generated text and emits the stamped form. `mode=check`
 on such a driver still recovers the rulefn: it fails when that rulefn is stale
 (the check that would have caught the 2026-08-20 stale-driver incident) and
 otherwise prints an "unstamped: run Refresh once to adopt" advisory and exits
-zero, so CI adoption is graceful. Rule versions are co-versioned: Refresh@1.1.10
-bakes in its sibling Solve@1.1.10/GenerateDriver@1.1.10/OpamVenv@1.1.10 and the
-newest `F_BuildLockedPackage`; `rulefn=` remains an explicit override.
+zero, so CI adoption is graceful. Rule versions are co-versioned: Refresh@1.1.12
+bakes in its sibling Solve@1.1.12/GenerateDriver@1.1.12/OpamVenv@1.1.12 and,
+absent an explicit `rulefn=`, prefers the newest `F_BuildLockedClosure` the
+import declares (falling back to `F_BuildLockedPackage`); `rulefn=` remains an
+explicit override.
 
 ### OpamVenv: a native dune inner loop
 
@@ -482,6 +517,33 @@ Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
 per-package build rule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+The @1.0.19 revision adds F_BuildLockedClosure beside F_BuildLockedPackage
+(both share one per-package form synthesis, H.synth_package, so they cannot
+drift). The closure rule builds the entire locked closure from ONE rule
+instantiation: it fetches and decodes the lock once, then a single submit
+registers every per-package build form (each still its own content-addressed
+Pkg object) plus an aggregate `.Built` output form whose unordered get-object
+precommands demand every package concurrently. Motivation: a rule
+instantiation can never be trace-cached (its scriptmodule dependency has no
+cloud-persistent hash, and a submit's registrations are side effects a cached
+value could not replay), so a warm run re-instantiated the per-package rule
+once per package -- roughly 9 s of a 14 s warm run on ocamlearlybird's
+58-package closure, each force re-decoding the whole 83 KB lock in lua-ml.
+Paired with Dk.OpamLock@1.1.12's one-line closure driver, the instantiation is
+paid once. The trade is deliberate and carries object-id churn: per-package
+Pkg value-ids derive from the canonical id of the values document that
+registers them, so registering the whole closure in ONE document changes every
+Pkg value-id (a one-time full closure rebuild plus a \dk.object re-harvest in
+every consumer, the same churn a lock change causes) and additionally couples
+them -- any later lock edit that alters one package's form re-keys the whole
+closure, where the per-package shape re-keyed only the edited package. Existing
+per-package drivers keep building: F_BuildLockedPackage is retained unchanged,
+and the lockless Refresh path refuses to cross rule families. No asset versions
+change (the closure rule reuses the same wrapper/tables/seq-META assets), and
+Export's submitted form is byte-identical (its declared id is pinned at
+Export@1.0.0), so the marker value-id stays shared and no new harvest is
+needed.
 
 The @1.0.1 revision ships alongside @1.0.0 for the MlFront with-test closure
 (short-circuit filter eval, an arch fenv, and the dune-install --prefix
