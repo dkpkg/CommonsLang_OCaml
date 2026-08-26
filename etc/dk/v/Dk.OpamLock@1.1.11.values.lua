@@ -1574,8 +1574,17 @@ function uirules.Adopt(command, request, continue_)
   local pkg = ns .. "." .. unit .. "@" .. version
 
   -- Solve the lock (stage 2 resolves and closes the round-1 expressions).
+  -- local_opam_dir pins the project's own *.opam into the solve switch so opam
+  -- resolves against the CHECKED-OUT source, not a stale same-named release in
+  -- opam-repository. Without it, `locals` only marks the package local in the
+  -- lock while opam silently solves the published metadata -- so a source whose
+  -- .opam has moved ahead of its last release (ex. a dependency bound raised in
+  -- the working tree) locks the wrong dependency versions and the build then
+  -- fails against them. "." is the project root (request.ui.capture runs the
+  -- helper with cwd = the project directory); override with local_opam_dir=.
   local sproxy = {
-    user = { roots = { root }, locals = { root } },
+    user = { roots = { root }, locals = { root },
+      local_opam_dir = request.user.local_opam_dir or "." },
     ui = request.ui, io = request.io,
     execution = request.execution, continued = request.continued
   }
