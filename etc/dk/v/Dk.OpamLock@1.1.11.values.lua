@@ -260,7 +260,11 @@ function uirules.Solve(command, request, continue_)
   if request.user.opam then
     opamexe = request.user.opam
   else
-    opamexe = H.trim(request.io.realpath(request.continued.opam)) .. "/bin/opam" .. exe
+    -- The Opam object ships bin/opam.exe on every platform (like the dune.exe
+    -- and coreutils.exe vendored tools, and unlike the DkML compiler whose
+    -- bin/ocamlc follows the platform suffix), so hardcode .exe here -- a bare
+    -- "/bin/opam" is ENOENT on Linux/macOS where `exe` is empty.
+    opamexe = H.trim(request.io.realpath(request.continued.opam)) .. "/bin/opam.exe"
     request.io.close(request.continued.opam)
   end
   local msys2 = nil
