@@ -227,7 +227,9 @@ function uirules.Solve(command, request, continue_)
       dkml = "$(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.execution_abi -d : -e 'bin/*' -e 'lib/ocaml/*')"
     }
     if request.user.opam == nil then
-      dirs.opam = "$(get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.execution_abi -d :)"
+      -- -e marks the binary executable at materialization; without it the
+      -- helper's spawn of bin/opam.exe is EACCES on Linux/macOS.
+      dirs.opam = "$(get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.execution_abi -d : -e 'bin/*')"
       if iswin then
         dirs.msys2 = "$(get-object CommonsLang_OCaml.MSYS2@2026.6.11 -s Release.Windows_x86_64 -d :)"
         dirs.git = "$(get-object CommonsBase_Build.Git.MinGit@2.55.0 -s Release.execution_abi -d :)"
