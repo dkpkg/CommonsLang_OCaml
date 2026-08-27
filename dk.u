@@ -162,18 +162,27 @@ Retired on 2026-08-23 (superseded at HEAD): Dk.OpamLock@1.1.8 and
 Apparatus.OpamLockHelper@1.0.14 (the pre-wdoc helper bytes), superseded by
 Dk.OpamLock@1.1.9 and Apparatus.OpamLockHelper@1.0.15 which add the --wdoc solve.
 
+Apparatus.OpamLockHelper@1.0.15 (the pre-hermetic-universe helper bytes),
+superseded by Dk.OpamLock@1.1.13 and Apparatus.OpamLockHelper@1.0.16 which
+register pin-table repositories under dk-owned names, recreate the ephemeral
+switch, and verify pinned versions are visible before solving.
+
 Retired on 2026-08-25 (superseded at HEAD): Dk.OpamLock@1.1.10 and its dist/*.u
 Export ladder, superseded by Dk.OpamLock@1.1.11 which derives the GenerateDriver
 arguments from a single `pkg=MODULE@VERSION`.
 
 Retired on 2026-08-25 (superseded at HEAD): Dk.OpamBuild@1.0.18 and
 Dk.OpamLock@1.1.11, superseded by Dk.OpamBuild@1.0.25 (which adds the
-F_BuildLockedClosure whole-closure build rule with hash-named source origins,
-request-slot toolchain resolution, and the native merge-object prefix merge)
-and Dk.OpamLock@1.1.12 (which
+F_BuildLockedClosure whole-closure build rule with hash-named source origins
+and the native merge-object prefix merge) and Dk.OpamLock@1.1.12 (which
 adds the one-line closure driver shape and shape-aware Refresh). The
 OpamBuild Export marker value-id is unchanged (Export@1.0.0 form is
 byte-identical); the OpamLock Export ladder is re-harvested for @1.1.12.
+
+Retired on 2026-08-27 (superseded at HEAD): Dk.OpamLock@1.1.12, superseded by
+Dk.OpamLock@1.1.13 and Apparatus.OpamLockHelper@1.0.16 (the hermetic solve
+universe, the with-test re-adoption solve, and reuse_lock=t; see
+"## Dk.OpamLock"). The OpamLock Export ladder is re-harvested for @1.1.13.
 (Dk.OpamBuild@1.0.19 was a same-version interim that could not ship its fix
 past the pre-2.4.2.336 stale-scriptmodule seal; @1.0.20 through @1.0.24
 carried successive repairs and are superseded by @1.0.25. See
@@ -263,10 +272,10 @@ carried successive repairs and are superseded by @1.0.25. See
   % unified.asset { name="DkMLX86Env", file="assets/dkml/x86-compiler-env-to-ocaml-configure-env.sh" }
   \dk.asset(byteSize: "3883", checksum: (sha256: "ac5ff39f1594ce83e25764085b509192df58adc8fd1ae000e0c5fb0dc472eb0e"))\;
 
-### CommonsLang_OCaml.Apparatus@1.0.15
+### CommonsLang_OCaml.Apparatus@1.0.16
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "58991", checksum: (sha256: "569c7e893542054a5a739394110b3d8e06fe482d72ba68cb85912a471045af0e"))\;
+  \dk.asset(byteSize: "61807", checksum: (sha256: "fd0edfb647d89feae0758250e0827cdff78e809a88cc09c46cf6782ace3c7fb6"))\;
 
 ## Dk.OpamLock
 
@@ -274,6 +283,22 @@ Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
 author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+The @1.1.13 revision makes the solve universe hermetic and re-adoption
+non-destructive. The opam-lock helper (Apparatus.OpamLockHelper@1.0.16)
+registers each pin-table repository under a URL-derived dk-owned name and
+selects only those names for its ephemeral switch, so a pre-existing
+repository in the machine's opam root can never supply the solve universe (a
+stale root's `default` silently overrode the pin table's snapshot, hiding
+the pinned dune/ocaml versions and surfacing as an unrelated-looking
+conflict on any constrained dependency); the ephemeral switch is recreated
+on every solve, the constraints repository name embeds the work directory
+so concurrent solves sharing one root cannot repoint each other, and every
+`pin NAME VER` is verified visible in the universe before solving, failing
+with a message that names the repository that should contain it. Adopt
+re-solves with --with-test (the canonical adoption lock is the with-test
+lock; wtest=f opts out), forwards wdoc=, and accepts reuse_lock=t to keep an
+existing committed lock untouched and regenerate only the build forms.
 
 The @1.1.12 revision teaches the driver machinery the closure shape that
 pairs with Dk.OpamBuild's F_BuildLockedClosure (see "## Dk.OpamBuild").

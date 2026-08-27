@@ -839,19 +839,51 @@ let setup_switch ~opam ~switch ~workdir ~pins ~local_opam_dir ~winlocs ~fresh =
     end;
     ignore (Proc.run_checked opam !initargs)
   end;
-  (* add repositories (ignore "already exists") *)
-  List.iter (fun (name, url) -> ignore (Proc.run opam [ "repository"; "add"; name; url; "--dont-select"; "--yes" ])) p.repos;
-  let reponames = ref p.reponames in
+  (* Register each pin-table repository under a dk-owned name derived from
+     its URL. Registering under the pin table's own name (`default`) silently
+     loses on a machine whose opam root already has that name: `repository
+     add` fails "already exists", the failure was ignored, and the solve then
+     ran against whatever the pre-existing repository serves -- on one
+     machine a five-month-stale opam.ocaml.org index whose newest dune
+     predated the pin, so the constraints package conflicted with every
+     visible candidate and the solve reported an unrelated-looking
+     incompatibility. A URL-derived name cannot collide with a different
+     URL, so an "already exists" failure means the SAME content and is safe
+     to ignore; the ephemeral switch below selects only these names, so the
+     root's own repositories never leak into the solve universe. A moving
+     URL (no #COMMIT fragment) is refreshed on every solve; a #COMMIT URL is
+     immutable and served from the root's cache. *)
+  let dkname (name, url) =
+    "dk-solve-repo-" ^ name ^ "-" ^ String.sub (Digest.to_hex (Digest.string url)) 0 8
+  in
+  let dkrepos = List.map (fun r -> (dkname r, r)) p.repos in
+  List.iter
+    (fun (dn, (_, url)) ->
+      ignore (Proc.run opam [ "repository"; "add"; dn; url; "--dont-select"; "--yes" ]);
+      if not (S.contains_sub ~needle:"#" url) then
+        ignore (Proc.run opam [ "update"; dn ]))
+    dkrepos;
+  let reponames = ref (List.map fst dkrepos) in
+  (* The constraints repository name embeds the workdir so concurrent solves
+     sharing one opam root cannot repoint each other's registration; the
+     legacy fixed name is removed if a prior helper left it. *)
   (match !csrepo_url with
    | Some url ->
+     let csname = "dk-solve-constraints-" ^ String.sub (Digest.to_hex (Digest.string workdir)) 0 8 in
      ignore (Proc.run opam [ "repository"; "remove"; "dk-solve-constraints-repo"; "--all"; "--yes" ]);
-     ignore (Proc.run opam [ "repository"; "add"; "dk-solve-constraints-repo"; url; "--dont-select"; "--yes" ]);
-     reponames := !reponames @ [ "dk-solve-constraints-repo" ]
+     ignore (Proc.run opam [ "repository"; "remove"; csname; "--all"; "--yes" ]);
+     ignore (Proc.run opam [ "repository"; "add"; csname; url; "--dont-select"; "--yes" ]);
+     reponames := !reponames @ [ csname ]
    | None -> ());
-  (* create empty switch if absent *)
+  (* Recreate the ephemeral switch: an existing one carries the repository
+     selection of whichever helper created it, and a stale selection is the
+     universe-leak bug all over again. A user-supplied switch keeps its
+     state. *)
   let swres = Proc.run opam [ "switch"; "list"; "--short" ] in
   let have = List.mem switch (S.lines swres.stdout) in
-  if not have then begin
+  if have && fresh then
+    ignore (Proc.run opam [ "switch"; "remove"; switch; "--yes" ]);
+  if (not have) || fresh then begin
     let cres = Proc.run opam [ "switch"; "create"; switch; "--empty"; "--repositories=" ^ String.concat "," !reponames; "--yes" ] in
     if cres.code <> 0 then begin
       let se = cres.stderr ^ cres.stdout in
@@ -861,6 +893,23 @@ let setup_switch ~opam ~switch ~workdir ~pins ~local_opam_dir ~winlocs ~fresh =
       end
     end
   end;
+  (* Every pinned version must exist in the switch's universe. Without this
+     guard a missing version surfaces as an unrelated-looking conflict deep
+     in the solve; with it, the failure names the repository that should
+     have supplied the version. *)
+  List.iter
+    (fun (name, ver) ->
+      let r = Proc.run opam [ "list"; "--all-versions"; "-A"; name; "--columns=package"; "--short"; "--switch=" ^ switch ] in
+      if not (List.mem (name ^ "." ^ ver) (S.lines r.stdout)) then begin
+        Printf.eprintf
+          "[opam-lock] FATAL: pinned %s.%s is not in the solve universe.\n\
+           The pin table's repositories (%s) do not contain that version;\n\
+           check the `repo` lines (a #COMMIT snapshot must include it).\n"
+          name ver
+          (String.concat ", " (List.map (fun (n, u) -> n ^ " -> " ^ u) p.repos));
+        exit 1
+      end)
+    p.pinned;
   (match !constraints_pkg with
    | Some c -> Printf.eprintf "[opam-lock] version locks supplied by the %s constraints repository\n" c
    | None -> ());
