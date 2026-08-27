@@ -183,6 +183,11 @@ Retired on 2026-08-27 (superseded at HEAD): Dk.OpamLock@1.1.12, superseded by
 Dk.OpamLock@1.1.13 and Apparatus.OpamLockHelper@1.0.16 (the hermetic solve
 universe, the with-test re-adoption solve, and reuse_lock=t; see
 "## Dk.OpamLock"). The OpamLock Export ladder is re-harvested for @1.1.13.
+
+Retired on 2026-08-27 (superseded at HEAD): Dk.OpamLock@1.1.13, superseded by
+Dk.OpamLock@1.1.14 (the GenerateSrc dune-workspace root marker and the
+reuse_lock root forwarding; see "## Dk.OpamLock"). The OpamLock Export ladder
+is re-harvested for @1.1.14.
 (Dk.OpamBuild@1.0.19 was a same-version interim that could not ship its fix
 past the pre-2.4.2.336 stale-scriptmodule seal; @1.0.20 through @1.0.24
 carried successive repairs and are superseded by @1.0.25. See
@@ -283,6 +288,15 @@ Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
 author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+The @1.1.14 revision completes the adoption generators. GenerateSrc emits
+the assembled tree's dune-workspace root marker (the project's own file, or
+a minimal `(lang dune <X>)` synthesized into the dk-owned dk-src/ directory
+and registered by Adopt): an assembly without the marker made every warm
+run-object of the final executable re-derive and re-save its traces instead
+of a silent cache read. Adopt forwards its derived root to the form
+generators, so the reuse_lock=t path works against a pre-@1.1.8
+minimal-stamp lock whose generated.roots is not recorded.
 
 The @1.1.13 revision makes the solve universe hermetic and re-adoption
 non-destructive. The opam-lock helper (Apparatus.OpamLockHelper@1.0.16)
