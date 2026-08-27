@@ -167,15 +167,17 @@ Export ladder, superseded by Dk.OpamLock@1.1.11 which derives the GenerateDriver
 arguments from a single `pkg=MODULE@VERSION`.
 
 Retired on 2026-08-25 (superseded at HEAD): Dk.OpamBuild@1.0.18 and
-Dk.OpamLock@1.1.11, superseded by Dk.OpamBuild@1.0.22 (which adds the
-F_BuildLockedClosure whole-closure build rule with hash-named source origins
-and the native merge-object prefix merge) and Dk.OpamLock@1.1.12 (which
+Dk.OpamLock@1.1.11, superseded by Dk.OpamBuild@1.0.23 (which adds the
+F_BuildLockedClosure whole-closure build rule with hash-named source origins,
+request-slot toolchain resolution, and the native merge-object prefix merge)
+and Dk.OpamLock@1.1.12 (which
 adds the one-line closure driver shape and shape-aware Refresh). The
 OpamBuild Export marker value-id is unchanged (Export@1.0.0 form is
 byte-identical); the OpamLock Export ladder is re-harvested for @1.1.12.
 (Dk.OpamBuild@1.0.19 was a same-version interim that could not ship its fix
-past the pre-2.4.2.336 stale-scriptmodule seal; @1.0.20 and @1.0.21 carried
-successive repairs and are superseded by @1.0.22. See "## Dk.OpamBuild".)
+past the pre-2.4.2.336 stale-scriptmodule seal; @1.0.20 through @1.0.22
+carried successive repairs and are superseded by @1.0.23. See
+"## Dk.OpamBuild".)
 
 ### CommonsLang_OCaml.Apparatus@1.0.1
 
@@ -522,7 +524,19 @@ per-package build rule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
 
-The @1.0.22 revision carries two closure-rule repairs over @1.0.20/@1.0.21.
+The @1.0.23 revision carries three closure-rule repairs over @1.0.20-@1.0.22.
+The rules resolve the build toolchain at the form's REQUESTED slot: the
+`targetabi=Release.target_abi` a committed driver passes is translated to
+`Release.request` before synthesis, because `Release.target_abi` is
+invocation-global (the dk0 --target-abi option) while one submitted closure
+document serves every slot -- a cross-targeting distribute job that touched
+the shared document recorded every form's toolchain dependency at ITS target
+abi, so a consumer's cold High Performance fetch failed lazy-dependency
+evidence verification and rebuilt the whole closure instead of serving it.
+The request slot equals the target abi on every distribute path (the dist
+script requests the leaf at the target abi and the slot propagates down the
+chain), so built artifacts are unchanged and the document's resolution is
+invocation-independent.
 Each synthesized .Src bundle now names its origin after the source hash
 ("src-<first8>"): origin names resolve beyond the single bundle, so when the
 closure rule registered 57 bundles all named "src" in one submit, one

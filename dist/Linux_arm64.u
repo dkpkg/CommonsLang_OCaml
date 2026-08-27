@@ -44,6 +44,6 @@ Only the current OpamBuild revision ships. The retired Export@1.0.0-@1.0.15
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.22 -f ${RUNTIME}/OpamBuild.Export-1.0.22.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.23 -f ${RUNTIME}/OpamBuild.Export-1.0.23.zip
   \test(pass)
   \dk.object(abi: "Release.Linux_arm64", value-id: "o0000000000000000000000000000000000000000000000000000")\;
