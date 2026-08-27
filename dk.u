@@ -167,14 +167,15 @@ Export ladder, superseded by Dk.OpamLock@1.1.11 which derives the GenerateDriver
 arguments from a single `pkg=MODULE@VERSION`.
 
 Retired on 2026-08-25 (superseded at HEAD): Dk.OpamBuild@1.0.18 and
-Dk.OpamLock@1.1.11, superseded by Dk.OpamBuild@1.0.20 (which adds the
-F_BuildLockedClosure whole-closure build rule) and Dk.OpamLock@1.1.12 (which
+Dk.OpamLock@1.1.11, superseded by Dk.OpamBuild@1.0.21 (which adds the
+F_BuildLockedClosure whole-closure build rule; @1.0.21 also merges the
+mergedprefix prefix natively via merge-object) and Dk.OpamLock@1.1.12 (which
 adds the one-line closure driver shape and shape-aware Refresh). The
 OpamBuild Export marker value-id is unchanged (Export@1.0.0 form is
 byte-identical); the OpamLock Export ladder is re-harvested for @1.1.12.
 (Dk.OpamBuild@1.0.19 was a same-version interim that could not ship its fix
-past the pre-2.4.2.336 stale-scriptmodule seal; @1.0.20 carries it. See
-"## Dk.OpamBuild".)
+past the pre-2.4.2.336 stale-scriptmodule seal; @1.0.20 carried it and is in
+turn superseded by @1.0.21. See "## Dk.OpamBuild".)
 
 ### CommonsLang_OCaml.Apparatus@1.0.1
 
@@ -520,6 +521,24 @@ Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
 per-package build rule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+The @1.0.21 revision replaces the closure rule's mergedprefix staging with the
+native merge: the aggregate's precommands `merge-object <Pkg> -m ./install.zip
+-d p/` each package (and each imported package) straight into the shared p/
+prefix -- the value shell's documented many-merges-into-one-DIR primitive --
+instead of get-object-staging every install.zip into its own p<i>/ and 7zz-x
+extracting each one; 7zz remains only to create prefix.zip (the value shell
+extracts but does not archive). The single-root path is unchanged. Shipped as
+a version bump (not an in-place edit) for the same reason as @1.0.20, and it
+deliberately re-keys the Closure/DevPrefix objects so the consumer release
+that adopts it republishes the complete closure: the 1.3.202608262345
+ocamlearlybird release shipped an INCOMPLETE object set (its distribute
+restored the prior release's store, the unchanged thin-leaf value-id served
+stale, and the new Closure object plus the Pkg.*.Src bundles were never built
+or published, 404ing every cold High Performance fetch) -- the adopting
+release must distribute with store: none (or an engine whose distribute fails
+loudly on stale seals, dk0 2.4.2.336+) so the full set publishes. Its Export
+value-id is unchanged (Export@1.0.0 form is byte-identical).
 
 The @1.0.20 revision adds F_BuildLockedClosure beside F_BuildLockedPackage
 (both share one per-package form synthesis, H.synth_package, so they cannot

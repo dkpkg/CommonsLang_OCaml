@@ -1,5 +1,5 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamBuild@1.0.20"
+  id = "CommonsLang_OCaml.Dk.OpamBuild@1.0.21"
 }
 
 -- ==========================================================================
@@ -123,17 +123,17 @@ local M = {
 -- rule functions, so helpers live in a unique global table; boolean values
 -- (returns, arguments, table values) are unreliable, so flags are numeric and
 -- sets store the key as its own string value.
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20 = {}
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.NULL = {}
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21 = {}
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.NULL = {}
 -- Memo of the per-(ocaml, targetabi) Windows PATH replacement string built in
 -- percommand_abi: a pure string of its inputs, so safe to share. The closure
 -- rule synthesizes every package x 8 abis in one instantiation, where
 -- rebuilding this large concatenation per command is measurable lua-ml work.
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.WINPATHS = {}
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.WINPATHS = {}
 
 rules, _uirules = build.newrules(M)
 
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.SLOTS = {
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.SLOTS = {
   "Release.Windows_x86_64", "Release.Windows_x86",
   "Release.Linux_x86_64", "Release.Linux_x86_64_musl", "Release.Linux_x86",
   "Release.Linux_arm64",
@@ -146,7 +146,7 @@ CommonsLang_OCaml__Dk_OpamBuild__1_0_20.SLOTS = {
 -- dk0 skips the non-matching commands when building a given slot (see
 -- ThunkAst.can_optimize_out_resolved_term). Populate by bracket-index because
 -- slot names contain dots.
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.ABIS = {
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.ABIS = {
   { slot = "Release.Windows_x86_64", msvc = "x64" },
   { slot = "Release.Windows_x86",    msvc = "x86" },
   { slot = "Release.Linux_x86_64",   msvc = "-" },
@@ -162,24 +162,24 @@ CommonsLang_OCaml__Dk_OpamBuild__1_0_20.ABIS = {
 
 -- Packages provided by toolchain objects or purely virtual: never built and
 -- never staged as dependency objects.
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED = {}
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["ocaml"] = "ocaml"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["ocaml-base-compiler"] = "ocaml-base-compiler"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["ocaml-config"] = "ocaml-config"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["ocaml-options-vanilla"] = "ocaml-options-vanilla"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["base-unix"] = "base-unix"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["base-threads"] = "base-threads"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["base-bigarray"] = "base-bigarray"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["dune"] = "dune"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["flexdll"] = "flexdll"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["conf-mingw-w64-gcc-x86_64"] = "conf-mingw-w64-gcc-x86_64"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["host-arch-x86_64"] = "host-arch-x86_64"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["host-arch-x86_32"] = "host-arch-x86_32"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["host-arch-arm64"] = "host-arch-arm64"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["host-system-mingw"] = "host-system-mingw"
-CommonsLang_OCaml__Dk_OpamBuild__1_0_20.PROVIDED["host-system-other"] = "host-system-other"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED = {}
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["ocaml"] = "ocaml"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["ocaml-base-compiler"] = "ocaml-base-compiler"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["ocaml-config"] = "ocaml-config"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["ocaml-options-vanilla"] = "ocaml-options-vanilla"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["base-unix"] = "base-unix"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["base-threads"] = "base-threads"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["base-bigarray"] = "base-bigarray"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["dune"] = "dune"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["flexdll"] = "flexdll"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["conf-mingw-w64-gcc-x86_64"] = "conf-mingw-w64-gcc-x86_64"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["host-arch-x86_64"] = "host-arch-x86_64"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["host-arch-x86_32"] = "host-arch-x86_32"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["host-arch-arm64"] = "host-arch-arm64"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["host-system-mingw"] = "host-system-mingw"
+CommonsLang_OCaml__Dk_OpamBuild__1_0_21.PROVIDED["host-system-other"] = "host-system-other"
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.iswhite(c)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.iswhite(c)
   local b = string.byte(c)
   return b == 32 or b == 9 or b == 13 or b == 10
 end
@@ -191,7 +191,7 @@ end
 -- string.format); non-integral or non-numeric values fall through unchanged.
 -- True when the string is one or more ASCII digits (a value lua-ml would
 -- serialize as a JSON number rather than a string).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.is_pure_int(s)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.is_pure_int(s)
   if type(s) ~= "string" or s == "" then return nil end
   local i = 1
   local n = string.len(s)
@@ -203,7 +203,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.is_pure_int(s)
   return 1
 end
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.numstr(v)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.numstr(v)
   if type(v) == "string" then return v end
   if type(v) ~= "number" then return tostring(v) end
   if v ~= v - (v % 1) then return tostring(v) end   -- non-integral: leave as-is
@@ -222,7 +222,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.numstr(v)
   return digits
 end
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.join(tbl, sep)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.join(tbl, sep)
   -- Iterate by sequential index, not next(): lua-ml `next` visits integer keys
   -- in hash order, which scrambles argv where token order is load-bearing (e.g.
   -- `dune build -p NAME`). lua-ml has no `#`, so walk tbl[1], tbl[2], ... .
@@ -236,7 +236,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.join(tbl, sep)
   return r
 end
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.indexof(s, ch, i)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.indexof(s, ch, i)
   local n = string.len(s)
   local j = i
   while j <= n do
@@ -246,7 +246,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.indexof(s, ch, i)
   return nil
 end
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.lastindexof(s, ch)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.lastindexof(s, ch)
   local n = string.len(s)
   local j = n
   while j >= 1 do
@@ -256,7 +256,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.lastindexof(s, ch)
   return nil
 end
 
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.endswith(s, suffix)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.endswith(s, suffix)
   local ls = string.len(s)
   local lf = string.len(suffix)
   if lf > ls then return nil end
@@ -269,7 +269,7 @@ end
 -- (an underscore must be followed by lowercase). opam names are already
 -- lowercase, but local package names carry internal capitals (MlFront_Console),
 -- so lowercase every non-initial character.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.modsegment(name)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.modsegment(name)
   local out = ""
   local i = 1
   local n = string.len(name)
@@ -288,8 +288,8 @@ end
 -- tok   = { kind = "str"|"ident", v = TEXT, filter = TEXT or nil }
 -- A field without surrounding brackets is one group (opam collapses
 -- single-command fields when printing).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.tokenize_field(raw)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_20
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.tokenize_field(raw)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_21
   local groups = {}
   local bare = { toks = {} }
   local cur = nil
@@ -372,7 +372,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.tokenize_field(raw)
 end
 
 -- Split a dotted numeric version into an array of integer segments.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.version_parts(v)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.version_parts(v)
   local out = {}
   local seg = ""
   local i = 1
@@ -388,9 +388,9 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.version_parts(v)
 end
 
 -- Compare dotted numeric versions: true when a >= b ("4.14.3" >= "4.02.0").
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.version_ge(a, b)
-  local pa = CommonsLang_OCaml__Dk_OpamBuild__1_0_20.version_parts(a)
-  local pb = CommonsLang_OCaml__Dk_OpamBuild__1_0_20.version_parts(b)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.version_ge(a, b)
+  local pa = CommonsLang_OCaml__Dk_OpamBuild__1_0_21.version_parts(a)
+  local pb = CommonsLang_OCaml__Dk_OpamBuild__1_0_21.version_parts(b)
   local i = 1
   while pa[i] ~= nil or pb[i] ~= nil do
     local xa = pa[i] or 0
@@ -405,8 +405,8 @@ end
 -- Evaluate an opam filter expression. Supports the shapes in the MlFront
 -- lock: IDENT, !IDENT, A & B, A | B, and `ocaml:version OP "str"`.
 -- Errors loudly on anything else so gaps surface per package.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.eval_filter(ftext, fenv, pkg)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_20
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.eval_filter(ftext, fenv, pkg)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_21
   local words = {}
   local i = 1
   local n = string.len(ftext)
@@ -477,8 +477,8 @@ end
 -- `skipeval` (set by eval_filter's short-circuit): still PARSE the atom to advance
 -- st.idx, but return without the fenv lookup -- the atom is in a dead branch, so
 -- an unmodeled variable there must not abort the build.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.filter_atom(words, st, fenv, pkg, ftext, skipeval)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_20
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.filter_atom(words, st, fenv, pkg, ftext, skipeval)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_21
   local negate = nil
   while words[st.idx] ~= nil and words[st.idx].k == "op" and words[st.idx].v == "!" do
     negate = not negate
@@ -532,8 +532,8 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.filter_atom(words, st, fenv, pk
 end
 
 -- Substitute %{var}% interpolations inside a string token.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.interpolate(s, vars, pkg)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_20
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.interpolate(s, vars, pkg)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_21
   local out = ""
   local i = 1
   local n = string.len(s)
@@ -562,8 +562,8 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.interpolate(s, vars, pkg)
 end
 
 -- Interpret an opam build:/install: field into a list of argv arrays.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.field_to_argvs(raw, fenv, vars, pkg)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_20
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.field_to_argvs(raw, fenv, vars, pkg)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_21
   local argvs = {}
   -- An absent build:/install: field arrives as nil, the rule's H.NULL sentinel,
   -- or jsondk's own `json.null` value (a distinct decoded null). opam fields are
@@ -619,7 +619,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.field_to_argvs(raw, fenv, vars,
 end
 
 -- Single-quote a token for /bin/sh.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.shq(s)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.shq(s)
   local out = "'"
   local i = 1
   local n = string.len(s)
@@ -646,7 +646,7 @@ end
 -- The opam `os` filter variable for an abi: `win32` on Windows, otherwise the
 -- kernel name opam uses (`macos` for Darwin, `linux` elsewhere). Lets the field
 -- interpreter select os-conditional build/install commands ({os = "win32"}).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.abi_os(abi)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.abi_os(abi)
   if abi.msvc ~= "-" then return "win32" end
   if string.find(abi.slot, "Darwin") ~= nil then return "macos" end
   return "linux"
@@ -655,7 +655,7 @@ end
 -- The opam `arch` filter variable for a slot (opam's canonical spelling). Derived
 -- from the slot name, like abi_os. x86_64 is checked before x86 (the former
 -- contains the latter).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.abi_arch(abi)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.abi_arch(abi)
   if string.find(abi.slot, "x86_64") ~= nil then return "x86_64" end
   if string.find(abi.slot, "arm64") ~= nil then return "arm64" end
   if string.find(abi.slot, "x86") ~= nil then return "x86_32" end
@@ -671,8 +671,8 @@ end
 -- `Release.target_abi` wildcard): closure package builds materialize at the
 -- HOST key, so `abi` is the executing host's record while the compiler and the
 -- vcvars arch must follow the target (see the PATH note below).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.percommand_abi(coreutils, wrapperfetch, msys2dash, argv, abi, targetabi, ocaml, dune)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_20
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.percommand_abi(coreutils, wrapperfetch, msys2dash, argv, abi, targetabi, ocaml, dune)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_21
   local shell = "/bin/sh"
   local cmd = { coreutils, "env" }
   if abi.msvc ~= "-" then
@@ -794,7 +794,7 @@ end
 -- exports OCAML_TOPLEVEL_PATH=p/lib/findlib, which the toplevel itself honors
 -- without any init file. Returns rebuilt argv tables (lua-ml: in-place order
 -- rewrites do not reliably propagate, so callers reassign).
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.hermeticize_argvs(argvs)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.hermeticize_argvs(argvs)
   local out = {}
   local i = 1
   while argvs[i] ~= nil do
@@ -820,7 +820,7 @@ end
 -- built artifacts must RUN on the build host during later package builds. The
 -- closure rule builds them at its `hosttoolabi=` instead of `targetabi=`,
 -- mirroring what GenerateDriver emitted per line for the per-package rule.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.is_host_tool(name)
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.is_host_tool(name)
   return name == "ocamlfind" or name == "ocamlbuild"
 end
 
@@ -831,8 +831,8 @@ end
 -- (opam dependency graphs are acyclic, so no cycle check). A dependency with
 -- neither a source nor the local mark (a virtual package such as `seq`) is
 -- skipped; a dependency absent from the lock is an error.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.driver_visit(byname, provided, name, seen, order)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_20
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.driver_visit(byname, provided, name, seen, order)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_21
   if seen[name] ~= nil or provided[name] ~= nil then return end
   local e = byname[name]
   assert(e ~= nil, "dependency `" .. name .. "` is not in the lock")
@@ -864,8 +864,8 @@ end
 --   targetabi, ocaml, dune, msys2
 --              toolchain/abi selection, defaults already applied by the caller
 -- Returns { form = <form table>, src_bundle = <bundle table or nil> }.
-function CommonsLang_OCaml__Dk_OpamBuild__1_0_20.synth_package(a)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_20
+function CommonsLang_OCaml__Dk_OpamBuild__1_0_21.synth_package(a)
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_21
   local pkg = a.pkg
   local entry = a.entry
   local modver = a.modver
@@ -1370,7 +1370,7 @@ end
 --                                localsrc (ex. "./dk-opam-lock.jsonc", the
 --                                lock member MlFrontSource emits)
 function rules.F_BuildLockedPackage(command, request, continue_)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_20
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_21
   if command == "declareoutput" then
     local modver = assert(request.user.modver, "please provide `modver=MODULE@VERSION`")
     assert(request.user.localsrc, "please provide `localsrc=MODULE@VERSION`")
@@ -1587,7 +1587,7 @@ end
 -- get-object precommands and each form's own dependency subshells) and
 -- slots[] (the Pkg/aggregate slots are the built-in H.SLOTS).
 function rules.F_BuildLockedClosure(command, request, continue_)
-  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_20
+  local H = CommonsLang_OCaml__Dk_OpamBuild__1_0_21
   if command == "declareoutput" then
     local modver = assert(request.user.modver, "please provide `modver=MODULE@VERSION` (the aggregate .Built form id)")
     assert(request.user.pkgpath, "please provide `pkgpath=MODPATH` (the module path for Pkg objects)")
@@ -1735,30 +1735,46 @@ function rules.F_BuildLockedClosure(command, request, continue_)
     oi = oi + 1
   end
 
-  -- The aggregate `.Built` form. Unordered get-object precommands demand (and
-  -- stage) every emitted package concurrently -- the parallel build fan-out.
-  -- In the single-root model the root stages at built/ and the function copies
-  -- built/install.zip out; under mergedprefix every install.zip merges into
-  -- one p/ prefix (the same merge the per-package driver's function did).
+  -- The aggregate `.Built` form. Unordered precommands demand (and stage)
+  -- every emitted package concurrently -- the parallel build fan-out.
+  -- In the single-root model the root's OBJECT tree (its sole member is the
+  -- file install.zip) extracts at built/ -- get-object WITHOUT `-m`: passing
+  -- `-m ./install.zip` would descend INTO the zip and unpack bin/lib/...
+  -- instead of placing the file -- and the function copies built/install.zip
+  -- out. Under mergedprefix every package's install.zip CONTENTS merge into
+  -- one shared p/ prefix via merge-object (the native shared-output-directory
+  -- merge; the spec allows many merge-objects into one DIR), replacing the
+  -- former stage-then-7zz-x dance; imported packages merge the same way.
   local built_root = nil
   if mergedprefix == nil then built_root = roots[1] end
   local pre = {}
-  local stagedirs = {}
-  local pi = 1
-  while emit[pi] ~= nil do
-    local dir = "p" .. H.numstr(pi - 1)
-    if built_root ~= nil and emit[pi] == built_root then dir = "built" end
-    stagedirs[pi] = dir
-    -- Extract the package OBJECT's file tree (its sole member is the file
-    -- install.zip) into <dir>, giving <dir>/install.zip -- the same file the
-    -- per-package driver's `run-function ... -d <dir>` staged. Do NOT pass
-    -- `-m ./install.zip`: that descends INTO the zip and unpacks its contents
-    -- (bin/, lib/, ...) instead, so <dir>/install.zip would not exist and the
-    -- root copy / mergedprefix extraction below would fail (os error 2).
-    table.insert(pre,
-      "get-object " .. pkgpath .. ".Pkg." .. H.modsegment(emit[pi]) .. "@" .. version
-      .. " -s ${SLOTNAME.request} -d " .. dir)
-    pi = pi + 1
+  if mergedprefix ~= nil then
+    local pi = 1
+    while emit[pi] ~= nil do
+      table.insert(pre,
+        "merge-object " .. pkgpath .. ".Pkg." .. H.modsegment(emit[pi]) .. "@" .. version
+        .. " -s ${SLOTNAME.request} -m ./install.zip -d p/")
+      pi = pi + 1
+    end
+    local qj = 1
+    while order[qj] ~= nil do
+      local impid = request.user["impdep_" .. H.modsegment(order[qj])]
+      if impid ~= nil then
+        table.insert(pre,
+          "merge-object " .. impid .. " -s ${SLOTNAME.request} -m ./install.zip -d p/")
+      end
+      qj = qj + 1
+    end
+  else
+    local pi = 1
+    while emit[pi] ~= nil do
+      local dir = "p" .. H.numstr(pi - 1)
+      if emit[pi] == built_root then dir = "built" end
+      table.insert(pre,
+        "get-object " .. pkgpath .. ".Pkg." .. H.modsegment(emit[pi]) .. "@" .. version
+        .. " -s ${SLOTNAME.request} -d " .. dir)
+      pi = pi + 1
+    end
   end
   local coreutils = "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')"
   local fcmds = {}
@@ -1772,26 +1788,6 @@ function rules.F_BuildLockedClosure(command, request, continue_)
       "$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildSeqMeta@1.0.1 -p assets/opam/seq-META -f seq-meta-src)",
       "p/lib/seq/META"
     })
-    local mj = 1
-    while emit[mj] ~= nil do
-      table.insert(fcmds, { sevenzz, "x", "-y", "-op", stagedirs[mj] .. "/install.zip" })
-      mj = mj + 1
-    end
-    -- Imported packages are not built here, so they staged no p<i>/install.zip;
-    -- fetch each one's prebuilt install.zip and extract it into the same merged
-    -- p/ prefix, so prefix.zip carries the whole closure.
-    local qj = 1
-    while order[qj] ~= nil do
-      local qn = order[qj]
-      local impid = request.user["impdep_" .. H.modsegment(qn)]
-      if impid ~= nil then
-        table.insert(fcmds, {
-          sevenzz, "x", "-y", "-op",
-          "$(get-object " .. impid .. " -s ${SLOTNAME.request} -m ./install.zip -f imp-" .. H.numstr(qj) .. ".zip)"
-        })
-      end
-      qj = qj + 1
-    end
     table.insert(fcmds, { sevenzz, "a", "-tzip", "${SLOT.request}/prefix.zip", "./p/*" })
   else
     local rootok = nil
