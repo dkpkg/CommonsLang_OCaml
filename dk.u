@@ -188,6 +188,10 @@ Retired on 2026-08-27 (superseded at HEAD): Dk.OpamLock@1.1.13, superseded by
 Dk.OpamLock@1.1.14 (the GenerateSrc dune-workspace root marker and the
 reuse_lock root forwarding; see "## Dk.OpamLock"). The OpamLock Export ladder
 is re-harvested for @1.1.14.
+
+Retired on 2026-08-28 (superseded at HEAD): Dk.OpamLock@1.1.14, superseded by
+Dk.OpamLock@1.1.15 (the declared uirule capability manifest; see
+"## Dk.OpamLock"). The OpamLock Export ladder is re-harvested for @1.1.15.
 (Dk.OpamBuild@1.0.19 was a same-version interim that could not ship its fix
 past the pre-2.4.2.336 stale-scriptmodule seal; @1.0.20 through @1.0.24
 carried successive repairs and are superseded by @1.0.25. See
@@ -288,6 +292,14 @@ Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
 author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+The @1.1.15 revision declares the uirule capability manifest
+(M.uirule_capabilities): each OpamLock uirule names the capabilities it may
+request (Solve/Adopt/Refresh/OpamVenv: run+write; the three Generate* rules
+and GenerateForms: write). An engine >= 2.4.2.339 enforces the manifest as
+an upper bound and lists every declared capability in its trust prompts and
+suggested `trust grant` commands, so a consumer grants a rule's full need in
+one command; older engines ignore the field. No rule body changed.
 
 The @1.1.14 revision completes the adoption generators. GenerateSrc emits
 the assembled tree's dune-workspace root marker (the project's own file, or
