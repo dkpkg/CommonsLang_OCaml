@@ -1171,13 +1171,12 @@ let do_solve o =
         let source =
           match ovr with
           | Some r ->
-            (* Fixed relocatable source: direct URL (incache=0), pinned
-               checksum + size; no cache probing. *)
+            (* Fixed relocatable source: direct URL, pinned checksum + size;
+               no cache probing. *)
             Json.Obj
               [ ("url", Json.Str r.r_url);
                 ("checksums", Json.Arr (List.map (fun s -> Json.Str s) r.r_sums));
                 ("archive", Json.Str r.r_archive);
-                ("incache", Json.Int 0);
                 ("size", Json.Int r.r_size) ]
           | None ->
           if is_local name || url = "" || !sums = [] then Json.Null
@@ -1196,7 +1195,11 @@ let do_solve o =
             fields := ("url", Json.Str url) :: !fields;
             fields := ("checksums", Json.Arr (List.map (fun s -> Json.Str s) !sums)) :: !fields;
             fields := ("archive", Json.Str (archive_type url)) :: !fields;
-            if !incache = 0 then fields := ("incache", Json.Int 0) :: !fields;
+            (* incache is a solve-time cache observation (always 0, present only
+               for archives not in the local opam download cache), so it varied
+               run to run and is never emitted: the lock records only the
+               package's own properties. The `incache` ref still selects where
+               `size` is read below. *)
             let sz =
               if !incache = 1 then
                 (match cache_url !sums with Some cu -> (match source_size cu with Some s -> Some s | None -> source_size url) | None -> source_size url)

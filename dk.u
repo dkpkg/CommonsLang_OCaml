@@ -227,6 +227,12 @@ capability manifest which @1.1.16 retains). The OpamBuild Export marker
 value-id is unchanged (Export@1.0.0 form is byte-identical); the OpamLock
 Export ladder is re-harvested for @1.1.16.
 
+Retired on 2026-08-30 (superseded at HEAD): Dk.OpamLock@1.1.18 and
+Apparatus.OpamLockHelper@1.0.17, superseded by Dk.OpamLock@1.1.19 and
+Apparatus.OpamLockHelper@1.0.18, which stop emitting the solve-time
+source.incache field. OpamBuild stays at @1.0.26. The OpamLock Export ladder is
+re-harvested for @1.1.19.
+
 Retired on 2026-08-30 (superseded at HEAD): Dk.OpamLock@1.1.17 and
 Apparatus.OpamLockHelper@1.0.16 (the pre-determinism helper bytes), superseded
 by Dk.OpamLock@1.1.18 and Apparatus.OpamLockHelper@1.0.17, which stamp
@@ -331,10 +337,10 @@ carried successive repairs and are superseded by @1.0.25. See
   % unified.asset { name="DkMLX86Env", file="assets/dkml/x86-compiler-env-to-ocaml-configure-env.sh" }
   \dk.asset(byteSize: "3883", checksum: (sha256: "ac5ff39f1594ce83e25764085b509192df58adc8fd1ae000e0c5fb0dc472eb0e"))\;
 
-### CommonsLang_OCaml.Apparatus@1.0.17
+### CommonsLang_OCaml.Apparatus@1.0.18
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "62208", checksum: (sha256: "943e258766a7ce65aaa2fb0144b6cc7bf548302eb4217c83afe0467b138f7601"))\;
+  \dk.asset(byteSize: "62430", checksum: (sha256: "a053bb5636c58be38e7e9871fd1e62c9883e9ca837973bc5f4b88be6907a1cf5"))\;
 
 ## Dk.OpamLock
 
