@@ -896,20 +896,27 @@ let setup_switch ~opam ~switch ~workdir ~pins ~local_opam_dir ~winlocs ~fresh =
   (* Every pinned version must exist in the switch's universe. Without this
      guard a missing version surfaces as an unrelated-looking conflict deep
      in the solve; with it, the failure names the repository that should
-     have supplied the version. *)
-  List.iter
-    (fun (name, ver) ->
-      let r = Proc.run opam [ "list"; "--all-versions"; "-A"; name; "--columns=package"; "--short"; "--switch=" ^ switch ] in
-      if not (List.mem (name ^ "." ^ ver) (S.lines r.stdout)) then begin
-        Printf.eprintf
-          "[opam-lock] FATAL: pinned %s.%s is not in the solve universe.\n\
-           The pin table's repositories (%s) do not contain that version;\n\
-           check the `repo` lines (a #COMMIT snapshot must include it).\n"
-          name ver
-          (String.concat ", " (List.map (fun (n, u) -> n ^ " -> " ^ u) p.repos));
-        exit 1
-      end)
-    p.pinned;
+     have supplied the version. Enumerate the whole universe once and check
+     the pins in memory: one `opam list` reloads the switch state once,
+     whereas a call per pin paid that cost hundreds of times (the pin table
+     dominated the solve wall-clock). *)
+  if p.pinned <> [] then begin
+    let r = Proc.run opam [ "list"; "--all-versions"; "-A"; "--columns=package"; "--short"; "--switch=" ^ switch ] in
+    let universe = Hashtbl.create 4096 in
+    List.iter (fun l -> if l <> "" then Hashtbl.replace universe l ()) (S.lines r.stdout);
+    List.iter
+      (fun (name, ver) ->
+        if not (Hashtbl.mem universe (name ^ "." ^ ver)) then begin
+          Printf.eprintf
+            "[opam-lock] FATAL: pinned %s.%s is not in the solve universe.\n\
+             The pin table's repositories (%s) do not contain that version;\n\
+             check the `repo` lines (a #COMMIT snapshot must include it).\n"
+            name ver
+            (String.concat ", " (List.map (fun (n, u) -> n ^ " -> " ^ u) p.repos));
+          exit 1
+        end)
+      p.pinned
+  end;
   (match !constraints_pkg with
    | Some c -> Printf.eprintf "[opam-lock] version locks supplied by the %s constraints repository\n" c
    | None -> ());
