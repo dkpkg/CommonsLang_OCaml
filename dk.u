@@ -92,28 +92,59 @@ sources in precedence order.
    version is recorded only in the source's lock, which is what step 3 matches
    against.
 
-3. **Match on opam name and opam version.** For each opam `<name>.<needver>` the
-   consumer's (with-test) lock requires, a source matches when its lock pins
-   `<name>` at the same `<needver>`. On the first matching source the package is
-   imported: the driver stages it with `get-object <source-lib>.<Seg>@<mv>`,
+3. **Match on the opam name, version, and dependency environment.** For each opam
+   `<name>.<needver>` the consumer's (with-test) lock requires, a source matches
+   when its lock pins `<name>` at the same `<needver>` and records the same
+   dependency environment for it (step 5). On the first matching source the package
+   is imported: the driver stages it with `get-object <source-lib>.<Seg>@<mv>`,
    lazily, fetched when a build needs its `install.zip`, and emits no local build
-   form. A package that no source provides at the required opam version is built
-   locally through `F_BuildLockedPackage`, with its own dependencies resolved the
-   same way.
+   form. A package that no source provides at the required version and dependency
+   environment is built locally through `F_BuildLockedPackage`, with its own
+   dependencies resolved the same way.
 
-4. **The compiler must match; Dune and MSYS2 need not.** Each lock records the
-   OCaml compiler its packages are built with in a top-level `ocaml` field, a full
-   module id such as `CommonsLang_OCaml.DkML@4.14.3` (or a `CommonsLang_OCaml.Base@5.5.x`
-   for a 5.5 toolchain); a lock without the field takes the default
-   `CommonsLang_OCaml.DkML@4.14.3`. `Dk.OpamLock.GenerateDriver` reads the `ocaml`
-   field from both the consumer's lock and each source's lock (already fetched in
-   step 1) and passes it to `F_BuildLockedPackage` as the `ocaml=` argument, along
-   with `dune=CommonsLang_OCaml.Dune@<v>` and (Windows) `msys2=CommonsLang_OCaml.MSYS2@<v>`.
+4. **The compiler matches through the top-level `ocaml` field.** Each lock records
+   the OCaml compiler its packages are built with in a top-level `ocaml` field, a
+   full module id such as `CommonsLang_OCaml.DkML@4.14.3` (or a
+   `CommonsLang_OCaml.Base@5.5.x` for a 5.5 toolchain); a lock without the field
+   takes the default `CommonsLang_OCaml.DkML@4.14.3`.
+   `Dk.OpamLock.GenerateDriver` reads the `ocaml` field from both the consumer's
+   lock and each source's lock (already fetched in step 1) and passes it to
+   `F_BuildLockedPackage` as the `ocaml=` argument, along with
+   `dune=CommonsLang_OCaml.Dune@<v>` and (Windows) `msys2=CommonsLang_OCaml.MSYS2@<v>`.
    An imported package ships compiled `.cmi`/`.cmx`/`.cmxa`, whose magic numbers are
    fixed by the compiler, so a source is consumable only when its lock's `ocaml`
-   equals the consumer's; a package from a source whose `ocaml` differs is built
-   locally instead. Dune and MSYS2 leave no trace in the compiled artifacts, so a
-   `dune` or `msys2` difference does not affect consumability.
+   equals the consumer's. The `dune` and `msys2` ids leave no trace in the compiled
+   artifacts and stay out of the match.
+
+5. **Match on the dependency environment.** A package's built `install.zip` is a
+   function of which of its optional dependencies were present at build time: the
+   opam solver folds each optional dependency that lands in the solved closure into
+   the package's `depends` name-set, so that set records the environment. A source's
+   package matches only when, for the package and for every package in its
+   dependency closure, the source's lock and the consumer's lock record the same
+   version and the same `depends` name-set (compared as a set, since the recorded
+   order follows discovery). Adding an optional dependency to the consumer changes
+   that package's `depends` set and builds it locally, the way opam rebuilds a
+   package when its optional dependencies change; the same holds when a dependency
+   deeper in the closure resolves to a different version or a different `depends`
+   set. A package built locally for this reason forces every package whose closure
+   contains it to build locally too. A package the compiler builds into the
+   toolchain, or a purely virtual package, stays out of this comparison; the
+   compiler is already fixed by step 4.
+
+`Dk.OpamLock.GenerateDriver` imports a package `P` from a source `S` when each of
+these variables is equal between the consumer's lock and `S`'s lock:
+
+- `ocaml`: the top-level compiler module id (a lock without the field carries `CommonsLang_OCaml.DkML@4.14.3`)
+- `version(P)`: the opam version `S` pins for `P`
+- `depends(P)`: `P`'s `depends` name-set, with the solved-closure optional dependencies folded in, compared as a set
+- `version(D)`: for every package `D` in `P`'s dependency closure, the opam version `S` pins for `D`
+- `depends(D)`: for every package `D` in `P`'s dependency closure, `D`'s `depends` name-set, compared as a set
+
+Under `skiplocal` a package recorded `"local":"t"` is built in-tree and is never
+imported. A package that fails any variable is built locally, and that outcome
+propagates to every package whose closure contains it. The compiler content is
+checked again at build time by the `.dk-provenance` gate.
 
 ## Assets
 
@@ -195,6 +226,12 @@ Dk.OpamLock@1.1.16 (deterministic `--zip` archives; @1.1.15 added the uirule
 capability manifest which @1.1.16 retains). The OpamBuild Export marker
 value-id is unchanged (Export@1.0.0 form is byte-identical); the OpamLock
 Export ladder is re-harvested for @1.1.16.
+
+Retired on 2026-08-29 (superseded at HEAD): Dk.OpamLock@1.1.16, superseded by
+Dk.OpamLock@1.1.17 (the dependency-environment import gate; see "## Resolution
+of imports"). No asset bump: OpamBuild stays at @1.0.26 and the OpamLockHelper
+and OpamFileFormat assets are unchanged. The OpamLock Export ladder is
+re-harvested for @1.1.17.
 
 Retired on 2026-08-28 (superseded at HEAD): Dk.OpamLock@1.1.14, superseded by
 Dk.OpamLock@1.1.15 (the declared uirule capability manifest; see
