@@ -1250,9 +1250,15 @@ let do_solve o =
               ("pins", Json.Str o.pins_name) ]
             @ (if o.wtest then [ ("wtest", Json.Str "t") ] else [])
             @ (if o.wdoc then [ ("wdoc", Json.Str "t") ] else [])
+            (* Stamp local_opam_dir only when it replays: a relative dir is a
+               stable project path the mode=solve replay can reuse, while an
+               absolute dir is a transient staging directory (gone by replay
+               time) whose machine-specific path would make the committed lock
+               nondeterministic. *)
             @ (match o.local_opam_dir with
-               | Some d -> [ ("local_opam_dir", Json.Str d) ]
-               | None -> [])));
+               | Some d when Filename.is_relative d ->
+                 [ ("local_opam_dir", Json.Str d) ]
+               | Some _ | None -> [])));
         ("opam_repositories", Json.Arr repos_json);
         ("packages", Json.Obj packages);
         ("slots", Json.Obj slots_json) ]
