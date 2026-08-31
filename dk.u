@@ -17,7 +17,7 @@ redistributed payload carries several licenses in combination.
 Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only WITH OCaml-LGPL-linking-exception AND LGPL-3.0-or-later AND GPL-2.0-only AND Zlib AND MIT AND GPL-3.0-or-later AND BSD-2-Clause AND Info-ZIP
 
 ## workspace
-  %% actual_version("2.4.2.329")
+  %% actual_version("2.4.3.9")
   'actual_version'
   '2.4.2.308'
 
