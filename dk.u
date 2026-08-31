@@ -227,6 +227,16 @@ capability manifest which @1.1.16 retains). The OpamBuild Export marker
 value-id is unchanged (Export@1.0.0 form is byte-identical); the OpamLock
 Export ladder is re-harvested for @1.1.16.
 
+Retired on 2026-08-30 (superseded at HEAD): Dk.OpamBuild@1.0.26, superseded by
+Dk.OpamBuild@1.0.27, which fetches a non-cached locked source from its direct
+opam URL whenever the lock does not explicitly mark it cached (`incache=1`),
+not only when `incache=0`. OpamLock@1.1.19 dropped the machine-nondeterministic
+`source.incache` flag, so the custom relocatable forks (ocamlfind/ocamlbuild)
+lost their `incache=0` marker and defaulted to the opam content-addressed
+cache, which never held them -- every distribute slot 404ed on the first fork
+source. The OpamBuild Export marker value-id is unchanged (Export@1.0.0 form is
+byte-identical).
+
 Retired on 2026-08-30 (superseded at HEAD): Dk.OpamLock@1.1.19 and
 Apparatus.OpamLockHelper@1.0.18, superseded by Dk.OpamLock@1.1.20 and
 Apparatus.OpamLockHelper@1.0.19, which check the pinned-version universe guard
@@ -642,6 +652,19 @@ Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
 per-package build rule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
+
+The @1.0.27 revision fetches a locked source from its direct opam URL unless
+the lock explicitly marks it cached (`incache=1`). OpamLock@1.1.19 dropped the
+machine-nondeterministic `source.incache` flag from the lock, so the custom
+relocatable forks (ocamlfind/ocamlbuild) lost their `incache=0` marker and the
+build defaulted them to the opam content-addressed cache, which never held
+them -- the fetch 404ed on every distribute slot (the CommonsBase_Dk binary
+build for MlFront 2.4.3.7). The opam cache mirrors opam-repository sources
+only; the direct URL is always recorded and authoritative, so it is the safe
+default when the flag is absent. A later engine gains a
+cache-miss->direct-URL fallback so the cache can be preferred again without the
+flag; until a driver carrying it ships, the direct URL is used outright. Its
+Export marker value-id is unchanged (Export@1.0.0 form is byte-identical).
 
 The @1.0.26 revision archives the per-package install.zip and the
 mergedprefix prefix.zip with the engine's in-process `--zip` special form,
