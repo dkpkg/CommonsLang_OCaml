@@ -103,12 +103,23 @@ jobs:
             # launcher exactly like the floating one. Kept in lockstep with
             # CommonsBase_Dk's distribute workflow.
             #
-            # 2.4.2.308 is the first driver manifest that carries a
-            # dk0_linux_x86_64_musl build, so a musl-detecting launcher can
-            # resolve every ABI from it. It succeeds 2.4.2.301, the first
-            # shallow-import driver that could build this closure (import
-            # idempotency fix + strict materialized-only trace import).
-            DK0_BASE_URL: https://gitlab.com/api/v4/projects/60486861/packages/generic/dk-dist/2.4.2.309
+            # 2.4.3.9 is required by Dk.OpamBuild@1.0.28: it is the first
+            # driver whose engine understands per-mirror filenames, so the
+            # two-mirror (opam cache, then direct URL) source emission
+            # resolves instead of joining the cache directory to the direct
+            # basename. It also carries the cross-slot object value-id fix:
+            # object_value_id no longer folds ::target_abi= into the id when
+            # the object's slot already names the target ABI, so a cross leg
+            # publishes ids a consumer can reproduce (the unfetchable
+            # TestPkg.Closure.Built on Darwin_x86_64 / Linux_x86).
+            #
+            # It succeeds 2.4.2.309, whose 2.4.2.308 base was the first driver
+            # manifest carrying a dk0_linux_x86_64_musl build, so a
+            # musl-detecting launcher can resolve every ABI from it; that in
+            # turn succeeded 2.4.2.301, the first shallow-import driver that
+            # could build this closure (import idempotency fix + strict
+            # materialized-only trace import).
+            DK0_BASE_URL: https://gitlab.com/api/v4/projects/60486861/packages/generic/dk-dist/2.4.3.9
             # The musl job's DkML.Unix build provisions /lib/ld-musl-x86_64.so.1
             # (the loader for the musl-dynamic ocamlopt), and the dksrc launcher
             # synced from MlFront ci/dist probes that file to detect a musl
