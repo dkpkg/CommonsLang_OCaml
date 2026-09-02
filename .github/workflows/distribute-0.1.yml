@@ -103,6 +103,16 @@ jobs:
             # launcher exactly like the floating one. Kept in lockstep with
             # CommonsBase_Dk's distribute workflow.
             #
+            # 2.4.3.10 succeeds 2.4.3.9 and carries the publish-path filter:
+            # a leg invoked with an execution ABI no longer publishes its
+            # host-slotted traces under that ABI slot, so a leg stops binding
+            # a key that another leg already binds to a different value.
+            # Under 2.4.3.9 this release Darwin_arm64 and Darwin_x86_64 legs
+            # published 3 keys at Release.Darwin_arm64 in common and disagreed
+            # on all 3. The same driver also makes an import FAIL LOUD when a
+            # distribution binds one key to two values, where it used to pick
+            # a winner in silence.
+            #
             # 2.4.3.9 is required by Dk.OpamBuild@1.0.28: it is the first
             # driver whose engine understands per-mirror filenames, so the
             # two-mirror (opam cache, then direct URL) source emission
@@ -119,7 +129,7 @@ jobs:
             # turn succeeded 2.4.2.301, the first shallow-import driver that
             # could build this closure (import idempotency fix + strict
             # materialized-only trace import).
-            DK0_BASE_URL: https://gitlab.com/api/v4/projects/60486861/packages/generic/dk-dist/2.4.3.9
+            DK0_BASE_URL: https://gitlab.com/api/v4/projects/60486861/packages/generic/dk-dist/2.4.3.10
             # The musl job's DkML.Unix build provisions /lib/ld-musl-x86_64.so.1
             # (the loader for the musl-dynamic ocamlopt), and the dksrc launcher
             # synced from MlFront ci/dist probes that file to detect a musl
