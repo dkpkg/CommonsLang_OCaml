@@ -2881,11 +2881,202 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.opamvenv_plan(request, coreutils
   P.ocaml = ocaml
   P.dune = request.user.dune or "CommonsLang_OCaml.Dune@3.23.1"
   P.out = request.user.out or "opam-venv"
+  -- Declared environment modifications: envmods=PATH, else the committed
+  -- dk-opam-venv.envmods beside dk.u when it exists (the venv's own stamp is
+  -- dk-opam-venv.json; the declaration takes the same stem). One envmod per
+  -- line: +NAME=VALUE, <NAME=VALUE or -NAME; lines are trimmed, and blank
+  -- lines and lines starting with '#' are ignored. The engine's envmod library
+  -- parses and orders them, so the grammar, the first-writer-wins dedupe of
+  -- additions and the additions-prepends-removals order are the engine's and
+  -- not a lua-ml reimplementation.
+  local envpath = request.user.envmods
+  local envtext = nil
+  if envpath ~= nil then
+    envtext = assert(request.ui.readfile { path = envpath },
+      "could not read envmods `" .. envpath .. "` (envmods=)")
+  else
+    envpath = "dk-opam-venv.envmods"
+    envtext = request.ui.readfile { path = envpath }
+  end
+  if envtext ~= nil then
+    P.envmods = envpath
+    local em = request.ui.checksum { path = envpath }
+    if em ~= nil then P.envmodssha = em.sha256 end
+    local entries = {}
+    local lines = H.splitlines(envtext)
+    local li = 1
+    while lines[li] ~= nil do
+      local ln = H.trim(lines[li])
+      if ln ~= "" and string.sub(ln, 1, 1) ~= "#" then table.insert(entries, ln) end
+      li = li + 1
+    end
+    local envmod = require("envmod")
+    local plan, err = envmod.plan(entries)
+    assert(plan ~= nil, "envmods `" .. envpath .. "`: " .. tostring(err))
+    P.envplan = H.envmod_cohere(plan)
+  end
   return P
 end
 
+-- The declared environment modifications (see opamvenv_plan) rendered into an
+-- activator. `plan` is what require("envmod").plan returned: additions, then
+-- prepends, then removals, which is the specification's order, so a removal
+-- beats an addition or a prepend of the same name. Values are emitted as
+-- written after ${PREFIX} (the staged prefix) and ${DKML} (the staged
+-- compiler) are substituted. The block goes after the fixed toolchain block
+-- and before DK_OPAM_VENV, so a declaration can override or remove a toolchain
+-- variable and a declared prepend lands ahead of the prefix bins.
+--
+-- What each shell can and cannot say:
+--   prepend-when-empty (SPECIFICATION "Environment Modifications": no
+--     separator when the variable is unset or empty) is exact in all three:
+--     ps1 `if ($env:NAME)`, cmd `if defined NAME`, sh `${NAME:+<sep>$NAME}`.
+--   -NAME: ps1 Remove-Item and sh unset delete the variable. cmd has no unset
+--     statement; `set "NAME="` is how cmd deletes a variable, so a child
+--     process sees the same absence (only PowerShell tells empty from absent).
+--   quoting: ps1 single quotes with '' for an embedded quote; sh double quotes
+--     with backslash, double quote, dollar and backtick escaped; cmd
+--     `set "NAME=VALUE"` doubles {'H': 'CommonsLang_OCaml__Dk_OpamLock__1_1_21'}nd cannot carry a double quote, nor a `)`
+--     inside the prepend's parenthesised if.
+--   separator: ps1 and cmd use `;`. sh uses `:` on Unix. On a Windows host
+--     env.sh treats PATH as the shell's own (`:`, with the entry through
+--     cygpath -u when cygpath exists) and every other prepend as a native
+--     program's (`;`, value as written), the same split the toolchain block
+--     makes between Path and CAML_LD_LIBRARY_PATH.
+-- A removal beats an addition or a prepend of the same name (specification
+-- order: additions, prepends, removals). envmod.plan keeps all three lists as
+-- declared; the engine's applier drops the shadowed entries before applying
+-- (MlFront_Core.EnvMods.cohere), and so does this, so an activator never sets
+-- a variable it unsets three lines later. Names compare as written.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.envmod_cohere(plan)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
+  local gone = H.set_from_list(plan.removals)
+  local out = { additions = {}, prepends = {}, removals = plan.removals }
+  local i = 1
+  while plan.additions[i] ~= nil do
+    if gone[plan.additions[i].name] == nil then table.insert(out.additions, plan.additions[i]) end
+    i = i + 1
+  end
+  i = 1
+  while plan.prepends[i] ~= nil do
+    if gone[plan.prepends[i].name] == nil then table.insert(out.prepends, plan.prepends[i]) end
+    i = i + 1
+  end
+  return out
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.envmod_expand(v, absprefix, absdkml)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
+  return H.replace_all(H.replace_all(v, "${PREFIX}", absprefix), "${DKML}", absdkml)
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.ps1_q(s)
+  return "'" .. CommonsLang_OCaml__Dk_OpamLock__1_1_21.replace_all(s, "'", "''") .. "'"
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.sh_esc(s)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
+  local r = H.replace_all(s, "\\", "\\\\")
+  r = H.replace_all(r, "\"", "\\\"")
+  r = H.replace_all(r, "$", "\\$")
+  r = H.replace_all(r, "`", "\\`")
+  return r
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.sh_q(s)
+  return "\"" .. CommonsLang_OCaml__Dk_OpamLock__1_1_21.sh_esc(s) .. "\""
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.cmd_v(s)
+  return CommonsLang_OCaml__Dk_OpamLock__1_1_21.replace_all(s, "%", "%%")
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.is_path_name(name)
+  if name == "PATH" or name == "Path" or name == "path" then return 1 end
+  return nil
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_envmods_ps1(L, plan, absprefix, absdkml)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
+  if plan == nil then return end
+  local i = 1
+  while plan.additions[i] ~= nil do
+    local e = plan.additions[i]
+    table.insert(L, "$env:" .. e.name .. " = " .. H.ps1_q(H.envmod_expand(e.value, absprefix, absdkml)))
+    i = i + 1
+  end
+  i = 1
+  while plan.prepends[i] ~= nil do
+    local e = plan.prepends[i]
+    local v = H.envmod_expand(e.value, absprefix, absdkml)
+    table.insert(L, "if ($env:" .. e.name .. ") { $env:" .. e.name .. " = " .. H.ps1_q(v .. ";")
+      .. " + $env:" .. e.name .. " } else { $env:" .. e.name .. " = " .. H.ps1_q(v) .. " }")
+    i = i + 1
+  end
+  i = 1
+  while plan.removals[i] ~= nil do
+    table.insert(L, "Remove-Item Env:" .. plan.removals[i] .. " -ErrorAction SilentlyContinue")
+    i = i + 1
+  end
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_envmods_cmd(L, plan, absprefix, absdkml)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
+  if plan == nil then return end
+  local i = 1
+  while plan.additions[i] ~= nil do
+    local e = plan.additions[i]
+    table.insert(L, "set \"" .. e.name .. "=" .. H.cmd_v(H.envmod_expand(e.value, absprefix, absdkml)) .. "\"")
+    i = i + 1
+  end
+  i = 1
+  while plan.prepends[i] ~= nil do
+    local e = plan.prepends[i]
+    local v = H.cmd_v(H.envmod_expand(e.value, absprefix, absdkml))
+    table.insert(L, "if defined " .. e.name .. " (set \"" .. e.name .. "=" .. v .. ";%" .. e.name .. "%\")"
+      .. " else (set \"" .. e.name .. "=" .. v .. "\")")
+    i = i + 1
+  end
+  i = 1
+  while plan.removals[i] ~= nil do
+    table.insert(L, "set \"" .. plan.removals[i] .. "=\"")
+    i = i + 1
+  end
+end
+
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_envmods_sh(L, plan, absprefix, absdkml, iswin)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
+  if plan == nil then return end
+  local i = 1
+  while plan.additions[i] ~= nil do
+    local e = plan.additions[i]
+    table.insert(L, "export " .. e.name .. "=" .. H.sh_q(H.envmod_expand(e.value, absprefix, absdkml)))
+    i = i + 1
+  end
+  i = 1
+  while plan.prepends[i] ~= nil do
+    local e = plan.prepends[i]
+    local v = H.envmod_expand(e.value, absprefix, absdkml)
+    local n = e.name
+    if iswin ~= nil and H.is_path_name(n) ~= nil then
+      table.insert(L, "if command -v cygpath >/dev/null 2>&1; then _v=\"$(cygpath -u " .. H.sh_q(v) .. ")\"; else _v=" .. H.sh_q(v) .. "; fi")
+      table.insert(L, n .. "=\"$_v${" .. n .. ":+:$" .. n .. "}\"; export " .. n)
+    else
+      local sep = ":"
+      if iswin ~= nil then sep = ";" end
+      table.insert(L, n .. "=\"" .. H.sh_esc(v) .. "${" .. n .. ":+" .. sep .. "$" .. n .. "}\"; export " .. n)
+    end
+    i = i + 1
+  end
+  i = 1
+  while plan.removals[i] ~= nil do
+    table.insert(L, "unset " .. plan.removals[i])
+    i = i + 1
+  end
+end
+
 -- env.ps1: the recommended Windows activator (auto-imports MSVC vcvars).
-function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_env_ps1(absprefix, absdkml)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_env_ps1(absprefix, absdkml, plan)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
   local pbin = H.to_back(absprefix) .. "\\bin"
   local dbin = H.to_back(absdkml) .. "\\bin"
@@ -2918,6 +3109,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_env_ps1(absprefix, absdkml)
   table.insert(L, "$env:OCAMLLIB = '" .. absdkml .. "/lib/ocaml'")
   table.insert(L, "Remove-Item Env:INSIDE_DUNE -ErrorAction SilentlyContinue")
   table.insert(L, "$env:Path = '" .. pbin .. ";" .. dbin .. ";' + $env:Path")
+  H.emit_envmods_ps1(L, plan, absprefix, absdkml)
   table.insert(L, "$env:DK_OPAM_VENV = '" .. absprefix .. "'")
   table.insert(L, "Write-Host 'opam venv active: OCaml 4.14.3 (DkML) + dune, prefix " .. absprefix .. "'")
   return H.join(L, "\n") .. "\n"
@@ -2926,7 +3118,7 @@ end
 -- env.cmd: a minimal linear cmd.exe activator (label-free so LF endings are
 -- safe). It does not auto-import MSVC; for native builds run it inside a
 -- "x64 Native Tools Command Prompt for VS", or use env.ps1.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_env_cmd(absprefix, absdkml)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_env_cmd(absprefix, absdkml, plan)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
   local pbin = H.to_back(absprefix) .. "\\bin"
   local dbin = H.to_back(absdkml) .. "\\bin"
@@ -2945,6 +3137,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_env_cmd(absprefix, absdkml)
   table.insert(L, "set \"OCAMLLIB=" .. absdkml .. "/lib/ocaml\"")
   table.insert(L, "set \"INSIDE_DUNE=\"")
   table.insert(L, "set \"PATH=" .. pbin .. ";" .. dbin .. ";%PATH%\"")
+  H.emit_envmods_cmd(L, plan, absprefix, absdkml)
   table.insert(L, "set \"DK_OPAM_VENV=" .. absprefix .. "\"")
   table.insert(L, "where cl >nul 2>nul || echo [note] cl not found; for native builds use env.ps1 or a x64 Native Tools prompt.")
   table.insert(L, "echo opam venv active: prefix " .. absprefix)
@@ -2954,7 +3147,7 @@ end
 -- env.sh: POSIX-sh activator, generated for the host it is made on. On Windows
 -- it converts PATH entries with cygpath (Git Bash / MSYS2); on Unix it also
 -- repairs DkML's baked native_pack_linker path. `iswin` is 1 on a Windows host.
-function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_env_sh(absprefix, absdkml, iswin)
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_env_sh(absprefix, absdkml, iswin, plan)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
   local L = {}
   table.insert(L, "#!/bin/sh")
@@ -2996,6 +3189,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.emit_env_sh(absprefix, absdkml, 
     table.insert(L, "  fi")
     table.insert(L, "fi")
   end
+  H.emit_envmods_sh(L, plan, absprefix, absdkml, iswin)
   table.insert(L, "export DK_OPAM_VENV=\"$DK_PREFIX\"")
   table.insert(L, "echo \"opam venv active: prefix $DK_PREFIX\"")
   return H.join(L, "\n") .. "\n"
@@ -3016,6 +3210,11 @@ end
 --                 from. It must be on disk; its sha256 is recorded in the stamp
 --                 so a later lock change forces a rebuild. Without lock= the
 --                 stamp records no lock and only formid/slot/tool are compared.
+--   envmods=PATH  the project's declared environment modifications (default:
+--                 dk-opam-venv.envmods beside dk.u, when it exists): one
+--                 +NAME=VALUE, <NAME=VALUE or -NAME per line, '#' comments,
+--                 ${PREFIX} and ${DKML} substituted, rendered into all three
+--                 activators after the toolchain block (see emit_envmods_*)
 --   slot=SLOT     the ABI to materialize (default: the host execution ABI)
 --   out=DIR       project-relative output dir (default: opam-venv)
 --   dune=ID@VER   the Dune object (default: CommonsLang_OCaml.Dune@3.23.1)
@@ -3063,7 +3262,7 @@ function uirules.OpamVenv(command, request, continue_)
       local jd = require("jsondk")
       local po = jd.decode(prev)
       if po ~= nil and po["lock-sha256"] == P.locksha and po.slot == P.slot
-         and po.formid == P.formid
+         and po.formid == P.formid and po["envmods-sha256"] == P.envmodssha
          and po.tool == H.MODULE .. ".OpamVenv@" .. H.VERSION then
         request.io.close(request.continued.co)
         print("opam venv is up to date (" .. stamppath .. "); pass force=t to rebuild it")
@@ -3157,9 +3356,9 @@ function uirules.OpamVenv(command, request, continue_)
   H.write_projfile(request, prefixdir .. "/lib/findlib.conf", findlibconf)
 
   -- Activators.
-  H.write_projfile(request, out .. "/env.ps1", H.emit_env_ps1(absprefix, absdkml))
-  H.write_projfile(request, out .. "/env.cmd", H.emit_env_cmd(absprefix, absdkml))
-  H.write_projfile(request, out .. "/env.sh", H.emit_env_sh(absprefix, absdkml, iswin))
+  H.write_projfile(request, out .. "/env.ps1", H.emit_env_ps1(absprefix, absdkml, P.envplan))
+  H.write_projfile(request, out .. "/env.cmd", H.emit_env_cmd(absprefix, absdkml, P.envplan))
+  H.write_projfile(request, out .. "/env.sh", H.emit_env_sh(absprefix, absdkml, iswin, P.envplan))
 
   -- Self-ignoring .gitignore so the ephemeral switch never shows in git status.
   H.write_projfile(request, out .. "/.gitignore", "*\n")
@@ -3176,6 +3375,12 @@ function uirules.OpamVenv(command, request, continue_)
     .. "  \"lock\": \"" .. H.json_esc(tostring(P.lock)) .. "\",\n"
     .. "  \"lock-sha256\": \"" .. tostring(P.locksha) .. "\",\n"
     .. "  \"slot\": \"" .. P.slot .. "\",\n"
+  if P.envmods ~= nil then
+    stamp = stamp
+      .. "  \"envmods\": \"" .. H.json_esc(P.envmods) .. "\",\n"
+      .. "  \"envmods-sha256\": \"" .. tostring(P.envmodssha) .. "\",\n"
+  end
+  stamp = stamp
     .. "  \"prefix\": \"" .. H.json_esc(absprefix) .. "\"\n"
     .. "}\n"
   H.write_projfile(request, out .. "/dk-opam-venv.json", stamp)

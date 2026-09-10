@@ -664,6 +664,18 @@ prefix was solved from so the stamp records its sha256 and a lock edit forces
 a rebuild. The stamp also records the `formid`, and the up-to-date check
 compares it, so a new closure version is never mistaken for the old one.
 
+The activators also carry the project's declared environment modifications. A
+committed `dk-opam-venv.envmods` beside `dk.u` (or `envmods=PATH`) holds one
+modification per line in the specification's grammar (`+NAME=VALUE`,
+`<NAME=VALUE`, `-NAME`; `#` comments; `${PREFIX}` and `${DKML}` stand for the
+staged prefix and compiler), planned by the engine's `envmod` library so the
+ordering and dedupe are the engine's. Each of `env.ps1`, `env.cmd` and `env.sh`
+renders the same plan after its toolchain block: a prepend adds no separator
+when the variable is empty in all three, a removal is `Remove-Item`, `unset`
+or cmd's `set "NAME="`, and the stamp records the file and its sha256 so an
+edit re-materializes. A project with no such file gets the same activators as
+before.
+
 The opam venv is additive and host-only: `opam-venv/` and dune's `_build/` are
 invisible to git and to dune. dk0 drops a self-ignoring `.gitignore` ("*") and a
 `dune` ("(dirs)") into its `t/` store, and the OpamVenv dialog does the same for
