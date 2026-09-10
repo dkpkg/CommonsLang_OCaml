@@ -247,6 +247,14 @@ cache, which never held them -- every distribute slot 404ed on the first fork
 source. The OpamBuild Export marker value-id is unchanged (Export@1.0.0 form is
 byte-identical).
 
+Retired on 2026-09-10 (superseded at HEAD): Dk.OpamLock@1.1.20, superseded by
+Dk.OpamLock@1.1.21, whose OpamVenv takes `formid=` and `lock=` to select a
+released merged prefix by form id, and gathers the project's declared
+environment modifications (`dk-opam-venv.envmods`) into all three activators
+(see "### OpamVenv: a native dune inner loop"). No asset bump: OpamBuild stays
+at @1.0.28 and the OpamLockHelper asset is unchanged. The OpamLock Export
+ladder is re-harvested for @1.1.21.
+
 Retired on 2026-08-30 (superseded at HEAD): Dk.OpamLock@1.1.19 and
 Apparatus.OpamLockHelper@1.0.18, superseded by Dk.OpamLock@1.1.20 and
 Apparatus.OpamLockHelper@1.0.19, which check the pinned-version universe guard
