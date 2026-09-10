@@ -2783,47 +2783,80 @@ end
 
 -- Resolve the dev-prefix plan: find the mergedprefix driver (explicit driver=
 -- or the sole discovered one), read its stamp, and derive the get-object
--- targets. Returns a table { driver, formid, lock, locksha, slot, ocaml, dune,
--- out }. Needs a materialized coreutils for discovery.
+-- targets. With formid= and no driver= the driver is not needed at all: the
+-- caller names the merged-prefix form directly (ex. a released with-test
+-- closure such as CommonsBase_Dk.TestPkg.Closure.Built@2.4.3), and lock=
+-- names the lock it was solved from so the stamp can guard staleness. Returns
+-- a table { driver, formid, lock, locksha, slot, ocaml, dune, out }. Needs a
+-- materialized coreutils for discovery.
 function CommonsLang_OCaml__Dk_OpamLock__1_1_21.opamvenv_plan(request, coreutils)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
-  local drivers = nil
-  if request.user.driver ~= nil then
-    drivers = { request.user.driver }
-  else
-    local all = H.discover_drivers(request, coreutils)
-    drivers = {}
-    local i = 1
-    while all[i] ~= nil do
-      local t = request.ui.readfile { path = all[i] }
-      if t ~= nil then
-        local st = H.read_stamp(t)
-        if st ~= nil and st.mergedprefix == "t" then table.insert(drivers, all[i]) end
-      end
-      i = i + 1
-    end
-    assert(drivers[1] ~= nil,
-      "no dev-prefix driver found under etc/dk/v. Generate one first:\n"
-      .. "  ./dk1 dialog " .. H.MODULE .. ".GenerateDriver@" .. H.VERSION .. " lock=<LOCK>"
-      .. " out=etc/dk/v/<Lib>/<Root>.DevPrefix.values.jsonc root=<ROOT> skiplocal=t"
-      .. " mergedprefix=t parallel=t formid=<Lib>.<Root>.DevPrefix@<VER> pkgpath=<Lib>.<Root>"
-      .. " version=<VER> localsrc=<SRC> locksrcpath=./dk-opam-lock.jsonc")
-    assert(drivers[2] == nil,
-      "multiple dev-prefix drivers found under etc/dk/v; pass driver=PATH to select one")
+  local formid = request.user.formid
+  if formid ~= nil then
+    assert(H.indexof_char(formid, "@") ~= nil,
+      "formid=`" .. formid .. "` is not a versioned form id (LIB.Name@VER)")
   end
-  local D = H.to_slash(drivers[1])
-  local text = assert(request.ui.readfile { path = D }, "could not read driver `" .. D .. "`")
-  local stamp = H.read_stamp(text)
-  assert(stamp ~= nil,
-    "driver `" .. D .. "` has no generated stamp; regenerate it with GenerateDriver@" .. H.VERSION)
-  assert(stamp.mergedprefix == "t",
-    "driver `" .. D .. "` is not a dev-prefix driver (mergedprefix != t). Regenerate it with"
-    .. " GenerateDriver@" .. H.VERSION .. " ... skiplocal=t mergedprefix=t")
+  local D = nil
+  local text = nil
+  local stamp = nil
+  if request.user.driver ~= nil or formid == nil then
+    local drivers = nil
+    if request.user.driver ~= nil then
+      drivers = { request.user.driver }
+    else
+      local all = H.discover_drivers(request, coreutils)
+      drivers = {}
+      local i = 1
+      while all[i] ~= nil do
+        local t = request.ui.readfile { path = all[i] }
+        if t ~= nil then
+          local st = H.read_stamp(t)
+          if st ~= nil and st.mergedprefix == "t" then table.insert(drivers, all[i]) end
+        end
+        i = i + 1
+      end
+      assert(drivers[1] ~= nil,
+        "no dev-prefix driver found under etc/dk/v. Generate one first:\n"
+        .. "  ./dk1 dialog " .. H.MODULE .. ".GenerateDriver@" .. H.VERSION .. " lock=<LOCK>"
+        .. " out=etc/dk/v/<Lib>/<Root>.DevPrefix.values.jsonc root=<ROOT> skiplocal=t"
+        .. " mergedprefix=t parallel=t formid=<Lib>.<Root>.DevPrefix@<VER> pkgpath=<Lib>.<Root>"
+        .. " version=<VER> localsrc=<SRC> locksrcpath=./dk-opam-lock.jsonc")
+      assert(drivers[2] == nil,
+        "multiple dev-prefix drivers found under etc/dk/v; pass driver=PATH to select one")
+    end
+    D = H.to_slash(drivers[1])
+    text = assert(request.ui.readfile { path = D }, "could not read driver `" .. D .. "`")
+    stamp = H.read_stamp(text)
+    assert(stamp ~= nil,
+      "driver `" .. D .. "` has no generated stamp; regenerate it with GenerateDriver@" .. H.VERSION)
+    assert(stamp.mergedprefix == "t",
+      "driver `" .. D .. "` is not a dev-prefix driver (mergedprefix != t). Regenerate it with"
+      .. " GenerateDriver@" .. H.VERSION .. " ... skiplocal=t mergedprefix=t")
+  end
   local P = {}
-  P.driver = D
-  P.formid = assert(stamp.formid, "driver `" .. D .. "` stamp has no formid")
-  P.lock = stamp.lock
-  P.locksha = stamp["lock-sha256"]
+  if stamp ~= nil then
+    -- Driver-backed: the stamp supplies the lock and its sha256 (the lock on
+    -- disk is checked against it before anything heavy runs).
+    P.driver = D
+    P.formid = stamp.formid
+    P.lock = stamp.lock
+    P.locksha = stamp["lock-sha256"]
+  else
+    -- formid-only: no driver. lock= is optional; when given it must be on
+    -- disk and its sha256 is what the stamp records, so the up-to-date
+    -- short-circuit sees a lock edit as a change.
+    P.driver = ""
+    P.lock = request.user.lock
+    if P.lock ~= nil then
+      local lm = request.ui.checksum { path = P.lock }
+      assert(lm ~= nil and lm.sha256 ~= nil,
+        "lock `" .. P.lock .. "` (lock=) is not on disk")
+      P.locksha = lm.sha256
+    end
+  end
+  -- formid= overrides the stamp's formid in every mode.
+  if formid ~= nil then P.formid = formid end
+  assert(P.formid ~= nil, "driver `" .. tostring(D) .. "` stamp has no formid; pass formid=")
   local slot = request.user.slot
   if slot == nil then
     local abi = nil
@@ -2832,7 +2865,7 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.opamvenv_plan(request, coreutils
     slot = "Release." .. abi
   end
   P.slot = slot
-  if stamp.slots ~= nil then
+  if stamp ~= nil and stamp.slots ~= nil then
     local okslot = nil
     local i = 1
     while stamp.slots[i] ~= nil do
@@ -2842,7 +2875,8 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.opamvenv_plan(request, coreutils
     assert(okslot ~= nil,
       "slot `" .. slot .. "` is not built by driver `" .. D .. "`; pass a slot= it declares")
   end
-  local ocaml = H.kv(text, "ocaml=")
+  local ocaml = nil
+  if text ~= nil then ocaml = H.kv(text, "ocaml=") end
   if ocaml == nil then ocaml = "CommonsLang_OCaml.DkML@4.14.3" end
   P.ocaml = ocaml
   P.dune = request.user.dune or "CommonsLang_OCaml.Dune@3.23.1"
@@ -2974,6 +3008,14 @@ end
 -- Parameters (dk0 dialog H.MODULE .. ".OpamVenv@" .. H.VERSION):
 --   driver=PATH   the mergedprefix driver (default: discover the sole one whose
 --                 stamp has mergedprefix=t)
+--   formid=ID@VER the merged-prefix form to get-object, overriding the driver
+--                 stamp's formid (ex. CommonsBase_Dk.TestPkg.Closure.Built@2.4.3,
+--                 the released with-test closure). Without driver= no driver is
+--                 discovered or read at all.
+--   lock=PATH     with formid= and no driver=: the lock the prefix was solved
+--                 from. It must be on disk; its sha256 is recorded in the stamp
+--                 so a later lock change forces a rebuild. Without lock= the
+--                 stamp records no lock and only formid/slot/tool are compared.
 --   slot=SLOT     the ABI to materialize (default: the host execution ABI)
 --   out=DIR       project-relative output dir (default: opam-venv)
 --   dune=ID@VER   the Dune object (default: CommonsLang_OCaml.Dune@3.23.1)
@@ -3021,6 +3063,7 @@ function uirules.OpamVenv(command, request, continue_)
       local jd = require("jsondk")
       local po = jd.decode(prev)
       if po ~= nil and po["lock-sha256"] == P.locksha and po.slot == P.slot
+         and po.formid == P.formid
          and po.tool == H.MODULE .. ".OpamVenv@" .. H.VERSION then
         request.io.close(request.continued.co)
         print("opam venv is up to date (" .. stamppath .. "); pass force=t to rebuild it")
@@ -3129,6 +3172,7 @@ function uirules.OpamVenv(command, request, continue_)
   local stamp = "{\n"
     .. "  \"tool\": \"" .. H.MODULE .. ".OpamVenv@" .. H.VERSION .. "\",\n"
     .. "  \"driver\": \"" .. H.json_esc(P.driver) .. "\",\n"
+    .. "  \"formid\": \"" .. H.json_esc(P.formid) .. "\",\n"
     .. "  \"lock\": \"" .. H.json_esc(tostring(P.lock)) .. "\",\n"
     .. "  \"lock-sha256\": \"" .. tostring(P.locksha) .. "\",\n"
     .. "  \"slot\": \"" .. P.slot .. "\",\n"
