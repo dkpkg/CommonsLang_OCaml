@@ -2784,9 +2784,9 @@ end
 -- Resolve the dev-prefix plan: find the mergedprefix driver (explicit driver=
 -- or the sole discovered one), read its stamp, and derive the get-object
 -- targets. With formid= and no driver= the driver is not needed at all: the
--- caller names the merged-prefix form directly (ex. a released with-test
--- closure such as CommonsBase_Dk.TestPkg.Closure.Built@2.4.3), and lock=
--- names the lock it was solved from so the stamp can guard staleness. Returns
+-- caller names the merged-prefix form directly (a released with-test closure
+-- form, for one), and lock= names the lock it was solved from so the stamp
+-- can guard staleness. Returns
 -- a table { driver, formid, lock, locksha, slot, ocaml, dune, out }. Needs a
 -- materialized coreutils for discovery.
 function CommonsLang_OCaml__Dk_OpamLock__1_1_21.opamvenv_plan(request, coreutils)
@@ -3203,8 +3203,8 @@ end
 --   driver=PATH   the mergedprefix driver (default: discover the sole one whose
 --                 stamp has mergedprefix=t)
 --   formid=ID@VER the merged-prefix form to get-object, overriding the driver
---                 stamp's formid (ex. CommonsBase_Dk.TestPkg.Closure.Built@2.4.3,
---                 the released with-test closure). Without driver= no driver is
+--                 stamp's formid (a released with-test closure form, named as
+--                 <Library>.<Form>@<version>). Without driver= no driver is
 --                 discovered or read at all.
 --   lock=PATH     with formid= and no driver=: the lock the prefix was solved
 --                 from. It must be on disk; its sha256 is recorded in the stamp

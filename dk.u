@@ -658,8 +658,8 @@ driver and the next OpamVenv re-materializes.
 
 A caller can also skip the driver: `formid=ID@VER` names the merged-prefix form
 to get-object directly, so a project whose merged prefix is a released object
-(the with-test closure `CommonsBase_Dk.TestPkg.Closure.Built@2.4.3`, for one)
-needs no dev-prefix driver of its own, and `lock=PATH` names the lock that
+(a released with-test closure form, for one) needs no dev-prefix driver of its
+own, and `lock=PATH` names the lock that
 prefix was solved from so the stamp records its sha256 and a lock edit forces
 a rebuild. The stamp also records the `formid`, and the up-to-date check
 compares it, so a new closure version is never mistaken for the old one.
