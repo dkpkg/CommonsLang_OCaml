@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Darwin_arm64 -d ${RUNTIME}/Darwin_arm64-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "oo4ayzg7xkx5jehdewwtopexnnwmwidon22bpm5qpu7zwtui3uduq")\;
+  \dk.object(abi: "Release.Darwin_arm64", value-id: "ov4hzcigbvcca6mmdcn3dkbcxzrqbyypiygv6uuqyxxi3xud45fza")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
@@ -46,7 +46,7 @@ ladder lives in pre-2026-08 release tags and git history (see dk.u
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.22 -f ${RUNTIME}/OpamLock.Export-1.1.22.zip
   \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "oe4g3eqnczobtqdjlxuj2k7lds2uc24c5cvmit5p45hpgbpaijzwq")\;
+  \dk.object(abi: "Release.Darwin_arm64", value-id: "o5vllo5gpdgwbs63gtxlfvdguztyxizeykgw76egto6x4nvywah7a")\;
 
 
 ## Dk.OpamBuild

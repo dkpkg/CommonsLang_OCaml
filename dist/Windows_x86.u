@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Windows_x86 -d ${RUNTIME}/Windows_x86-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86", value-id: "otj6lfdhsvf6qonulwtjephn7wu7ow5ocwzkjknfplo2uanj65kya")\;
+  \dk.object(abi: "Release.Windows_x86", value-id: "op7pbgi75o5tg4d6u6wlhih4ejc6gvte2it5qaduhy4a3ydgeiafq")\;
 
 Release.Windows_x86_64 will be used as Release.execution_abi on normal (64-bit) build + CI machines.
 
@@ -41,7 +41,7 @@ ladder lives in pre-2026-08 release tags and git history (see dk.u
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.22 -f ${RUNTIME}/OpamLock.Export-1.1.22.zip
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "ofbqiqfwzp34epi2s4ehi73caj2zvrrv6z7kvdg7f5slru2bgrdma")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "o3jbpgkdxedk6umphkznsdodo6pfusrxqetux7x3qzljlknpxpfxq")\;
 
 
 ## Dk.OpamBuild
