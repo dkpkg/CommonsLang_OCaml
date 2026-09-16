@@ -2,17 +2,17 @@
 
 ## DkML
 
-  $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -d ${RUNTIME}/Linux_x86_64-DkML-4.14.3
+  $ get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Linux_x86_64 -d ${RUNTIME}/Linux_x86_64-DkML-4.14.3
   \test(pass)
   \dk.object(abi: "Release.Linux_x86_64", value-id: "ot73vapttmhsm5oskmtiousmp7bmqheglknykhprnqp36bbzcm7ha")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
-  >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
+  >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
   \test(pass)
   \dk.target(abi: "Linux_x86_64")[ELF 64-bit LSB executable, x86-64, version 1 (SYSV)
   ]\;
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -version
+  $ run-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -version
   \test(pass)
   \dk.target(abi: "Linux_x86_64")[4.14.3+relocatable
   ]\;
@@ -22,7 +22,7 @@ bare `ld -r -o`), never an absolute build-host path such as the ephemeral
 `.../src-ocaml/support/with-host-c-compiler.sh.ld64.sh` a stock build bakes;
 otherwise `ocamlopt -pack` fails off the build machine.
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -config-var native_pack_linker
+  $ run-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -config-var native_pack_linker
   \test(pass)
   \dk.target(abi: "Linux_x86_64")[ld -r -o ]\;
 
@@ -31,11 +31,11 @@ absolute /opt/rh/gcc-toolset-14 paths of the manylinux build container
 (issue #2): end-user hosts supply their own PATH toolchain, while the release
 build still resolves the same gcc-toolset-14 first on PATH.
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -config-var c_compiler
+  $ run-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -config-var c_compiler
   \test(pass)
   \dk.target(abi: "Linux_x86_64")[gcc]\;
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -config-var asm
+  $ run-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt -- -config-var asm
   \test(pass)
   \dk.target(abi: "Linux_x86_64")[as]\;
 
@@ -44,7 +44,7 @@ on a non-PIC libasmrun.a with `relocation R_X86_64_32S ... can not be used
 when making a PIE object`, reproducing on the non-PIE-default gcc-toolset
 builder exactly what PIE-default consumer hosts do by default.
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt --
+  $ run-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Linux_x86_64 -e 'bin/*' -c bin/ocamlopt --
   >   -ccopt -pie -o ${RUNTIME}/piecheck.exe
   >   $(get-asset CommonsLang_OCaml.Apparatus.DkMLPieCheck@1.0.1 -p assets/dkml/piecheck.ml -f piecheck.ml)
   \test(pass)
@@ -69,14 +69,14 @@ glibc configure blocks.
 
 ## Dune
 
-  $ run-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Linux_x86_64 -e 'bin/*' -c bin/dune.exe -- --version
+  $ run-object CommonsLang_OCaml.Dune@3.23.2 -s Release.Linux_x86_64 -e 'bin/*' -c bin/dune.exe -- --version
   \test(pass)
   \dk.target(abi: "Linux_x86_64")[3.23.1
   ]\;
 
 ## Opam
 
-  $ run-object CommonsLang_OCaml.Opam@2.5.1 -s Release.Linux_x86_64 -e 'bin/*' -c bin/opam.exe -- --version
+  $ run-object CommonsLang_OCaml.Opam@2.5.2 -s Release.Linux_x86_64 -e 'bin/*' -c bin/opam.exe -- --version
   \test(pass)
   \dk.target(abi: "Linux_x86_64")[2.5.1
   ]\;

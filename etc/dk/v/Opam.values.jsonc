@@ -1,8 +1,8 @@
 // Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.Opam.Bundle@2.5.1 -d target/opam-src
-// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml --trust-local-package CommonsBase_GNU --trust-local-package CommonsBase_Std get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.Windows_x86_64 -d target/opam-win64
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml --trust-local-package CommonsBase_GNU --trust-local-package CommonsBase_Std get-object CommonsLang_OCaml.Opam@2.5.2 -s Release.Windows_x86_64 -d target/opam-win64
 //
 // Opam 2.5.1 is built from its release tarball with vendored dependencies. Like
-// Dune, this package builds opam off CommonsLang_OCaml.DkML@4.14.3 so it covers
+// Dune, this package builds opam off CommonsLang_OCaml.DkML@4.14.3001 so it covers
 // every DkML slot, including the 32-bit Windows_x86 and Linux_x86 ABIs that
 // OCaml 5 (Base) drops.
 //
@@ -78,16 +78,16 @@
     ],
     "forms": [
         {
-            "id": "CommonsLang_OCaml.Opam@2.5.1",
+            "id": "CommonsLang_OCaml.Opam@2.5.2",
             "precommands": {
                 "private": [
-                    "get-object CommonsLang_OCaml.Opam.Win32.X64@2.5.1 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}",
-                    "get-object CommonsLang_OCaml.Opam.Win32.X86@2.5.1 -s Release.Windows_x86 -d ${SLOT.Release.Windows_x86}",
-                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.1 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
-                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.1 -s Release.Linux_x86 -d ${SLOT.Release.Linux_x86}",
-                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.1 -s Release.Linux_arm64 -d ${SLOT.Release.Linux_arm64}",
-                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.1 -s Release.Darwin_x86_64 -d ${SLOT.Release.Darwin_x86_64}",
-                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.1 -s Release.Darwin_arm64 -d ${SLOT.Release.Darwin_arm64}"
+                    "get-object CommonsLang_OCaml.Opam.Win32.X64@2.5.2 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}",
+                    "get-object CommonsLang_OCaml.Opam.Win32.X86@2.5.2 -s Release.Windows_x86 -d ${SLOT.Release.Windows_x86}",
+                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.2 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
+                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.2 -s Release.Linux_x86 -d ${SLOT.Release.Linux_x86}",
+                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.2 -s Release.Linux_arm64 -d ${SLOT.Release.Linux_arm64}",
+                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.2 -s Release.Darwin_x86_64 -d ${SLOT.Release.Darwin_x86_64}",
+                    "get-object CommonsLang_OCaml.Opam.Unix@2.5.2 -s Release.Darwin_arm64 -d ${SLOT.Release.Darwin_arm64}"
                 ]
             },
             "outputs": {
@@ -103,7 +103,7 @@
             }
         },
         {
-            "id": "CommonsLang_OCaml.Opam.Win32.X64@2.5.1",
+            "id": "CommonsLang_OCaml.Opam.Win32.X64@2.5.2",
             "function": {
                 "execution": [
                     {
@@ -113,8 +113,8 @@
                 ],
                 "envmods": [
                     "<PATH=${CACHEABS}${/}lookup-s",
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Win32@4.14.3 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Win32@4.14.3001 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.2 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
                     "<PATH=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin"
                 ],
                 "commands": [
@@ -164,7 +164,7 @@
             }
         },
         {
-            "id": "CommonsLang_OCaml.Opam.Win32.X86@2.5.1",
+            "id": "CommonsLang_OCaml.Opam.Win32.X86@2.5.2",
             "function": {
                 "execution": [
                     {
@@ -174,8 +174,8 @@
                 ],
                 "envmods": [
                     "<PATH=${CACHEABS}${/}lookup-s",
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Win32@4.14.3 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Win32@4.14.3001 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.2 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
                     "<PATH=$(--path=absnative get-object CommonsBase_GNU.Toolchain.W64dev@2.5.0 -s Release.execution_abi -d : -e 'bin/*')${/}bin"
                 ],
                 "commands": [
@@ -225,11 +225,11 @@
             }
         },
         {
-            "id": "CommonsLang_OCaml.Opam.Unix@2.5.1",
+            "id": "CommonsLang_OCaml.Opam.Unix@2.5.2",
             "function": {
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Unix@4.14.3 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.1 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin"
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Unix@4.14.3001 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.2 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin"
                 ],
                 "commands": [
                     [

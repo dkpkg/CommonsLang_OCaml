@@ -2,12 +2,12 @@
 
 ## DkML
 
-  $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Darwin_x86_64 -d ${RUNTIME}/Darwin_x86_64-DkML-4.14.3
+  $ get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Darwin_x86_64 -d ${RUNTIME}/Darwin_x86_64-DkML-4.14.3
   \test(pass)
   \dk.object(abi: "Release.Darwin_x86_64", value-id: "okzumfa6r4confdol3ixdbc7txprthvklwsrnmdiygkxwqr75fmea")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
-  >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
+  >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
   \test(pass)
   \dk.target(abi: "Darwin_x86_64")[Mach-O 64-bit executable, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|WEAK_DEFINES|BINDS_TO_WEAK|PIE>
   ]\;
@@ -21,14 +21,14 @@
 
 ## Dune
 
-  $ run-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Darwin_x86_64 -e 'bin/*' -c bin/dune.exe -- --version
+  $ run-object CommonsLang_OCaml.Dune@3.23.2 -s Release.Darwin_x86_64 -e 'bin/*' -c bin/dune.exe -- --version
   \test(pass)
   \dk.target(abi: "Darwin_x86_64")[3.23.1
   ]\;
 
 ## Opam
 
-  $ run-object CommonsLang_OCaml.Opam@2.5.1 -s Release.Darwin_x86_64 -e 'bin/*' -c bin/opam.exe -- --version
+  $ run-object CommonsLang_OCaml.Opam@2.5.2 -s Release.Darwin_x86_64 -e 'bin/*' -c bin/opam.exe -- --version
   \test(pass)
   \dk.target(abi: "Darwin_x86_64")[2.5.1
   ]\;

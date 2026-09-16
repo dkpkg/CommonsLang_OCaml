@@ -1,5 +1,5 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamBuild@1.0.28"
+  id = "CommonsLang_OCaml.Dk.OpamBuild@1.0.29"
 }
 
 -- ==========================================================================
@@ -68,9 +68,9 @@ local M = {
 --   ip/ - the install prefix for THIS package only; install.zip = ip/ alone,
 --         so a Pkg object never re-ships its dependencies.
 --   Toolchain on PATH (form envmods): the relocatable OCaml 4.14 compiler
---   CommonsLang_OCaml.DkML@4.14.3 (the unified object that covers every slot -
+--   CommonsLang_OCaml.DkML@4.14.3001 (the unified object that covers every slot -
 --   the Unix compiler on Unix slots, the MSVC compiler on Windows slots) and
---   CommonsLang_OCaml.Dune@3.23.1; for non-dune packages also GNU make from
+--   CommonsLang_OCaml.Dune@3.23.2; for non-dune packages also GNU make from
 --   CommonsBase_GNU.Make@4.4.1.
 --   Command tools (get-object subshells): CommonsBase_Std.Coreutils@0.8.0
 --   (mkdir/cp/env), CommonsBase_Std.Toybox@0.8.9 (tar), CommonsBase_Std.S7z@25.1.0
@@ -1501,9 +1501,9 @@ function rules.F_BuildLockedPackage(command, request, continue_)
   -- shell) leave no trace in the compiled artifacts and are irrelevant to
   -- consumability. See CommonsLang_OCaml dk.u "## Resolution of imports".
   local ocaml = request.user.ocaml
-  if ocaml == nil then ocaml = "CommonsLang_OCaml.DkML@4.14.3" end
+  if ocaml == nil then ocaml = "CommonsLang_OCaml.DkML@4.14.3001" end
   local dune = request.user.dune
-  if dune == nil then dune = "CommonsLang_OCaml.Dune@3.23.1" end
+  if dune == nil then dune = "CommonsLang_OCaml.Dune@3.23.2" end
   local msys2 = request.user.msys2
   if msys2 == nil then msys2 = "CommonsLang_OCaml.MSYS2@2026.6.11" end
   -- The ABI this package's OCaml artifacts must be built FOR (the target), as
@@ -1673,9 +1673,9 @@ function rules.F_BuildLockedClosure(command, request, continue_)
   local pkgpath = request.user.pkgpath
   local version = request.user.version
   local ocaml = request.user.ocaml
-  if ocaml == nil then ocaml = "CommonsLang_OCaml.DkML@4.14.3" end
+  if ocaml == nil then ocaml = "CommonsLang_OCaml.DkML@4.14.3001" end
   local dune = request.user.dune
-  if dune == nil then dune = "CommonsLang_OCaml.Dune@3.23.1" end
+  if dune == nil then dune = "CommonsLang_OCaml.Dune@3.23.2" end
   local msys2 = request.user.msys2
   if msys2 == nil then msys2 = "CommonsLang_OCaml.MSYS2@2026.6.11" end
   local targetabi = request.user.targetabi or "Release.target_abi"

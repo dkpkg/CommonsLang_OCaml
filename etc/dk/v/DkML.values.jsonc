@@ -2,7 +2,7 @@
 // DkML.Win32 (Windows) and DkML.Unix (Linux/macOS) host-build forms and
 // re-declares each slot's output manifest. Bundles live in
 // DkML.Bundle.values.jsonc.
-// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml --trust-local-package CommonsBase_GNU --trust-local-package CommonsBase_Std get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Windows_x86_64 -d target/dkml-winx64
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml --trust-local-package CommonsBase_GNU --trust-local-package CommonsBase_Std get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Windows_x86_64 -d target/dkml-winx64
 {
     "$schema": "https://diskuv.com/dk/schema/dk-value-1.0.json",
     "schema_version": {
@@ -11,18 +11,18 @@
     },
     "forms": [
         {
-            "id": "CommonsLang_OCaml.DkML@4.14.3",
+            "id": "CommonsLang_OCaml.DkML@4.14.3001",
             "precommands": {
                 "sequential": true,
                 "private": [
-                    "get-object CommonsLang_OCaml.DkML.Win32@4.14.3 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}",
-                    "get-object CommonsLang_OCaml.DkML.Win32@4.14.3 -s Release.Windows_x86 -d ${SLOT.Release.Windows_x86}",
-                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
-                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3 -s Release.Linux_x86_64_musl -d ${SLOT.Release.Linux_x86_64_musl}",
-                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3 -s Release.Linux_x86 -d ${SLOT.Release.Linux_x86}",
-                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3 -s Release.Linux_arm64 -d ${SLOT.Release.Linux_arm64}",
-                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3 -s Release.Darwin_x86_64 -d ${SLOT.Release.Darwin_x86_64}",
-                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3 -s Release.Darwin_arm64 -d ${SLOT.Release.Darwin_arm64}"
+                    "get-object CommonsLang_OCaml.DkML.Win32@4.14.3001 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}",
+                    "get-object CommonsLang_OCaml.DkML.Win32@4.14.3001 -s Release.Windows_x86 -d ${SLOT.Release.Windows_x86}",
+                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3001 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
+                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3001 -s Release.Linux_x86_64_musl -d ${SLOT.Release.Linux_x86_64_musl}",
+                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3001 -s Release.Linux_x86 -d ${SLOT.Release.Linux_x86}",
+                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3001 -s Release.Linux_arm64 -d ${SLOT.Release.Linux_arm64}",
+                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3001 -s Release.Darwin_x86_64 -d ${SLOT.Release.Darwin_x86_64}",
+                    "get-object CommonsLang_OCaml.DkML.Unix@4.14.3001 -s Release.Darwin_arm64 -d ${SLOT.Release.Darwin_arm64}"
                 ]
             },
             "outputs": {

@@ -11,7 +11,7 @@ The value-ids below are harvested from the first CI run (the DkML pattern).
 
 ## DkML
 
-  $ get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -d ${RUNTIME}/Linux_x86_64_musl-DkML-4.14.3
+  $ get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Linux_x86_64_musl -d ${RUNTIME}/Linux_x86_64_musl-DkML-4.14.3
   \test(pass)
   \dk.object(abi: "Release.Linux_x86_64_musl", value-id: "obazby47qzcgflxlvkysgb7tcxcqfsm5ljhxktojhoui6dmuswzma")\;
 
@@ -22,12 +22,12 @@ path (see the per-ABI dynamic linker in DK0-REFERENCE.md). The file(1) string
 below is harvested from the first CI run.
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
-  >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
+  >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
   \test(pass)
   \dk.target(abi: "Linux_x86_64_musl")[ELF 64-bit LSB ${x?pie executable:shared object}, x86-64, version 1 (SYSV)
   ]\;
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -version
+  $ run-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -version
   \test(pass)
   \dk.target(abi: "Linux_x86_64_musl")[4.14.3+relocatable
   ]\;
@@ -40,7 +40,7 @@ stock build bakes; otherwise `ocamlopt -pack` fails off the build machine. The
 musl partial linker is required because the host `ld` cannot read the musl
 toolchain's compressed debug sections.
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -config-var native_pack_linker
+  $ run-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -config-var native_pack_linker
   \test(pass)
   \dk.target(abi: "Linux_x86_64_musl")[x86_64-linux-musl-ld -r -o ]\;
 
@@ -49,13 +49,13 @@ bin/x86_64-linux-musl-* dispatch wrappers shipped in the same slot, so
 consumer machines link static musl executables wherever the slot's bin/ is on
 PATH.
 
-  $ run-object CommonsLang_OCaml.DkML@4.14.3 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -config-var c_compiler
+  $ run-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/ocamlopt -- -config-var c_compiler
   \test(pass)
   \dk.target(abi: "Linux_x86_64_musl")[x86_64-linux-musl-gcc]\;
 
 ## Dune
 
-  $ run-object CommonsLang_OCaml.Dune@3.23.1 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/dune.exe -- --version
+  $ run-object CommonsLang_OCaml.Dune@3.23.2 -s Release.Linux_x86_64_musl -e 'bin/*' -c bin/dune.exe -- --version
   \test(pass)
   \dk.target(abi: "Linux_x86_64_musl")[3.23.1
   ]\;

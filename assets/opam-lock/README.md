@@ -2,7 +2,7 @@
 
 `dk_opam_lock.ml` is the heavy logic of `CommonsLang_OCaml.Dk.OpamLock.Solve`,
 ported out of lua-ml (Lua 2.5) into OCaml. The dk0 `Solve` uirule stays thin:
-it materializes `opam` and the `CommonsLang_OCaml.DkML@4.14.3` toolchain,
+it materializes `opam` and the `CommonsLang_OCaml.DkML@4.14.3001` toolchain,
 `get-asset`s the two `.ml` files here, compiles them with the materialized
 `ocamlc`, runs the bytecode with `ocamlrun`, and `writefile`s the program's
 stdout as the lock — mirroring `CommonsLang_Python`'s

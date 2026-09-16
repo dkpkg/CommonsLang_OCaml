@@ -1,5 +1,5 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.21",
+  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.22",
   -- Declared capability manifest (engine >= 2.4.2.339; older engines ignore
   -- it). Each entry is the enforced upper bound of what that uirule may
   -- request, and the engine lists every declared capability in its trust
@@ -306,12 +306,12 @@ function uirules.Solve(command, request, continue_)
     -- (on Windows) the MSYS2 tree and MinGit for the hermetic opam init. The
     -- compiler is a build-time tool, so it uses the execution ABI slot.
     local dirs = {
-      dkml = "$(get-object CommonsLang_OCaml.DkML@4.14.3 -s Release.execution_abi -d : -e 'bin/*' -e 'lib/ocaml/*')"
+      dkml = "$(get-object CommonsLang_OCaml.DkML@4.14.3001 -s Release.execution_abi -d : -e 'bin/*' -e 'lib/ocaml/*')"
     }
     if request.user.opam == nil then
       -- -e marks the binary executable at materialization; without it the
       -- helper's spawn of bin/opam.exe is EACCES on Linux/macOS.
-      dirs.opam = "$(get-object CommonsLang_OCaml.Opam@2.5.1 -s Release.execution_abi -d : -e 'bin/*')"
+      dirs.opam = "$(get-object CommonsLang_OCaml.Opam@2.5.2 -s Release.execution_abi -d : -e 'bin/*')"
       if iswin then
         dirs.msys2 = "$(get-object CommonsLang_OCaml.MSYS2@2026.6.11 -s Release.Windows_x86_64 -d :)"
         dirs.git = "$(get-object CommonsBase_Build.Git.MinGit@2.55.0 -s Release.execution_abi -d :)"
@@ -451,7 +451,7 @@ function uirules.Solve(command, request, continue_)
   -- packages and does not know dk toolchain modules, so inject the field here.
   -- Default to the pinned DkML compiler; `ocaml=<full module id>` overrides.
   local ocamlmod = request.user.ocaml
-  if ocamlmod == nil then ocamlmod = "CommonsLang_OCaml.DkML@4.14.3" end
+  if ocamlmod == nil then ocamlmod = "CommonsLang_OCaml.DkML@4.14.3001" end
   local content = result.stdout
   local brace = string.find(content, "{")
   assert(brace ~= nil, "opam-lock helper output is not a JSON object")
@@ -865,7 +865,7 @@ function uirules.GenerateDriver(command, request)
   -- this lock on the package's resolved dependency environment; every other
   -- package is built here.
   local gate_ocaml = lock.ocaml
-  if gate_ocaml == nil then gate_ocaml = "CommonsLang_OCaml.DkML@4.14.3" end
+  if gate_ocaml == nil then gate_ocaml = "CommonsLang_OCaml.DkML@4.14.3001" end
   local imported = {}   -- bare opam name -> fully-qualified imported object id
   local implibs = request.user.implib
   local impvers = request.user.impver
@@ -883,7 +883,7 @@ function uirules.GenerateDriver(command, request)
       local slock = jd.decode(scontent)
       assert(slock and slock.packages, "import srclock has no packages: " .. spath)
       local socaml = slock.ocaml
-      if socaml == nil then socaml = "CommonsLang_OCaml.DkML@4.14.3" end
+      if socaml == nil then socaml = "CommonsLang_OCaml.DkML@4.14.3001" end
       -- Compiler must match for the compiled .cmi/.cmxa to be consumable.
       if socaml == gate_ocaml then
         local sbyver = {}
@@ -1768,12 +1768,12 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.default_pins()
     .. "# opam-repository. Append #COMMIT to pin a commit for a reproducible closure.\n"
     .. "repo default git+https://github.com/ocaml/opam-repository.git\n"
     .. "#\n"
-    .. "# Lock the compiler to the 4.14.3 toolchain (CommonsLang_OCaml.DkML@4.14.3) so\n"
+    .. "# Lock the compiler to the 4.14.3 toolchain (CommonsLang_OCaml.DkML@4.14.3001) so\n"
     .. "# the solved closure compiles under 4.14, not 5.x:\n"
     .. "pin ocaml 4.14.3\n"
     .. "pin ocaml-base-compiler 4.14.3\n"
     .. "#\n"
-    .. "# Pin dune to the toolchain-provided version (CommonsLang_OCaml.Dune@3.23.1):\n"
+    .. "# Pin dune to the toolchain-provided version (CommonsLang_OCaml.Dune@3.23.2):\n"
     .. "pin dune 3.23.1\n"
 end
 
@@ -2877,9 +2877,9 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.opamvenv_plan(request, coreutils
   end
   local ocaml = nil
   if text ~= nil then ocaml = H.kv(text, "ocaml=") end
-  if ocaml == nil then ocaml = "CommonsLang_OCaml.DkML@4.14.3" end
+  if ocaml == nil then ocaml = "CommonsLang_OCaml.DkML@4.14.3001" end
   P.ocaml = ocaml
-  P.dune = request.user.dune or "CommonsLang_OCaml.Dune@3.23.1"
+  P.dune = request.user.dune or "CommonsLang_OCaml.Dune@3.23.2"
   P.out = request.user.out or "opam-venv"
   -- Declared environment modifications: envmods=PATH, else the committed
   -- dk-opam-venv.envmods beside dk.u when it exists (the venv's own stamp is
@@ -3217,7 +3217,7 @@ end
 --                 activators after the toolchain block (see emit_envmods_*)
 --   slot=SLOT     the ABI to materialize (default: the host execution ABI)
 --   out=DIR       project-relative output dir (default: opam-venv)
---   dune=ID@VER   the Dune object (default: CommonsLang_OCaml.Dune@3.23.1)
+--   dune=ID@VER   the Dune object (default: CommonsLang_OCaml.Dune@3.23.2)
 --   force=t       rebuild even when the stamp says it is up to date
 function uirules.OpamVenv(command, request, continue_)
   local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21

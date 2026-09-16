@@ -104,9 +104,9 @@ sources in precedence order.
 
 4. **The compiler matches through the top-level `ocaml` field.** Each lock records
    the OCaml compiler its packages are built with in a top-level `ocaml` field, a
-   full module id such as `CommonsLang_OCaml.DkML@4.14.3` (or a
+   full module id such as `CommonsLang_OCaml.DkML@4.14.3001` (or a
    `CommonsLang_OCaml.Base@5.5.x` for a 5.5 toolchain); a lock without the field
-   takes the default `CommonsLang_OCaml.DkML@4.14.3`.
+   takes the default `CommonsLang_OCaml.DkML@4.14.3001`.
    `Dk.OpamLock.GenerateDriver` reads the `ocaml` field from both the consumer's
    lock and each source's lock (already fetched in step 1) and passes it to
    `F_BuildLockedPackage` as the `ocaml=` argument, along with
@@ -135,7 +135,7 @@ sources in precedence order.
 `Dk.OpamLock.GenerateDriver` imports a package `P` from a source `S` when each of
 these variables is equal between the consumer's lock and `S`'s lock:
 
-- `ocaml`: the top-level compiler module id (a lock without the field carries `CommonsLang_OCaml.DkML@4.14.3`)
+- `ocaml`: the top-level compiler module id (a lock without the field carries `CommonsLang_OCaml.DkML@4.14.3001`)
 - `version(P)`: the opam version `S` pins for `P`
 - `depends(P)`: `P`'s `depends` name-set, with the solved-closure optional dependencies folded in, compared as a set
 - `version(D)`: for every package `D` in `P`'s dependency closure, the opam version `S` pins for `D`

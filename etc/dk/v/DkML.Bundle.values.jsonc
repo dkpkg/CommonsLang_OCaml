@@ -1,6 +1,6 @@
 // Source inputs for the non-opam DkML lane: the OCaml 4.14.3 tree, the
 // flexdll source and the dkml-runtime-common tree, packaged as bundles.
-// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.Bundle@4.14.3 -d target/dkml-src
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.Bundle@4.14.3001 -d target/dkml-src
 // Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml get-bundle CommonsLang_OCaml.DkML.RuntimeCommon.Bundle@2.4.2-26 -d target/dkml-drc-src
 {
     "$schema": "https://diskuv.com/dk/schema/dk-value-1.0.json",
@@ -10,7 +10,7 @@
     },
     "bundles": [
         {
-            "id": "CommonsLang_OCaml.DkML.Bundle@4.14.3",
+            "id": "CommonsLang_OCaml.DkML.Bundle@4.14.3001",
             "listing": {
                 "origins": [
                     {
