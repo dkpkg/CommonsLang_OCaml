@@ -1,77 +1,64 @@
 name: test-quickstart-ocaml
-# Manual end-to-end guard for the `dk0 quickstart ocaml` recipes.
+# Manual guard for the `dk0 quickstart ocaml` recipes.
 #
 # WHY IT LIVES HERE. The quickstart's closure-driver step is this package's own
 # rule (CommonsLang_OCaml.Dk.OpamLock.Adopt/Refresh), and that rule requires the
 # CommonsBase_Std distribution. A quickstart recipe (in dksdk-coder) that does not
 # import a distribution the driver requires produces a project that cannot
 # regenerate its driver -- "Could not use <X> because the distribution has not
-# been imported." This job scaffolds a fresh quickstart against the LIVE recipe,
+# been imported." Each job scaffolds a fresh quickstart against the LIVE recipe,
 # resolves its imports with `dk1 update`, and asserts that CommonsBase_Std -- the
 # distribution the driver requires -- is present in the imported set etc/dk/i. It
 # does not run the driver: the fresh-project generate step (Adopt) needs the
 # user's own opam package, so a driver run on a bare quickstart fails for an
 # unrelated reason.
 #
+# ONE JOB PER RECIPE. The recipes run in a matrix so each is on its OWN runner and
+# shares no dk data directories (the launcher's ~/.local/share/dk<n> engine
+# install and ~/.cache/dk object cache) with the other. A shared cache could let
+# one recipe's imports mask a missing import in another.
+#
 # WHY MANUAL. It depends on the network and on the deployed recipe, so it is not a
-# push gate. The periodic dk-ecosystem release exercise invokes it (workflow_dispatch); a
-# maintainer can also run it from the Actions tab.
+# push gate. The periodic dk-ecosystem release exercise invokes it (workflow_dispatch);
+# a maintainer can also run it from the Actions tab.
 on:
   workflow_dispatch:
-    inputs:
-      recipes:
-        description: Space-separated ocaml quickstart recipe names to test.
-        default: opam414 opam550
 
 permissions:
   contents: read
 
 jobs:
   quickstart-ocaml:
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: [opam414, opam550]
     runs-on: ubuntu-latest
     env:
-      RECIPES: ${{ github.event.inputs.recipes }}
+      RECIPE: ${{ matrix.recipe }}
     steps:
       - name: Checkout (for the vendored dk0/dk1 launchers)
         uses: actions/checkout@v6
-      - name: Scaffold, resolve imports, and assert the driver's required distributions are present
+      - name: Scaffold, resolve imports, and assert the driver's required distribution is present
         shell: bash
         run: |
           set -euo pipefail
-          recipes="${RECIPES:-opam414 opam550}"
-          # The closure driver (CommonsLang_OCaml.Dk.OpamLock) requires the
-          # CommonsBase_Std distribution: a recipe that does not import it produces a
-          # project whose driver cannot regenerate -- "Could not use CommonsBase_Std
-          # because the distribution has not been imported". After `dk1 update`
-          # resolves the recipe's imports, that distribution must be present in the
-          # imported set etc/dk/i. We assert that directly. We do NOT run the driver
-          # here: the fresh-project generate step is Adopt, which needs the user's
-          # own opam package, and Refresh on a bare project fails for an unrelated
-          # reason (no driver to refresh yet), which would only add noise.
-          fail=0
-          for name in $recipes; do
-            echo "::group::quickstart ocaml $name"
-            rm -rf "work-$name"; mkdir "work-$name"
-            # A fresh dir with no dk.u floats the launcher on the latest engine,
-            # which is what a new user gets. The vendored launchers self-install it.
-            cp dk0 dk1 "work-$name/"
-            (
-              cd "work-$name"
-              ./dk0 quickstart ocaml "$name" --dir proj
-              cp ../dk0 ../dk1 proj/
-              cd proj
-              ./dk1 update
-              echo "imported distributions (etc/dk/i):"; ls etc/dk/i
-              if ! ls etc/dk/i | grep -q '^CommonsBase_Std\.'; then
-                echo "::error::quickstart ocaml $name did not import CommonsBase_Std, which the closure driver requires."
-                exit 1
-              fi
-              echo "OK: $name imports CommonsBase_Std"
-            ) || fail=1
-            echo "::endgroup::"
-          done
-          if [ "$fail" -ne 0 ]; then
-            echo "One or more quickstart ocaml recipes is missing a distribution its driver requires."
+          name="$RECIPE"
+          # A fresh dir with no dk.u floats the launcher on the latest engine,
+          # which is what a new user gets. The vendored launchers self-install it.
+          mkdir work
+          cp dk0 dk1 work/
+          cd work
+          ./dk0 quickstart ocaml "$name" --dir proj
+          cp ../dk0 ../dk1 proj/
+          cd proj
+          ./dk1 update
+          echo "imported distributions (etc/dk/i):"
+          ls etc/dk/i
+          # The closure driver requires the CommonsBase_Std distribution; after
+          # dk1 update resolves the recipe's imports it must be present here.
+          if ! ls etc/dk/i | grep -q '^CommonsBase_Std\.'; then
+            echo "::error::quickstart ocaml $name did not import CommonsBase_Std, which the closure driver requires."
             exit 1
           fi
-          echo "All quickstart ocaml recipes import the distributions their driver requires."
+          echo "OK: quickstart ocaml $name imports CommonsBase_Std"
