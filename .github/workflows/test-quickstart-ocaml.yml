@@ -1,0 +1,72 @@
+name: test-quickstart-ocaml
+# Manual end-to-end guard for the `dk0 quickstart ocaml` recipes.
+#
+# WHY IT LIVES HERE. The quickstart's closure-driver step is this package's own
+# rule (CommonsLang_OCaml.Dk.OpamLock.Adopt/Refresh), and that rule requires the
+# CommonsBase_Std distribution. A quickstart recipe (in dksdk-coder) that does not
+# import a distribution the driver requires produces a project that cannot
+# regenerate its driver -- "Could not use <X> because the distribution has not
+# been imported." This job scaffolds a fresh quickstart against the LIVE recipe,
+# resolves its imports, and runs the driver, failing if any required distribution
+# is missing. It is the guard for the class of defect, not one distribution.
+#
+# WHY MANUAL. It depends on the network and on the deployed recipe, so it is not a
+# push gate. The periodic dk-ecosystem release exercise invokes it (workflow_dispatch); a
+# maintainer can also run it from the Actions tab.
+on:
+  workflow_dispatch:
+    inputs:
+      recipes:
+        description: Space-separated ocaml quickstart recipe names to test.
+        default: opam414 opam550
+
+permissions:
+  contents: read
+
+jobs:
+  quickstart-ocaml:
+    runs-on: ubuntu-latest
+    env:
+      RECIPES: ${{ github.event.inputs.recipes }}
+    steps:
+      - name: Checkout (for the vendored dk0/dk1 launchers)
+        uses: actions/checkout@v4
+      - name: Scaffold, resolve imports, and run the driver dependency check
+        shell: bash
+        run: |
+          set -euo pipefail
+          recipes="${RECIPES:-opam414 opam550}"
+          # The driver's own error when a recipe omits a distribution it needs.
+          missing_re='because the distribution has not been imported'
+          fail=0
+          for name in $recipes; do
+            echo "::group::quickstart ocaml $name"
+            rm -rf "work-$name"; mkdir "work-$name"
+            # A fresh dir with no dk.u floats the launcher on the latest engine,
+            # which is what a new user gets. The vendored launchers self-install it.
+            cp dk0 dk1 "work-$name/"
+            (
+              cd "work-$name"
+              ./dk0 quickstart ocaml "$name" --dir proj
+              cp ../dk0 ../dk1 proj/
+              cd proj
+              ./dk1 update
+              # Run the closure driver. On a fresh project it stops at the missing
+              # etc/dk/v (there is no driver to refresh yet) -- that is expected and
+              # is NOT the failure we guard. We fail only if the driver reports a
+              # required distribution was never imported.
+              ref=$(grep -rho 'CommonsLang_OCaml\.Dk\.OpamLock\.Refresh@[0-9][0-9.]*' etc/dk/i | sort -uV | tail -1)
+              out=$(./dk1 dialog "$ref" 2>&1 || true)
+              printf '%s\n' "$out"
+              if printf '%s' "$out" | grep -Eq "$missing_re"; then
+                echo "::error::quickstart ocaml $name: the driver could not use a distribution the recipe did not import."
+                exit 1
+              fi
+            ) || fail=1
+            echo "::endgroup::"
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "One or more quickstart ocaml recipes failed the driver dependency check."
+            exit 1
+          fi
+          echo "All quickstart ocaml recipes import the distributions their driver requires."
