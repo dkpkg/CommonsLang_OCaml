@@ -30,7 +30,7 @@ jobs:
       RECIPES: ${{ github.event.inputs.recipes }}
     steps:
       - name: Checkout (for the vendored dk0/dk1 launchers)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Scaffold, resolve imports, and run the driver dependency check
         shell: bash
         run: |
