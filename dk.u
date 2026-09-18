@@ -272,151 +272,87 @@ author-time OpamLock uirule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
 
-The @1.1.16 revision emits deterministic archives from the generators:
-GenerateSrc's localized-source form and GenerateDriver's legacy mergedprefix
-driver archive with the engine's in-process `--zip` special form (same
-inputs, same bytes on every platform), and the emitted Src form drops its
-S7z dependency. Building the emitted forms requires dk 2.4.2.342 or later.
+The scriptmodule carries the uirules a maintainer runs to lock, adopt, and
+regenerate an opam and dune project: Solve, Adopt, Refresh, OpamVenv, the
+three Generate rules (GenerateSrc, GenerateDriver, GenerateFinal), and
+GenerateForms. Each rule declares in `M.uirule_capabilities` the capabilities
+it may request: Solve, Adopt, Refresh, and OpamVenv request run and write, and
+the Generate rules and GenerateForms request write. An engine at 2.4.2.339 or
+later enforces that manifest as an upper bound and lists every declared
+capability in its trust prompts and suggested `trust grant` commands, so a
+consumer grants a rule's full need in one command.
 
-The @1.1.15 revision declares the uirule capability manifest
-(M.uirule_capabilities): each OpamLock uirule names the capabilities it may
-request (Solve/Adopt/Refresh/OpamVenv: run+write; the three Generate* rules
-and GenerateForms: write). An engine >= 2.4.2.339 enforces the manifest as
-an upper bound and lists every declared capability in its trust prompts and
-suggested `trust grant` commands, so a consumer grants a rule's full need in
-one command; older engines ignore the field. No rule body changed.
+Adopt carries a first-time adoption end to end: it seeds the pin table, solves,
+generates the forms, and registers the dk.u assets. It re-solves with
+--with-test, since the canonical adoption lock is the with-test lock (wtest=f
+opts out), forwards wdoc=, and takes reuse_lock=t to keep an existing committed
+lock and regenerate only the build forms. GenerateDriver derives its nine
+arguments from one `pkg=MODULE@VERSION`: the formid, pkgpath, version,
+localsrc, and out path from that token, the roots from the lock's stamped
+generated.roots, and the rulefn from the CommonsLang_OCaml import. GenerateSrc
+and GenerateFinal generate the localized-source and thin final forms,
+GenerateForms runs the fixed trio (Src, driver, Final) from one pkg=, and
+building the emitted forms requires dk 2.4.2.342 or later.
 
-The @1.1.14 revision completes the adoption generators. GenerateSrc emits
-the assembled tree's dune-workspace root marker (the project's own file, or
-a minimal `(lang dune <X>)` synthesized into the dk-owned dk-src/ directory
-and registered by Adopt): an assembly without the marker made every warm
-run-object of the final executable re-derive and re-save its traces instead
-of a silent cache read. Adopt forwards its derived root to the form
-generators, so the reuse_lock=t path works against a pre-@1.1.8
-minimal-stamp lock whose generated.roots is not recorded.
+GenerateSrc emits the assembled tree's dune-workspace root marker: the
+project's own file, or a minimal `(lang dune <X>)` that Adopt synthesizes into
+the dk-owned dk-src/ directory and registers. The marker lets a warm
+run-object of the final executable read its traces from cache. Adopt forwards
+its derived root to the form generators, so the reuse_lock=t path works against
+a minimal-stamp lock whose generated.roots is unrecorded.
 
-The @1.1.13 revision makes the solve universe hermetic and re-adoption
-non-destructive. The opam-lock helper (Apparatus.OpamLockHelper@1.0.16)
-registers each pin-table repository under a URL-derived dk-owned name and
-selects only those names for its ephemeral switch, so a pre-existing
-repository in the machine's opam root can never supply the solve universe (a
-stale root's `default` silently overrode the pin table's snapshot, hiding
-the pinned dune/ocaml versions and surfacing as an unrelated-looking
-conflict on any constrained dependency); the ephemeral switch is recreated
-on every solve, the constraints repository name embeds the work directory
-so concurrent solves sharing one root cannot repoint each other, and every
-`pin NAME VER` is verified visible in the universe before solving, failing
-with a message that names the repository that should contain it. Adopt
-re-solves with --with-test (the canonical adoption lock is the with-test
-lock; wtest=f opts out), forwards wdoc=, and accepts reuse_lock=t to keep an
-existing committed lock untouched and regenerate only the build forms.
+The generators emit deterministic archives through the engine's in-process
+`--zip` special form: GenerateSrc's localized-source form and GenerateDriver's
+mergedprefix driver archive produce the same bytes on every platform from the
+same inputs, and the emitted Src form carries no S7z dependency.
 
-The @1.1.12 revision teaches the driver machinery the closure shape that
-pairs with Dk.OpamBuild's F_BuildLockedClosure (see "## Dk.OpamBuild").
-GenerateDriver keys its emission off the rulefn family: an F_BuildLockedClosure
-rulefn -- the default when the import declares one -- emits ONE run-function
-precommand carrying the whole parameter set (the closure rule re-derives the
-per-package plan from the lock at build time), while an F_BuildLockedPackage
-rulefn emits the per-package lines byte-identically to @1.1.11 so existing
-drivers regenerate unchanged. Import resolution stays at author time (the
-emitted line carries resolved impdep_ ids, since a build rule cannot read the
-impsrclock project files), and the line keeps a literal ocaml= token that
-OpamVenv still reads off the raw driver text. Refresh resolves its target per
-driver: an explicit rulefn= wins; with the lock on disk a stamped driver
-upgrades to the newest F_BuildLockedClosure the import declares (a deliberate
-shape change that re-keys every Pkg object id, so it happens only when the
-lock -- the regeneration source -- is present); a stampless driver adopts the
-stamp in the per-package shape first (preserving the pkg=-token reproducibility
-guard, which a shape change would defeat); and a lockless
-(consume-from-archive) driver substitutes only within its stamped rulefn's
-family. mode=check compares within family and flags a per-package driver STALE
-when the import provides the closure rule and the lock is on disk. Its Export
-value-id is per-version and is harvested from CI as usual.
+GenerateDriver keys its emission off the rulefn family. An F_BuildLockedClosure
+rulefn, the default when the import declares one, emits one run-function
+precommand carrying the whole parameter set, and the closure rule re-derives
+the per-package plan from the lock at build time. An F_BuildLockedPackage
+rulefn emits the per-package lines. Import resolution runs at author time, so
+the emitted line carries resolved impdep_ ids, and it keeps a literal ocaml=
+token that OpamVenv reads off the raw driver text.
 
-The @1.1.11 revision reduces what a maintainer types to adopt an opam+dune
-project. GenerateDriver derives its nine arguments from one
-`pkg=MODULE@VERSION` (formid, pkgpath, version, localsrc, and the out path;
-the roots from the lock's stamped generated.roots; the rulefn from the
-CommonsLang_OCaml import). GenerateSrc and GenerateFinal generate the
-localized-source and thin final forms a maintainer used to hand-author, and
-GenerateForms runs the fixed trio (Src, driver, Final) from one pkg=. Adopt
-carries a first-time adoption end to end (seed the pin table, solve, generate
-the forms, register the dk.u assets). Parallel scheduling is the default
-(sequential=t opts out); Refresh injects sequential=t when replaying a driver
-that stamped neither, keeping pre-@1.1.11 drivers byte-stable. Every stamped
-tool id and printed message derives from M.id, and in-module cross-calls
-dispatch through version-unique function bindings (H.Solve, H.GenerateDriver,
-...) rather than the rebindable rules/uirules globals.
+Parallel scheduling is the default; sequential=t opts out, and Refresh injects
+sequential=t when it replays a driver that stamped neither, so an older driver
+stays byte-stable. Every stamped tool id and printed message derives from M.id,
+and in-module cross-calls dispatch through version-unique function bindings
+(H.Solve, H.GenerateDriver, and the rest).
 
-The generated driver values.jsonc stays a committed, on-disk artifact rather
-than being produced dynamically at build time. Dynamic generation is feasible
-(the engine's x-dynamic-driver-spike cram proves a stub form plus a generator
-function rule emitting the per-package forms via submit.values), but the
-committed driver is kept deliberately: the primary metric is characters TYPED,
-and the driver is machine-generated (GenerateDriver/Adopt write it), so it
-costs the maintainer zero typed characters -- collapsing it to a stub saves
-nothing on that metric. Meanwhile the committed driver earns its place: its
-`generated` stamp powers Refresh mode=check and the CI refresh-check gate
-(which compare the on-disk driver), it is on the include path at scan time so
-a fresh clone builds offline without first running a generator, and its formid
-is a published contract (the thin form and dist/*.u reference Closure@VER by
-name). Under the @1.1.12 closure shape the driver is one run-function line, so
-the auditable build plan a reviewer reads is the committed lock plus the
-closure rule rather than the enumerated per-package lines; that trade was made
-for warm-run speed (see "## Dk.OpamBuild"), and the stamp/formid/offline-scan
-reasons are unchanged. A dynamic driver would additionally retire the
-staleness-anchor and published-contract subsystem for no gain on the headline
-metric, so the layer is kept and only its authoring was removed.
+The generated driver values.jsonc is a committed, on-disk artifact that
+GenerateDriver and Adopt write, so it costs the maintainer zero typed
+characters. Its `generated` stamp powers Refresh mode=check and the CI
+refresh-check gate, both of which read the on-disk driver; it sits on the
+include path at scan time, so a fresh clone builds offline before any generator
+runs; and its formid is a published contract that the thin form and dist/*.u
+reference by name (Closure@VER). Under the closure shape the driver is one
+run-function line, so a reviewer reads the build plan as the committed lock
+plus the closure rule.
 
-The @1.1.10 revision adds the OpamVenv uirule (see "### OpamVenv: a native
-dune inner loop"). It materializes a real, dune-usable opam prefix from a
-GenerateDriver `mergedprefix=t skiplocal=t` closure into the project's
-`opam-venv/` directory, so a developer runs native `dune build -w` against the
-working tree instead of dk's per-edit whole-package rebuild. Its Export value-id
-is per-version and is harvested from CI as usual.
+How the lock is produced: the OpamLock.Solve uirule launches `opam` to solve
+the dependency closure. It runs `opam list --resolve` to compute the closure
+and `opam show` to read each package's version, source, dependencies, and build
+commands, and never runs `opam install`. opam has no switch-less solve, since
+the solver needs a switch's repositories, pins, and os/arch variables, so Solve
+creates an empty opam switch purely as a throwaway resolution context: it adds
+the pinned repositories, applies the version pins from dk-opam-pins.txt,
+path-pins the local packages, then resolves. That switch is an ephemeral local
+switch in the rule's sandbox, unique per run so no cross-project or cross-run
+pin leaks into the lock, and the rule removes it once the solve finishes;
+nothing is installed into it.
 
-The @1.1.9 revision adds the --wdoc solve: Solve passes --with-doc to opam when
-wdoc is set and stamps wdoc into the lock generated block, so a with-doc lock
-carries odoc (the odoc package that `dune build @doc` needs). The helper moves to
-Apparatus.OpamLockHelper@1.0.15; the --wdoc content edit rides an Apparatus bump
-per "## Assets". Its Export value-id is per-version and is harvested from CI as
-usual.
-
-The @1.1.8 revision makes the two generated artifacts self-describing and adds
-the Refresh uirule (see "### Refresh: self-describing regeneration"). Solve
-stamps its `roots`/`pins` (and `wtest`/`local_opam_dir` when set) into the lock's
-`generated` block, and GenerateDriver stamps its full parameter set into a
-top-level `generated` member of the driver values.jsonc (right after
-`schema_version`). This needs no dk-value schema change: MlFront's value reader
-pulls members by name and ignores unknown top-level members. The helper moves to
-Apparatus.OpamLockHelper@1.0.14. Its Export value-id is per-version and is
-harvested from CI as usual.
-
-The @1.1.7 revision flips the default host-tool ABI (see "### Host tools and the
-hosttoolabi= escape hatch"): GenerateDriver now emits
-`targetabi=Release.target_abi` for `ocamlfind`/`ocamlbuild` and takes an optional
-`hosttoolabi=SLOT` parameter that restores `Release.execution_abi` for a matrix
-with a host-unemulatable cross slot. Its Export value-id is per-version and is
-harvested from CI as usual.
-
-The @1.1.6 revision is behaviorally identical to @1.1.5. It exists because the
-lock-helper assets were collapsed onto the stable
-assets/opam-lock/dk_opam_lock.ml path (Apparatus.OpamLockHelper@1.0.10, the
-same bytes as the retired dk_opam_lock_filtered.ml) and every earlier OpamLock
-revision was retired from HEAD; see "## Assets". Its Export value-id is
-per-version and is harvested from CI as usual.
-
-How the lock is produced: the OpamLock.Solve uirule launches `opam` to SOLVE
-the dependency closure -- it runs `opam list --resolve` to compute the closure
-and `opam show` to read each package's version/source/deps/build commands, and
-never `opam install`s. opam has no switch-less solve (the solver needs a
-switch's repositories, pins, and os/arch variables), so Solve creates an EMPTY
-opam switch purely as a throwaway resolution context: it adds the pinned
-repositories, applies the version pins from dk-opam-pins.txt, path-pins the
-local packages, then resolves. By default that switch is an ephemeral LOCAL
-switch in the rule's sandbox -- unique per run (no cross-project or cross-run
-pin contamination, so the lock is reproducible) and removed once the solve
-finishes; nothing is ever installed into it.
+The solve universe is hermetic. The opam-lock helper
+(Apparatus.OpamLockHelper) registers each pin-table repository under a
+URL-derived dk-owned name and selects only those names for the ephemeral
+switch, so a pre-existing repository in the machine's opam root stays out of the
+solve universe. The helper recreates the ephemeral switch on every solve,
+embeds the work directory in the constraints repository name so concurrent
+solves sharing one root leave each other's universe intact, and verifies every
+pin visible in the universe before solving, failing with a message that names
+the repository that should contain it. Solve passes --with-doc to opam when
+wdoc is set and stamps wdoc into the lock's generated block, so a with-doc lock
+carries odoc, the package `dune build @doc` needs.
 
 ### Resolving ocaml 5.1.1 as the solve compiler
 
@@ -431,11 +367,9 @@ resolution deterministic, and the version is a solve artifact only: the DkML
   selectors, so the solved closure resolves the right platform packages for
   every slot.
 + The resolved ocaml version drives per-slot mingw selection: 5.1.1 resolves
-  the Windows_x86 slot to the 32-bit ocaml-env-mingw32 toolchain, where 4.14.2
-  resolves the wrong 64-bit one.
+  the Windows_x86 slot to the 32-bit ocaml-env-mingw32 toolchain.
 + The DkML 4.14.3 toolchain ocaml replaces this solve compiler at build time,
-  so the lock's ocaml and ocaml-base-compiler entries are solve artifacts, not
-  build inputs.
+  so the lock's ocaml and ocaml-base-compiler entries record only the solve.
 
 ### Relocatable ocamlfind and ocamlbuild
 
@@ -448,7 +382,7 @@ bakes an absolute libdir. Those absolute paths are valid only in the build tree
 that produced them, so a prebuilt `CommonsBase_Dk.Dk0.Pkg.Ocamlfind` or
 `Pkg.Ocamlbuild` object is unusable once imported into a different build tree
 (the imported `#use "topfind"` loads a dead `#directory`). The relocatable
-builds write paths relative to the tool's own location instead, so the imported
+builds write paths relative to the tool's own location, so the imported
 objects stay usable across build trees.
 
 + ocamlfind is pinned to dra27's relocatable fork (v1.9.8) and built with
@@ -466,70 +400,71 @@ objects stay usable across build trees.
 ### Host tools and the hosttoolabi= escape hatch
 
 `ocamlfind` and `ocamlbuild` are host tools: their built artifacts are native
-executables that run on the build host during every later package build (topkg's
-`ocaml pkg/pkg.ml build` invokes `ocamlfind` and `ocamlbuild`). They are
-dual-role: the build must RUN them, and their findlib metadata (stdlib path,
-`ocamlmklib`/`ocamlc` config, arch flags) flows into every later package build.
-Since @1.1.7 GenerateDriver emits `targetabi=Release.target_abi` for these two by
-default, so on a cross slot whose host can emulate the target (Windows_x86 under
-WOW64, Darwin_x86_64 under Rosetta, Linux_x86 under multilib) the metadata
-matches the target and the tool still runs. This is the dual-role convention in
-SPECIFICATION "Object Slot ABI"; it was validated as the ocamlearlybird 57fd802
-hand edit before it moved into the generator.
+executables that run on the build host during every later package build
+(topkg's `ocaml pkg/pkg.ml build` invokes `ocamlfind` and `ocamlbuild`). They
+are dual-role: the build runs them, and their findlib metadata (stdlib path,
+`ocamlmklib` and `ocamlc` config, arch flags) flows into every later package
+build. GenerateDriver emits `targetabi=Release.target_abi` for these two by
+default, so on a cross slot whose host can emulate the target (Windows_x86
+under WOW64, Darwin_x86_64 under Rosetta, Linux_x86 under multilib) the
+metadata matches the target and the tool still runs. This is the dual-role
+convention in SPECIFICATION "Object Slot ABI".
 
 The `hosttoolabi=SLOT` parameter restores `Release.execution_abi` for a matrix
-that contains a cross slot the host CANNOT emulate. Building a host tool at the
-target ABI there produces a binary the host cannot run: on `Release.Linux_x86_64_musl`
-the tool links against the target musl toolchain and becomes a musl-dynamic
-executable, and the glibc host that must run it during the build lacks the musl
-loader. Worse, the opam-build form is host-keyed and carries the
-`Release.target_abi` wildcard in its value-id, so a single such build is stored
-under one key and shared to every slot -- including the glibc `Release.Linux_x86_64`
-one, where the tool then fails to exec. A consumer whose matrix includes such a
-slot passes `hosttoolabi=Release.execution_abi` to keep the host tools host-native;
-that is the musl hazard the @1.1.4 execution-abi pin originally guarded.
+that contains a cross slot the host cannot emulate. Building a host tool at the
+target ABI there produces a binary the host cannot run: on
+`Release.Linux_x86_64_musl` the tool links against the target musl toolchain
+and becomes a musl-dynamic executable, and the glibc host that runs it during
+the build lacks the musl loader. The opam-build form is host-keyed and carries
+the `Release.target_abi` wildcard in its value-id, so a single such build is
+stored under one key and shared to every slot, including the glibc
+`Release.Linux_x86_64` one, where the tool then fails to exec. A consumer whose
+matrix includes such a slot passes `hosttoolabi=Release.execution_abi` to keep
+the host tools host-native, guarding that musl hazard.
 
 ### Refresh: self-describing regeneration
 
-Since @1.1.8 the lock and the driver stamp their inputs, and the Refresh uirule
-reads those stamps back. Solve records `roots`/`pins` in the lock's `generated`
-block; GenerateDriver records its full parameter set in a top-level `generated`
-member of the driver values.jsonc. A consumer therefore regenerates without
-re-copying the roughly ten parameters that used to live only in prose, and CI
-detects a stale driver in seconds instead of hours into a release build.
+The lock and the driver stamp their inputs, and the Refresh uirule reads those
+stamps back. Solve records `roots` and `pins` (and `wtest` and
+`local_opam_dir` when set) in the lock's `generated` block, and GenerateDriver
+records its full parameter set in a top-level `generated` member of the driver
+values.jsonc, right after `schema_version`. MlFront's value reader pulls
+members by name and ignores an unknown top-level member, so the stamp needs no
+dk-value schema change. A consumer regenerates from the stamp rather than
+re-copying the roughly ten parameters, and CI detects a stale driver in
+seconds.
 
 Refresh has four modes. Default (`driver`) regenerates the driver from the
 existing lock using the stamped parameters, so a routine repin never silently
 changes solved package versions; when the lock is not checked in (a
-consume-from-archive consumer), it substitutes the target rulefn in place, which
-equals a full regeneration for a rule-version-only move. `mode=solve` fetches
-opam hermetically, re-solves the lock from its stamped `roots`/`pins`, then
-regenerates. `mode=check` is read-only: it compares each driver's stamped
-`rulefn`/`tool` against the newest the imported
+consume-from-archive consumer), it substitutes the target rulefn in place,
+which equals a full regeneration for a rule-version-only move. `mode=solve`
+fetches opam hermetically, re-solves the lock from its stamped `roots` and
+`pins`, then regenerates. `mode=check` is read-only: it compares each driver's
+stamped `rulefn` and `tool` against the newest the imported
 `etc/dk/i/CommonsLang_OCaml.<ver>.values.json` declares (and, when the lock is
-checked in, the stamped `lock-sha256` against the lock on disk), prints the exact
-fix command and exits nonzero when stale. `version=NEW` rewrites the coupled
-`version`/`formid`/`localsrc` and regenerates.
+checked in, the stamped `lock-sha256` against the lock on disk), prints the
+exact fix command, and exits nonzero when stale. `version=NEW` rewrites the
+coupled `version`, `formid`, and `localsrc` and regenerates.
 
-A pre-@1.1.8 driver carries no stamp; the first `driver`-mode Refresh recovers
+An unstamped driver carries no stamp; the first `driver`-mode Refresh recovers
 its parameters from the generated text and emits the stamped form. `mode=check`
-on such a driver still recovers the rulefn: it fails when that rulefn is stale
-(the check that would have caught the 2026-08-20 stale-driver incident) and
+on an unstamped driver recovers the rulefn, fails when that rulefn is stale, and
 otherwise prints an "unstamped: run Refresh once to adopt" advisory and exits
-zero, so CI adoption is graceful. Rule versions are co-versioned: Refresh@1.1.12
-bakes in its sibling Solve@1.1.12/GenerateDriver@1.1.12/OpamVenv@1.1.12 and,
-absent an explicit `rulefn=`, prefers the newest `F_BuildLockedClosure` the
-import declares (falling back to `F_BuildLockedPackage`); `rulefn=` remains an
-explicit override.
+zero, so CI adoption stays graceful. The rules are co-versioned: a Refresh rule
+bakes in its sibling Solve, GenerateDriver, and OpamVenv at the same version
+and, absent an explicit `rulefn=`, prefers the newest `F_BuildLockedClosure`
+the import declares (falling back to `F_BuildLockedPackage`); `rulefn=` remains
+an explicit override.
 
 ### OpamVenv: a native dune inner loop
 
 dk's incremental unit is the whole package object: editing one source file and
 rebuilding re-stages the localized-source object and rebuilds the entire leaf
-package in a fresh hermetic sandbox, which is minutes even with every dependency
-cached. The OpamVenv uirule hands the inner loop to dune instead. It reuses a
-GenerateDriver `mergedprefix=t skiplocal=t` driver -- the whole non-local
-dependency closure merged into one cached `prefix.zip` object -- and stages that
+package in a fresh hermetic sandbox, which takes minutes even with every
+dependency cached. The OpamVenv uirule hands the inner loop to dune. It reuses a
+GenerateDriver `mergedprefix=t skiplocal=t` driver, whose whole non-local
+dependency closure merges into one cached `prefix.zip` object, and stages that
 prefix, the DkML compiler, and dune into the project's `opam-venv/` directory,
 so `source opam-venv/env.sh && dune build -w` recompiles only the edited module
 and its dependents.
@@ -580,188 +515,72 @@ per-package build rule ships in this distribution. Running any rule of a
 scriptmodule brings in the whole scriptmodule; the marker output is otherwise
 unused. The value-id is harvested from the first CI run (the DkML pattern).
 
-The @1.0.28 revision emits each external locked source as two mirrors of one
-asset: the opam content-addressed cache first (the file is named by its hash)
-and the direct opam URL second (named by its basename). The opam cache mirrors
-opam-repository sources only, so a cache miss -- the custom relocatable forks
-(ocamlfind/ocamlbuild) the cache never held -- falls back to the direct URL.
-The engine tries the mirrors in order and verifies each against the asset
-sha256, so `source.incache`, which OpamLock@1.1.19 dropped from the lock, is no
-longer load-bearing: the CDN serves the sources it holds without giving up
-correctness for the forks (the earlier @1.0.27 gave up the cache entirely to
-stop the forks 404ing on the CommonsBase_Dk binary build for MlFront 2.4.3.7).
-Per-mirror filenames need a dk0 that supports them. Its Export marker value-id
-is unchanged (Export@1.0.0 form is byte-identical).
+The scriptmodule provides two build rules over one lock, both built on the same
+per-package form synthesis (H.synth_package) so they cannot drift.
+F_BuildLockedPackage builds one locked package per rule instantiation.
+F_BuildLockedClosure builds the entire locked closure from a single
+instantiation: it fetches and decodes the lock once, then one submit registers
+every per-package build form (each its own content-addressed Pkg object) plus
+an aggregate `.Built` output form whose unordered get-object precommands demand
+every package concurrently. A rule instantiation cannot be trace-cached, so the
+closure rule instantiates once for the whole closure and a warm run pays that
+cost a single time. Registering the whole closure in one values document
+derives every per-package Pkg value-id from that document's canonical id, so a
+lock edit that alters any package's form re-keys the whole closure and a
+consumer re-harvests every `\dk.object`.
 
-The @1.0.26 revision archives the per-package install.zip and the
-mergedprefix prefix.zip with the engine's in-process `--zip` special form,
-which is deterministic: the same install prefix produces the same archive
-bytes on every platform. Building these forms requires dk 2.4.2.342 or
-later. S7z remains a dependency only where archives are extracted.
+The closure rule emits each external locked source as two mirrors of one asset:
+the opam content-addressed cache first, named by its hash, and the direct opam
+URL second, named by its basename. The opam cache mirrors opam-repository
+sources only, so a source the cache never held, such as the custom relocatable
+ocamlfind and ocamlbuild forks, falls back to the direct URL. The engine tries
+the mirrors in order and verifies each against the asset sha256. Per-mirror
+filenames need a dk0 that supports them. Each synthesized .Src bundle names its
+origin after the source hash (src-<first8>), so a bundle's opam-cache mirror
+directory resolves the right asset when one submit registers many bundles.
 
-The @1.0.25 revision carries the closure rule with the @1.0.22 reference
-semantics restored: the toolchain resolves at the drivers'
+The mergedprefix aggregate merges each package, and each imported package,
+straight into the shared p/ prefix with `merge-object <Pkg> -m ./install.zip -d
+p/`, the value shell's many-merges-into-one-directory primitive; the
+single-root path re-emits the root's install.zip. The rule archives each
+per-package install.zip and the mergedprefix prefix.zip with the engine's
+in-process `--zip` special form, which produces the same archive bytes on every
+platform from the same install prefix. Building these forms requires dk
+2.4.2.342 or later, and S7z remains a dependency only where archives are
+extracted.
+
+The closure rule resolves the toolchain at the drivers'
 `targetabi=Release.target_abi` wildcard, which follows dk0's --target-abi
 through a cross-targeting distribute job whose forms materialize at the host
-key (the @1.0.23/@1.0.24 request-slot translation shipped 64-bit artifacts
-under the 32-bit labels and both consumer releases failed their architecture
-guards). The wildcard makes the resolved document differ per invocation
-target; the lazy-dependency evidence gap that once let a cross job's
-resolution reject a native cold High Performance fetch is repaired on the
-engine side (dk0 2.4.2.338 keeps every distinct imported dependency set and
-serves a restored pointer when any set matches).
-Each synthesized .Src bundle now names its origin after the source hash
-("src-<first8>"): origin names resolve beyond the single bundle, so when the
-closure rule registered 57 bundles all named "src" in one submit, one
-package's opam-cache mirror directory (which embeds that hash's first two hex
-chars) served every asset and each cold fetch 404ed. And the mergedprefix
-aggregate merges each package (and each imported package) straight into the
-shared p/ prefix with `merge-object <Pkg> -m ./install.zip -d p/`, the value
-shell's many-merges-into-one-DIR primitive; 7zz remains only to create
-prefix.zip, since the value shell extracts but does not archive. The
-single-root path re-emits the root's install.zip. Each repair shipped as a
-version bump for the same seal reason as @1.0.20, and the re-key each bump
-causes is deliberate: a consumer release adopting a closure revision must
-distribute with store: none (or an engine whose distribute fails loudly on
-stale seals, dk0 2.4.2.336+) so the complete object set publishes -- the
-1.3.202608262345 ocamlearlybird release shipped an incomplete set (restored
-store, unchanged thin-leaf value-id served stale, new Closure object and
-Pkg.*.Src bundles never published) and 404ed every cold High Performance
-fetch. The Export value-id is unchanged (Export@1.0.0 form is
-byte-identical).
+key, so the resolved document differs per invocation target. dk0 2.4.2.338
+keeps every distinct imported dependency set and serves a restored pointer when
+any set matches. A consumer release that adopts a closure revision distributes
+with store: none, or with an engine whose distribute fails loudly on a stale
+seal (dk0 2.4.2.336 or later), so the complete object set publishes.
 
-The @1.0.20 revision adds F_BuildLockedClosure beside F_BuildLockedPackage
-(both share one per-package form synthesis, H.synth_package, so they cannot
-drift). It supersedes @1.0.19, which introduced the same rule but whose fix
-for the aggregate staging (a spurious `-m ./install.zip` that unpacked each
-package's install.zip instead of placing it, breaking the final copy) could
-not ship as a same-version body edit: the pre-2.4.2.336 distribute engine
-re-registered and sealed the previous release's stale @1.0.19 body. @1.0.20
-is a fresh version so the fixed body ships cleanly. The closure rule builds
-the entire locked closure from ONE rule
-instantiation: it fetches and decodes the lock once, then a single submit
-registers every per-package build form (each still its own content-addressed
-Pkg object) plus an aggregate `.Built` output form whose unordered get-object
-precommands demand every package concurrently. Motivation: a rule
-instantiation can never be trace-cached (its scriptmodule dependency has no
-cloud-persistent hash, and a submit's registrations are side effects a cached
-value could not replay), so a warm run re-instantiated the per-package rule
-once per package -- roughly 9 s of a 14 s warm run on ocamlearlybird's
-58-package closure, each force re-decoding the whole 83 KB lock in lua-ml.
-Paired with Dk.OpamLock@1.1.12's one-line closure driver (whose GenerateDriver
-and Refresh resolve the rule version from the import, so they pick up @1.0.20
-without a co-version bump), the instantiation is paid once. The trade is deliberate and carries object-id churn: per-package
-Pkg value-ids derive from the canonical id of the values document that
-registers them, so registering the whole closure in ONE document changes every
-Pkg value-id (a one-time full closure rebuild plus a \dk.object re-harvest in
-every consumer, the same churn a lock change causes) and additionally couples
-them -- any later lock edit that alters one package's form re-keys the whole
-closure, where the per-package shape re-keyed only the edited package. Existing
-per-package drivers keep building: F_BuildLockedPackage is retained unchanged,
-and the lockless Refresh path refuses to cross rule families. No asset versions
-change (the closure rule reuses the same wrapper/tables/seq-META assets), and
-Export's submitted form is byte-identical (its declared id is pinned at
-Export@1.0.0), so the marker value-id stays shared and no new harvest is
-needed.
+F_BuildLockedPackage runs the OpamBuildWrapper (assets/opam/build-locked-package.sh),
+which prepares the build environment an imported relocatable toolchain needs.
+On Windows it gives every bin and sbin destination the .exe suffix, so cmd.exe
+can run a staged ocamlbuild. Its ocamlbuild-nh shim passes `-install-lib-dir
+p/lib/ocamlbuild`, so ocamlbuild -where resolves to the package prefix while the
+dk0 closure keeps the compiler separate. It exports OCAML_TOPLEVEL_PATH,
+OCAMLTOP_INCLUDE_PATH, and OCAMLFIND_LDCONF so a topkg `#use "topfind"` finds
+the imported relocatable findlib, and it rewrites the imported findlib.conf's
+`stdlib=` and `ldconf=` to the running compiler's lib/ocaml so `-package
+compiler-libs.toplevel` resolves. It exports CAML_LD_LIBRARY_PATH pointing at
+the running compiler's stublibs, as a native path (cygpath -m) on Windows, so a
+bytecode helper that links unix loads dllunix at runtime.
 
-The @1.0.1 revision ships alongside @1.0.0 for the MlFront with-test closure
-(short-circuit filter eval, an arch fenv, and the dune-install --prefix
-repair); its per-slot value-id is likewise harvested from the first CI run.
-
-The @1.0.8 revision ships alongside @1.0.7: it fetches the build wrapper from
-the fresh Apparatus.OpamBuildWrapper@1.0.4 (build-locked-package-v2.sh), whose
-@INSTALL@ installs Windows executables under their .exe name so cmd.exe can run
-a staged ocamlbuild. @1.0.4 is a new asset module because an in-place edit of
-@1.0.1 does not propagate through a distribution (value id hashes the
-invocation, not the content). All other assets stay at @1.0.1; the Export marker
-value-id is shared with @1.0.0/@1.0.6/@1.0.7, so no new harvest is needed.
-
-The @1.0.9 revision supersedes @1.0.8's wrapper: @1.0.4's @INSTALL@ only added
-.exe when a literal <name>.exe existed, but DkML's ocamlopt emits <name> with no
-.exe when -o carries an extension (ocamlbuild.native), so nothing matched and the
-staged ocamlbuild stayed unrunnable. @1.0.9 fetches Apparatus.OpamBuildWrapper@1.0.5
-(build-locked-package-v3.sh), which instead gives every bin/sbin destination the
-.exe suffix on Windows. @1.0.5 is again a new asset module for the same
-propagation reason; the Export marker value-id stays shared.
-
-The @1.0.10 revision fetches Apparatus.OpamBuildWrapper@1.0.6
-(build-locked-package-v4.sh), whose ocamlbuild-nh shim passes
-`-install-lib-dir p/lib/ocamlbuild` so ocamlbuild -where resolves to the package
-prefix. The relocatable ocamlbuild otherwise computes -where beside the compiler
-(dirname of ocaml_libdir), but the dk0 closure keeps the compiler separate and
-installs ocamlbuild.cmo into the package prefix, so compiling a myocamlbuild.ml
-plugin (e.g. ptime) fails to find ocamlbuild.cmo. @1.0.6 is a new asset module;
-the Export marker value-id stays shared.
-
-The @1.0.11 revision fetches Apparatus.OpamBuildWrapper@1.0.7
-(build-locked-package-v5.sh), which makes the imported relocatable findlib usable
-by a topkg `#use "topfind"`. @1.0.10's wrapper set only OCAML_TOPLEVEL_PATH, which
-findlib_config reads to resolve its `location`, but the OCaml >= 4.13 toplevel does
-NOT search that variable for `#use`, so `#use "topfind"` failed with `Cannot find
-file topfind` whenever ocamlfind was imported (rather than built in-closure, where
-its build also seeded topfind into the then-writable shared stdlib). @1.0.7 also
-exports OCAMLTOP_INCLUDE_PATH (the toplevel's actual `#use` search path) and
-OCAMLFIND_LDCONF (pointing at the running compiler's ld.conf), because
-findlib_config bakes ocaml_stdlib/ocaml_ldconf as an absolute compile-time path
-that is dead once the object is imported into another build tree. All three
-variables are required together; the imported Dk0.Pkg.Ocamlfind object itself is
-correct and unchanged. @1.0.7 is a new asset module; the Export marker value-id
-stays shared.
-
-The @1.0.15 revision fetches Apparatus.OpamBuildWrapper@1.0.9
-(build-locked-package-v6.sh), which additionally rewrites the imported
-findlib.conf's `stdlib=` (and `ldconf=`) to the running compiler's lib/ocaml.
-@1.0.11's OCAMLFIND_LDCONF fixed `ocamlfind list`, but findlib_config's baked
-`ocaml_stdlib` still pointed at the dead compile-time path, so `-package
-compiler-libs.toplevel` (findlib expands it to `<ocaml_stdlib>/compiler-libs`)
-resolved into that dead directory and any consumer of the toplevel libraries
-failed with `Unbound module Toploop` -- first hit compiling astring's
-`src/astring_top.ml`. findlib exposes no environment override for `stdlib`
-(unlike ldconf), so the wrapper must rewrite findlib.conf itself; the DkML
-compiler does ship compiler-libs/toploop.cmi + ocamltoplevel.cma, so once
-`stdlib` points at it the toplevel packages resolve. @1.0.9 is a new asset
-module; the Export marker value-id stays shared.
-
-The @1.0.16 revision is behaviorally identical to @1.0.15. It exists because
-the wrapper assets were collapsed onto the stable
-assets/opam/build-locked-package.sh path (Apparatus.OpamBuildWrapper@1.0.10,
-the same bytes as the retired build-locked-package-v6.sh) and every earlier
-OpamBuild revision was retired from HEAD; see "## Assets". The revision
-paragraphs above are history: the file names they mention exist only in
-earlier release tags. The Export marker value-id stays shared, so no new
-harvest is needed.
-
-The @1.0.17 revision fetches Apparatus.OpamBuildWrapper@1.0.11, the same
-build-locked-package.sh with one Unix addition: it exports
-`CAML_LD_LIBRARY_PATH` pointing at the running compiler's `stublibs`. A package
-build that runs a bytecode helper linking `unix` -- first hit ocamlbuild's
-`man/options_man.byte`, run during the build to generate a man page -- loads
-`dllunix-*` at runtime via `CAML_LD_LIBRARY_PATH` and then the compiler's
-ld.conf. The DkML relocatable compiler's baked ld.conf lists a dead absolute
-stublibs dir (the same dead-baked-path root cause as the findlib stdlib above)
-and the rule strips `CAML_LD_LIBRARY_PATH` for hermeticity, so `ocamlrun`
-aborted (core dump) and the build failed. It is set on every slot -- as a native
-path (cygpath -m) on Windows, matching OCAMLFIND_LDCONF -- so the stub load path
-is correct regardless of how the host resolves DLLs. @1.0.11 is an
-OpamBuildWrapper patch bump (its bytes changed); the Export marker value-id
-stays shared.
-
-The @1.0.18 revision fetches Apparatus.OpamBuildWrapper@1.0.12, the same
-build-locked-package.sh with a toolchain-fingerprint gate added on both sides.
-Producer half: after a successful build it records the sha256 of the DkML
-compiler-libs it linked against (`compiler-libs/ocamlcommon.cmxa`) into each
-library dir it produced, as a `p/lib`-mergeable `ip/lib/<pkg>/.dk-provenance`
-key=value sidecar. Consumer half: before building, it compares every staged
-dependency's recorded compiler-libs sha against the compiler-libs THIS build
-links against and, on a mismatch, fails fast with an actionable `[abi-toolchain]`
-message instead of letting the build die deep inside with the opaque `.cmxa make
-inconsistent assumptions over implementation <Module>` link error (the ppxlib
-astlib-vs-skewed-DkML failure). OCaml native compiler-libs are not
-bit-reproducible, so the SAME declaration-stable DkML object can hold different
-`.cmx` CRCs across CLO releases; this content fingerprint catches a producer and
-consumer that resolved different CLO releases even though their DkML module-id
-STRING matches. It is fail-open for dependencies with no recorded fingerprint
-(objects built by an earlier wrapper), so coverage grows as objects are rebuilt;
-fail-closed only when a fingerprint is present and differs. @1.0.12 is an
-OpamBuildWrapper patch bump (its bytes changed); the Export marker value-id
-stays shared.
+The wrapper also runs a toolchain-fingerprint gate on both sides. After a
+successful build the producer records the sha256 of the DkML compiler-libs it
+linked against (compiler-libs/ocamlcommon.cmxa) into each library dir it
+produced, as a p/lib-mergeable `ip/lib/<pkg>/.dk-provenance` sidecar. Before
+building, the consumer compares every staged dependency's recorded
+compiler-libs sha against the compiler-libs this build links against and, on a
+mismatch, fails fast with an actionable `[abi-toolchain]` message. OCaml native
+compiler-libs are not bit-reproducible, so one declaration-stable DkML object
+can hold different `.cmx` CRCs across CLO releases, and this content
+fingerprint catches a producer and consumer that resolved different CLO
+releases even though their DkML module-id string matches. The gate is fail-open
+for a dependency with no recorded fingerprint and fail-closed only when a
+present fingerprint differs.
