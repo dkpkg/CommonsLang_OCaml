@@ -7,8 +7,11 @@ name: test-quickstart-ocaml
 # import a distribution the driver requires produces a project that cannot
 # regenerate its driver -- "Could not use <X> because the distribution has not
 # been imported." This job scaffolds a fresh quickstart against the LIVE recipe,
-# resolves its imports, and runs the driver, failing if any required distribution
-# is missing. It is the guard for the class of defect, not one distribution.
+# resolves its imports with `dk1 update`, and asserts that CommonsBase_Std -- the
+# distribution the driver requires -- is present in the imported set etc/dk/i. It
+# does not run the driver: the fresh-project generate step (Adopt) needs the
+# user's own opam package, so a driver run on a bare quickstart fails for an
+# unrelated reason.
 #
 # WHY MANUAL. It depends on the network and on the deployed recipe, so it is not a
 # push gate. The periodic dk-ecosystem release exercise invokes it (workflow_dispatch); a
@@ -31,13 +34,20 @@ jobs:
     steps:
       - name: Checkout (for the vendored dk0/dk1 launchers)
         uses: actions/checkout@v6
-      - name: Scaffold, resolve imports, and run the driver dependency check
+      - name: Scaffold, resolve imports, and assert the driver's required distributions are present
         shell: bash
         run: |
           set -euo pipefail
           recipes="${RECIPES:-opam414 opam550}"
-          # The driver's own error when a recipe omits a distribution it needs.
-          missing_re='because the distribution has not been imported'
+          # The closure driver (CommonsLang_OCaml.Dk.OpamLock) requires the
+          # CommonsBase_Std distribution: a recipe that does not import it produces a
+          # project whose driver cannot regenerate -- "Could not use CommonsBase_Std
+          # because the distribution has not been imported". After `dk1 update`
+          # resolves the recipe's imports, that distribution must be present in the
+          # imported set etc/dk/i. We assert that directly. We do NOT run the driver
+          # here: the fresh-project generate step is Adopt, which needs the user's
+          # own opam package, and Refresh on a bare project fails for an unrelated
+          # reason (no driver to refresh yet), which would only add noise.
           fail=0
           for name in $recipes; do
             echo "::group::quickstart ocaml $name"
@@ -51,22 +61,17 @@ jobs:
               cp ../dk0 ../dk1 proj/
               cd proj
               ./dk1 update
-              # Run the closure driver. On a fresh project it stops at the missing
-              # etc/dk/v (there is no driver to refresh yet) -- that is expected and
-              # is NOT the failure we guard. We fail only if the driver reports a
-              # required distribution was never imported.
-              ref=$(grep -rho 'CommonsLang_OCaml\.Dk\.OpamLock\.Refresh@[0-9][0-9.]*' etc/dk/i | sort -uV | tail -1)
-              out=$(./dk1 dialog "$ref" 2>&1 || true)
-              printf '%s\n' "$out"
-              if printf '%s' "$out" | grep -Eq "$missing_re"; then
-                echo "::error::quickstart ocaml $name: the driver could not use a distribution the recipe did not import."
+              echo "imported distributions (etc/dk/i):"; ls etc/dk/i
+              if ! ls etc/dk/i | grep -q '^CommonsBase_Std\.'; then
+                echo "::error::quickstart ocaml $name did not import CommonsBase_Std, which the closure driver requires."
                 exit 1
               fi
+              echo "OK: $name imports CommonsBase_Std"
             ) || fail=1
             echo "::endgroup::"
           done
           if [ "$fail" -ne 0 ]; then
-            echo "One or more quickstart ocaml recipes failed the driver dependency check."
+            echo "One or more quickstart ocaml recipes is missing a distribution its driver requires."
             exit 1
           fi
           echo "All quickstart ocaml recipes import the distributions their driver requires."
