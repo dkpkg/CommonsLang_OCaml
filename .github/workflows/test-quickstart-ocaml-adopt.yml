@@ -92,7 +92,7 @@ jobs:
             ./dk1 dialog "$adopt" version=1.0.0 unit=Dktest ns=CiTest_Dktest
             ./dk1 update
             ./dk1 run-object CiTest_Dktest.Dktest@1.0.0 \
-              -s Release.Linux_x86_64 -m bin/dktest.exe
+              -s Release.Linux_x86_64 -m ./bin/dktest.exe
           ) 2>&1 | tee "$log"
           rc=${PIPESTATUS[0]}
           set -e
