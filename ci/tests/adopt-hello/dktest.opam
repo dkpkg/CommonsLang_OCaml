@@ -1,5 +1,5 @@
 opam-version: "2.0"
-synopsis: "Zero-dependency fixture the quickstart adopt CI builds"
+synopsis: "Zero-dependency test the quickstart adopt CI builds"
 description: """
 This opam package ships one executable and carries no dependencies beyond the
 recipe's base toolchain (the OCaml compiler and dune). The quickstart adopt CI

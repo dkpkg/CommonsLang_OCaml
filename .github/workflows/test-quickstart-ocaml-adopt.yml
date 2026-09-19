@@ -4,7 +4,7 @@ name: test-quickstart-ocaml-adopt
 # WHAT IT COVERS. The sibling `test-quickstart-ocaml` guard checks only the
 # precondition, that a fresh quickstart imports the distribution the driver
 # requires. This guard is the superset: it scaffolds a fresh quickstart, adds a
-# minimal zero-dependency opam package (ci/fixtures/adopt-hello), and runs the
+# minimal zero-dependency opam package (ci/tests/adopt-hello), and runs the
 # FULL fresh-project driver-generation flow to completion. Adopt
 # (CommonsLang_OCaml.Dk.OpamLock.Adopt) solves the lock, generates the source,
 # driver, and final forms, and registers the workspace assets; the guard then
@@ -48,14 +48,14 @@ jobs:
     env:
       RECIPE: ${{ matrix.recipe }}
     steps:
-      - name: Checkout (for the vendored dk0/dk1 launchers and the fixture)
+      - name: Checkout (for the vendored dk0/dk1 launchers and the test)
         uses: actions/checkout@v6
-      - name: Scaffold, adopt the fixture, and build it to completion
+      - name: Scaffold, adopt the test, and build it to completion
         shell: bash
         run: |
           set -euo pipefail
           name="$RECIPE"
-          fixture="$GITHUB_WORKSPACE/ci/fixtures/adopt-hello"
+          test="$GITHUB_WORKSPACE/ci/tests/adopt-hello"
           # A fresh dir with no dk.u floats the launcher on the latest engine,
           # which is what a new user gets. The vendored launchers self-install it.
           mkdir work
@@ -69,7 +69,7 @@ jobs:
           # comes from.
           ./dk1 update
           # Read the Adopt module version the imported recipe offers, so the
-          # guard runs the live version and hardcodes none.
+          # test runs the live version and hardcodes none.
           adopt_ref=$(grep -hoE 'Dk\.OpamLock\.Adopt@[0-9]+\.[0-9]+\.[0-9]+' \
             etc/dk/i/CommonsLang_OCaml.*.values.json | head -1)
           if [ -z "$adopt_ref" ]; then
@@ -78,25 +78,38 @@ jobs:
           fi
           adopt="CommonsLang_OCaml.$adopt_ref"
           echo "using $adopt"
-          # Add the zero-dependency fixture opam package to the scaffolded project.
-          cp -R "$fixture/." .
-          # Run the full flow, capturing stdout and stderr to a log the guard
+          # Add the zero-dependency test opam package to the scaffolded project.
+          cp -R "$test/." .
+          # Run the full flow, capturing stdout and stderr to a log the test
           # scans for FATAL. The inner subshell stops at the first failing
           # command and propagates its exit code, which PIPESTATUS[0] reads.
-          # The guard turns -e off around the pipeline so it reaches its own rc
+          # The test turns -e off around the pipeline so it reaches its own rc
           # check and FATAL scan instead of aborting on a failing flow.
           log=adopt.log
           set +e
           (
             set -e
-            ./dk1 dialog "$adopt" version=1.0.0 unit=Dkfixture ns=CiFixture_Dkfixture
+            ./dk1 dialog "$adopt" version=1.0.0 unit=Dktest ns=CiTest_Dktest
             ./dk1 update
-            ./dk1 run-object CiFixture_Dkfixture.Dkfixture@1.0.0 \
-              -s Release.Linux_x86_64 -m bin/dkfixture.exe
+            ./dk1 run-object CiTest_Dktest.Dktest@1.0.0 \
+              -s Release.Linux_x86_64 -m bin/dktest.exe
           ) 2>&1 | tee "$log"
           rc=${PIPESTATUS[0]}
           set -e
           if [ "$rc" -ne 0 ]; then
+            # When run-object cannot find the executable member, list what the
+            # built final-form object actually holds, so the -m path is read from
+            # the object rather than guessed on the next run.
+            echo "======== diagnostic: value-store object members ========"
+            for z in t/d/val.*/* ; do
+              [ -f "$z" ] || continue
+              if unzip -l "$z" 2>/dev/null | grep -qiE 'dktest|bin/'; then
+                echo "--- $z ---"
+                unzip -l "$z" 2>/dev/null | grep -iE 'bin/|dktest|\.exe' | head -20
+              fi
+            done
+            echo "======== diagnostic: dktest executables on disk ========"
+            find . -type f -name 'dktest*' 2>/dev/null | head -20
             echo "::error::quickstart ocaml $name adopt/build flow failed (exit $rc): a recipe or driver regression stopped Adopt."
             exit 1
           fi
@@ -106,4 +119,4 @@ jobs:
             echo "::error::quickstart ocaml $name adopt log contains FATAL (a clean pass carries none)."
             exit 1
           fi
-          echo "OK: quickstart ocaml $name adopted the fixture and built and ran it with no FATAL."
+          echo "OK: quickstart ocaml $name adopted the test and built and ran it with no FATAL."
