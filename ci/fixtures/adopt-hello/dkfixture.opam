@@ -1,0 +1,26 @@
+opam-version: "2.0"
+synopsis: "Zero-dependency fixture the quickstart adopt CI builds"
+description: """
+This opam package ships one executable and carries no dependencies beyond the
+recipe's base toolchain (the OCaml compiler and dune). The quickstart adopt CI
+scaffolds a fresh project, adds this package, and drives the full Adopt
+driver-generation flow against it, then runs the built executable.
+"""
+maintainer: ["dk engine CI"]
+authors: ["dk engine CI"]
+license: "MIT"
+homepage: "https://diskuv.com/dk"
+bug-reports: "https://diskuv.com/dk"
+depends: [
+  "dune" {>= "3.0"}
+  "ocaml"
+]
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune" "build" "-p" name "-j" jobs
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+]

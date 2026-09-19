@@ -1,0 +1,109 @@
+name: test-quickstart-ocaml-adopt
+# End-to-end guard for the `dk0 quickstart ocaml` recipes.
+#
+# WHAT IT COVERS. The sibling `test-quickstart-ocaml` guard checks only the
+# precondition, that a fresh quickstart imports the distribution the driver
+# requires. This guard is the superset: it scaffolds a fresh quickstart, adds a
+# minimal zero-dependency opam package (ci/fixtures/adopt-hello), and runs the
+# FULL fresh-project driver-generation flow to completion. Adopt
+# (CommonsLang_OCaml.Dk.OpamLock.Adopt) solves the lock, generates the source,
+# driver, and final forms, and registers the workspace assets; the guard then
+# builds and runs the executable and asserts it succeeds. A recipe or driver
+# regression that stops Adopt turns the job red.
+#
+# THE FATAL SCAN. The guard captures the whole flow's output and fails the job
+# when the text "FATAL" appears anywhere in it, even when the flow exits zero. A
+# clean pass carries no FATAL line. This scan exists because a green job that ran
+# WITH a FATAL is a false green, so the guard reads the captured log and treats
+# any FATAL as a failure.
+#
+# THE ADOPT VERSION COMES FROM THE IMPORT. The guard reads the Adopt module
+# version out of the imported CommonsLang_OCaml record that `dk1 update` writes to
+# etc/dk/i, so it always runs the version the live recipe offers and hardcodes no
+# module version. The launcher floats on the latest engine, which is what a new
+# user gets, and the vendored launchers self-install it.
+#
+# ONE JOB PER RECIPE. The recipes run in a matrix so each is on its OWN runner
+# and shares no dk data directories (the launcher's engine install and object
+# cache) with the other. A shared cache could let one toolchain's imports or
+# built objects mask a break in the other, so each recipe gets a fresh runner.
+#
+# WHY MANUAL. The flow depends on the network, on the deployed recipe, and on a
+# full source build, so it is not a push gate. The periodic dk-ecosystem release
+# exercise invokes it (workflow_dispatch); a maintainer can also run it from the
+# Actions tab.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quickstart-ocaml-adopt:
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: [opam414, opam550]
+    runs-on: ubuntu-latest
+    env:
+      RECIPE: ${{ matrix.recipe }}
+    steps:
+      - name: Checkout (for the vendored dk0/dk1 launchers and the fixture)
+        uses: actions/checkout@v6
+      - name: Scaffold, adopt the fixture, and build it to completion
+        shell: bash
+        run: |
+          set -euo pipefail
+          name="$RECIPE"
+          fixture="$GITHUB_WORKSPACE/ci/fixtures/adopt-hello"
+          # A fresh dir with no dk.u floats the launcher on the latest engine,
+          # which is what a new user gets. The vendored launchers self-install it.
+          mkdir work
+          cp dk0 dk1 work/
+          cd work
+          ./dk0 quickstart ocaml "$name" --dir proj
+          cp ../dk0 ../dk1 proj/
+          cd proj
+          # Resolve the recipe's imports, which writes the imported records to
+          # etc/dk/i, including the CommonsLang_OCaml record the Adopt version
+          # comes from.
+          ./dk1 update
+          # Read the Adopt module version the imported recipe offers, so the
+          # guard runs the live version and hardcodes none.
+          adopt_ref=$(grep -hoE 'Dk\.OpamLock\.Adopt@[0-9]+\.[0-9]+\.[0-9]+' \
+            etc/dk/i/CommonsLang_OCaml.*.values.json | head -1)
+          if [ -z "$adopt_ref" ]; then
+            echo "::error::could not read the Adopt version from the imported CommonsLang_OCaml record in etc/dk/i."
+            exit 1
+          fi
+          adopt="CommonsLang_OCaml.$adopt_ref"
+          echo "using $adopt"
+          # Add the zero-dependency fixture opam package to the scaffolded project.
+          cp -R "$fixture/." .
+          # Run the full flow, capturing stdout and stderr to a log the guard
+          # scans for FATAL. The inner subshell stops at the first failing
+          # command and propagates its exit code, which PIPESTATUS[0] reads.
+          # The guard turns -e off around the pipeline so it reaches its own rc
+          # check and FATAL scan instead of aborting on a failing flow.
+          log=adopt.log
+          set +e
+          (
+            set -e
+            ./dk1 dialog "$adopt" version=1.0.0 unit=Dkfixture ns=CiFixture_Dkfixture
+            ./dk1 update
+            ./dk1 run-object CiFixture_Dkfixture.Dkfixture@1.0.0 \
+              -s Release.execution_abi -m bin/dkfixture.exe
+          ) 2>&1 | tee "$log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::quickstart ocaml $name adopt/build flow failed (exit $rc): a recipe or driver regression stopped Adopt."
+            exit 1
+          fi
+          # A green job that ran WITH a FATAL is a false green; treat any FATAL
+          # in the captured log as a failure.
+          if grep -q FATAL "$log"; then
+            echo "::error::quickstart ocaml $name adopt log contains FATAL (a clean pass carries none)."
+            exit 1
+          fi
+          echo "OK: quickstart ocaml $name adopted the fixture and built and ran it with no FATAL."
