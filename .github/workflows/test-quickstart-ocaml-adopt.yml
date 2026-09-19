@@ -92,7 +92,7 @@ jobs:
             ./dk1 dialog "$adopt" version=1.0.0 unit=Dkfixture ns=CiFixture_Dkfixture
             ./dk1 update
             ./dk1 run-object CiFixture_Dkfixture.Dkfixture@1.0.0 \
-              -s Release.execution_abi -m bin/dkfixture.exe
+              -s Release.Linux_x86_64 -m bin/dkfixture.exe
           ) 2>&1 | tee "$log"
           rc=${PIPESTATUS[0]}
           set -e
