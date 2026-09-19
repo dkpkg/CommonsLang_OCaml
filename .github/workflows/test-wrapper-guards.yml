@@ -1,0 +1,98 @@
+name: test-wrapper-guards
+# Red/green demonstration of the two dk0 wrapper-script security guards, run
+# against the landed wrapper (diskuv/dk V2_5). It is manual: it exists to show
+# the guards fire, not to gate every push.
+#
+# GUARD 1, the manifest-downgrade refusal. When dk.u pins a version, the wrapper
+# refuses a signify-verified manifest whose version is older than the pin. The
+# demonstration re-serves a genuine OLDER signed manifest under the pinned
+# (newer) filename from a local server and points DK0_BASE_URL at it: the
+# signature verifies (the manifest is genuine) and the guard still refuses it.
+# The green case serves the matching version and is accepted.
+#
+# GUARD 2, the CommonsBase_Dk host narrowing. The wrapper downloads the binary
+# only from github.com/dkpkg/CommonsBase_Dk or the dk-dist GitLab registry. A
+# signed manifest cannot carry a sibling-repo URL (signify would reject a
+# tampered manifest), so the narrowing is shown at the dk_allow_host function:
+# it accepts a CommonsBase_Dk URL and the GitLab registry and rejects a sibling
+# dkpkg repository.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wrapper-guards:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse a downgrade and reject a sibling binary host
+        shell: bash
+        run: |
+          set -uo pipefail
+          fails=0
+          NEW=2.4.3.21
+          OLD=2.4.3.20
+          # The landed guard-carrying wrapper.
+          curl -fsSL -o dk0 "https://raw.githubusercontent.com/diskuv/dk/b776aca98550f54ad23dad024e3aa2b68767ccd3/dk0"
+          chmod +x dk0
+
+          echo "======== GUARD 1 RED: pin $NEW, serve genuine $OLD manifest under the pinned name ========"
+          mkdir -p served
+          curl -fsSL -o "served/manifest-$NEW.txt"     "https://diskuv.com/dk/manifest-$OLD.txt"
+          curl -fsSL -o "served/manifest-$NEW.txt.sig" "https://diskuv.com/dk/manifest-$OLD.txt.sig"
+          ( cd served && python3 -m http.server 8099 >/dev/null 2>&1 ) &
+          srv=$!
+          sleep 2
+          mkdir -p redproj && cp dk0 redproj/
+          echo "%% actual_version(\"$NEW\")" > redproj/dk.u
+          set +e
+          out=$(cd redproj && DK0_BASE_URL=http://localhost:8099 ./dk0 version 2>&1); rc=$?
+          set -e
+          echo "$out"
+          if echo "$out" | grep -q "manifest downgrade refused" && [ "$rc" -ne 0 ]; then
+            echo "RED-OK: the guard refused the older manifest (pin $NEW, served $OLD)."
+          else
+            echo "RED-FAIL: the older manifest was not refused (rc=$rc)."; fails=1
+          fi
+
+          echo "======== GUARD 1 GREEN: pin $OLD, serve genuine $OLD manifest ========"
+          mkdir -p served2
+          curl -fsSL -o "served2/manifest-$OLD.txt"     "https://diskuv.com/dk/manifest-$OLD.txt"
+          curl -fsSL -o "served2/manifest-$OLD.txt.sig" "https://diskuv.com/dk/manifest-$OLD.txt.sig"
+          ( cd served2 && python3 -m http.server 8100 >/dev/null 2>&1 ) &
+          srv2=$!
+          sleep 2
+          mkdir -p greenproj && cp dk0 greenproj/
+          echo "%% actual_version(\"$OLD\")" > greenproj/dk.u
+          set +e
+          out=$(cd greenproj && DK0_BASE_URL=http://localhost:8100 ./dk0 version 2>&1); rc=$?
+          set -e
+          echo "$out"
+          if echo "$out" | grep -q "manifest downgrade refused"; then
+            echo "GREEN-FAIL: a matching pin was wrongly refused."; fails=1
+          else
+            echo "GREEN-OK: the matching pin passed the downgrade guard."
+          fi
+          kill "$srv" "$srv2" 2>/dev/null || true
+
+          echo "======== GUARD 2: dk_allow_host accepts CommonsBase_Dk and the GitLab registry, rejects a sibling ========"
+          sed -n '/^dk_allow_host()/,/^}/p' dk0 > allow.sh
+          . ./allow.sh
+          set +e
+          dk_allow_host "https://github.com/dkpkg/CommonsBase_Dk/releases/download/x/dk0-linux_x86_64"; cbd=$?
+          dk_allow_host "https://github.com/dkpkg/CommonsBase_Dk_x/releases/download/x/dk0-linux_x86_64"; sib=$?
+          dk_allow_host "https://github.com/dkpkg/EvilRepo/releases/download/x/dk0-linux_x86_64"; evil=$?
+          dk_allow_host "https://gitlab.com/api/v4/projects/60486861/packages/generic/dk-dist/x/dk0-linux_x86_64"; gl=$?
+          set -e
+          [ "$cbd" -eq 0 ]  && echo "HOST-OK: CommonsBase_Dk accepted"            || { echo "HOST-FAIL: CommonsBase_Dk rejected"; fails=1; }
+          [ "$gl" -eq 0 ]   && echo "HOST-OK: gitlab dk-dist registry accepted"   || { echo "HOST-FAIL: gitlab registry rejected"; fails=1; }
+          [ "$sib" -ne 0 ]  && echo "HOST-OK: sibling CommonsBase_Dk_x rejected"  || { echo "HOST-FAIL: sibling prefix accepted"; fails=1; }
+          [ "$evil" -ne 0 ] && echo "HOST-OK: sibling EvilRepo rejected"          || { echo "HOST-FAIL: sibling repo accepted"; fails=1; }
+
+          echo "========================================================"
+          if [ "$fails" -ne 0 ]; then
+            echo "::error::a wrapper guard did not behave as expected."
+            exit 1
+          fi
+          echo "OK: both wrapper guards behaved as expected (downgrade refused, sibling host rejected)."
