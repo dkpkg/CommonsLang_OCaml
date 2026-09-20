@@ -34,6 +34,14 @@ name: test-quickstart-ocaml-adopt
 # Actions tab.
 on:
   workflow_dispatch:
+    inputs:
+      dk_base_url:
+        description: >-
+          Optional dk-dist/<version> folder to pin the engine to (sets DK0_BASE_URL
+          and DK1_BASE_URL). Empty floats on the latest published engine, which is
+          what a new user gets; set it to observe a specific release.
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -56,6 +64,12 @@ jobs:
           set -euo pipefail
           name="$RECIPE"
           test="$GITHUB_WORKSPACE/ci/tests/adopt-hello"
+          # Optional engine pin (empty floats on latest, the new-user default).
+          dkurl="${{ inputs.dk_base_url }}"
+          if [ -n "$dkurl" ]; then
+            export DK0_BASE_URL="$dkurl" DK1_BASE_URL="$dkurl"
+            echo "pinned engine to $dkurl"
+          fi
           # A fresh dir with no dk.u floats the launcher on the latest engine,
           # which is what a new user gets. The vendored launchers self-install it.
           mkdir work
@@ -91,8 +105,15 @@ jobs:
             set -e
             ./dk1 dialog "$adopt" version=1.0.0 unit=Dktest ns=CiTest_Dktest
             ./dk1 update
+            # Run the executable member BOTH ways: with the leading ./ the object
+            # stores (./bin/dktest.exe) and with the dot-less form the Adopt "Next
+            # steps" banner prints (bin/dktest.exe). Both must reach a running
+            # executable; the dot-less form is the one the ./-tolerant run-object
+            # matcher makes resolve, so a regression there reds this job.
             ./dk1 run-object CiTest_Dktest.Dktest@1.0.0 \
               -s Release.Linux_x86_64 -m ./bin/dktest.exe
+            ./dk1 run-object CiTest_Dktest.Dktest@1.0.0 \
+              -s Release.Linux_x86_64 -m bin/dktest.exe
           ) 2>&1 | tee "$log"
           rc=${PIPESTATUS[0]}
           set -e
