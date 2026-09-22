@@ -508,6 +508,38 @@ invisible to git and to dune. dk0 drops a self-ignoring `.gitignore` ("*") and a
 versions and the same DkML compiler the release build uses, driven from the same
 lock.
 
+An activated venv does not reproduce everything the release gate stages, and the
+gap is a debt ledger rather than a waiver: the maintainer requires parity for
+every venv use case, so each item below is a thing to close, and an item a later
+module bump fixes leaves this list. What the venv does not reproduce today,
+grouped as the gate sees it:
+
+- Test toggles the gate sets and the venv leaves to the host or a committed
+  `dk-opam-venv.envmods`: `ENABLE_NETWORK_TESTS`, `ENABLE_ZIPBOMB_TESTS`,
+  `OCAMLRUNPARAM=b`, `MLFRONT_STUBS_BUILD_TYPE`, `FLEXLINKFLAGS`, and the
+  dksdk-coder stublib `PATH` prepend. `MLFRONT_GATE` and the `DK_SBOM_*` keys
+  agree (both unset).
+- MSVC capture on `Windows_*`: the `INCLUDE`, `LIB` and `LIBPATH` values and the
+  `vcvarsall` architecture. `env.ps1` captures them only when `cl.exe` is absent
+  and hardcodes `x64` whatever the `slot=` is, so a `Windows_x86` venv does not
+  get the `x86` mapping from `assets/table/msvc-arch/Release.<slot>`; `env.cmd`
+  and `env.sh` capture nothing and print a note. The gate also derives
+  `OCAMLFIND_LDCONF`, `CAML_LD_LIBRARY_PATH` and `OCAMLLIB` at run time and
+  copies the `ocaml*.opt` executables on Windows, neither of which the venv
+  reproduces.
+- Host tools that switch tests on or off rather than fail them: `sh` on `PATH`
+  (the gate stages MSYS2), `node`, `gh` and `zig`.
+- Network access and the GitHub credential the gate serves through `GH_TOKEN`; a
+  committed envmods file must never carry that secret.
+- Host platform the gate pins: the Linux glibc floor and assembler, the
+  `Linux_x86` 32-bit userland, the Darwin Command Line Tools clang, the Windows
+  `MAX_PATH` junction, and a Visual Studio install carrying the
+  `VC.Tools.x86.x64` component.
+
+The localized source, the gate's dev-then-release test sequence and its `-j 1`,
+the zero-test refusal, and the CommonsLang_OCaml pin-alignment guard are gate
+mechanics rather than environment, so the venv does not carry them.
+
 ## Dk.OpamBuild
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamBuild scriptmodule so its
@@ -584,3 +616,29 @@ fingerprint catches a producer and consumer that resolved different CLO
 releases even though their DkML module-id string matches. The gate is fail-open
 for a dependency with no recorded fingerprint and fail-closed only when a
 present fingerprint differs.
+
+## Toolchain checks
+
+What the distscripts and scripts check about the toolchain, each tied to the
+check that performs it or marked as unchecked:
+
+- The CommonsLang_OCaml distscript `dist/Linux_x86_64.u` checks that the
+  `Linux_x86_64` DkML compiler names the bare tools `gcc`, `as` and `ld -r -o`,
+  and no check covers the other binutils or the other Linux ABIs.
+- Such a build works for local use with CommonsLang_OCaml release
+  `0.1.20260820083108` or later, whose DkML compiler is relocatable, and no
+  check exercises a build on a newer-glibc host.
+- The CommonsLang_OCaml distscript `dist/Linux_x86_64.u` fails when a forced
+  `-pie` link with the `Linux_x86_64` DkML or Base compiler fails, and no check
+  covers the `Linux_arm64` or `Linux_x86` runtime objects.
+- The `diskuv/dk-distribute` script `toolchain-conformance.sh` fails a
+  distribution build when `vswhere` is missing or finds no MSVC installation in
+  the version range `[16.0,19.0)`, and the CommonsLang_OCaml script
+  `assets/dune/bootstrap-msvc.bat` fails when `vswhere` finds none or `vcvarsall`
+  fails.
+- `Windows_*`: a `vcvarsall` environment capture supplies `INCLUDE`, `LIB`,
+  `LIBPATH` and `PATH`, and the slot to `vcvarsall` architecture mapping is the
+  CommonsLang_OCaml table `assets/table/msvc-arch/Release.<slot>`. No check
+  confirms the captured variables.
+- A package's distscript can check them, as the CommonsLang_OCaml distscript
+  `dist/Linux_x86_64.u` does by running `file -b` on its `bin/ocamlopt`.

@@ -43,13 +43,6 @@ jobs:
             image: quay.io/pypa/manylinux_2_28_x86_64:2026.04.08-5
             distscript: dist/Linux_x86_64.u
             target-abi: Linux_x86_64
-          # The musl target builds on the same glibc manylinux container: the
-          # execution ABI stays Linux_x86_64 and the target slot's pinned
-          # x86_64-linux-musl cross toolchain (MuslCC.Bundle) does the rest.
-          - runs-on: ubuntu-latest
-            image: quay.io/pypa/manylinux_2_28_x86_64:2026.04.08-5
-            distscript: dist/Linux_x86_64_musl.u
-            target-abi: Linux_x86_64_musl
           - runs-on: ubuntu-latest
             image: quay.io/pypa/manylinux_2_28_x86_64:2026.04.08-5
             distscript: dist/Linux_x86.u
@@ -93,18 +86,6 @@ jobs:
 
       - name: Distribute Modules
         uses: diskuv/dk-distribute@v4
-        env:
-            # The musl job's DkML.Unix build provisions /lib/ld-musl-x86_64.so.1
-            # (the loader for the musl-dynamic ocamlopt), and the dksrc launcher
-            # synced from MlFront ci/dist probes that file to detect a musl
-            # host. Every dk0 invocation AFTER the DkML build then misdetects
-            # this glibc container as musl. The host genuinely is glibc, so pin
-            # the launcher's host identity for the musl job; under the musl-less
-            # 2.4.2.301 pin this was load-bearing (FATAL: no musl dk0 build),
-            # under 2.4.2.308 it keeps the driver download the honest glibc
-            # one. The launcher treats an empty value as unset (normal
-            # autodetection), leaving every other matrix job untouched.
-            DKML_HOST_ABI: ${{ matrix.distscript == 'dist/Linux_x86_64_musl.u' && 'linux_x86_64' || '' }}
         with:
           pubkey: ${{ secrets.distribute_0_1_pubkey }}
           seckey: ${{ secrets.distribute_0_1_seckey }}
@@ -129,13 +110,7 @@ jobs:
           # The engine now lets the workspace's current values file supersede the
           # restored trace, and a distribute that would still seal stale content
           # fails loudly instead of publishing. Keep the escape hatch above for
-          # OTHER stale-reference classes (such as the two pinned below).
-          #
-          # The Linux_x86_64_musl slot is pinned to store: none: its
-          # store: release restore from 0.1.20260806025427 came back missing
-          # bin/ocamlopt + bin/dune.exe (run 31156747482 failed the DkML/Dune
-          # run-object version assertions with `command not found`), so it
-          # rebuilds clean until the musl restore integrity is fixed.
+          # OTHER stale-reference classes (such as the cross slots pinned below).
           #
           # The three CROSS slots (Linux_x86, Windows_x86, Darwin_x86_64, where
           # execution-abi != target-abi) are ALSO pinned to store: none. Since
@@ -148,7 +123,7 @@ jobs:
           # correct end to end. Revert these to store: release once the dk engine
           # cross-id plumbing is unified and one clean suffixed release exists to
           # restore from. Native slots (execution == target) restore as before.
-          store: ${{ (matrix.distscript == 'dist/Linux_x86_64_musl.u' || matrix.distscript == 'dist/Linux_x86.u' || matrix.distscript == 'dist/Windows_x86.u' || matrix.distscript == 'dist/Darwin_x86_64.u') && 'none' || vars.DK_STORE || 'release' }}
+          store: ${{ (matrix.distscript == 'dist/Linux_x86.u' || matrix.distscript == 'dist/Windows_x86.u' || matrix.distscript == 'dist/Darwin_x86_64.u') && 'none' || vars.DK_STORE || 'release' }}
           distscript: ${{ matrix.distscript }}
           execution-abi: ${{ matrix.execution-abi }}
           target-abi: ${{ matrix.target-abi }}

@@ -187,7 +187,7 @@
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
                         "cp",
-                        "$(get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.1 -p assets/s -m ./$(get-asset CommonsBase_GNU.Lookup@1.0.0 -p mingw-host-triplet -m ./${SLOTNAME.request})-mklib.cmd -f any-w64-mingw32-mklib.cmd)",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.1 -p assets/s -m ./$(get-asset CommonsBase_GNU.Awk.Apparatus.MingwHostTriplet@5.3.1 -p assets/table/mingw-host-triplet -m ./${SLOTNAME.request})-mklib.cmd -f any-w64-mingw32-mklib.cmd)",
                         "$(get-asset CommonsLang_OCaml.Apparatus.Scripts@1.0.1 -p assets/s -m ./cygpath-winepath.cmd -f cygpath.cmd)",
                         "${STATE}/wineprefixes/CommonsLang_OCaml.Toolchain.LLVM_MinGW.${SLOTNAME.request}@5.4.1/drive_c/src/CommonsLang_OCaml/llvm-mingw/5.4.1/bin"
                     ],
