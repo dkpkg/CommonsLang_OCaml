@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3002 -s Release.Windows_x86 -d ${RUNTIME}/Windows_x86-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86", value-id: "op7pbgi75o5tg4d6u6wlhih4ejc6gvte2it5qaduhy4a3ydgeiafq")\;
+  \dk.object(abi: "Release.Windows_x86", value-id: "onqfkoonad3a3hbmuohdolzewdjk2622m4aqf74g4jynqoxdygmbq")\;
 
 Release.Windows_x86_64 will be used as Release.execution_abi on normal (64-bit) build + CI machines.
 
@@ -39,9 +39,9 @@ Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.7
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.23 -f ${RUNTIME}/OpamLock.Export-1.1.22.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.23 -f ${RUNTIME}/OpamLock.Export-1.1.23.zip
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "o3jbpgkdxedk6umphkznsdodo6pfusrxqetux7x3qzljlknpxpfxq")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "opzfl3skfptn4qyw7dfigvma7d7iczanbgxd5woq4ps6fnceskvga")\;
 
 
 ## Dk.OpamBuild
@@ -50,6 +50,6 @@ Only the current OpamBuild revision ships. The retired Export@1.0.0-@1.0.15
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.30 -f ${RUNTIME}/OpamBuild.Export-1.0.29.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.30 -f ${RUNTIME}/OpamBuild.Export-1.0.30.zip
   \test(pass)
   \dk.object(abi: "Release.Windows_x86_64", value-id: "ohbdeipwjlbjfj3gpfsgorska7y44vbvddn3ciuxsiqnjceebesua")\;

@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3002 -s Release.Linux_x86_64 -d ${RUNTIME}/Linux_x86_64-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Linux_x86_64", value-id: "oy4bi6npnczw5wdd2ts6sqa6fcwutpuntrkceqp7agqh5kqeiwmeq")\;
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "osff4qrtmdnubwxlzy2li54ignd5ilj2tap3jow62iuip7j2puqqq")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3002 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
@@ -87,9 +87,9 @@ Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.7
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.23 -f ${RUNTIME}/OpamLock.Export-1.1.22.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.23 -f ${RUNTIME}/OpamLock.Export-1.1.23.zip
   \test(pass)
-  \dk.object(abi: "Release.Linux_x86_64", value-id: "owqfoom6rt4lhmmxuzoy4g6yimeqaskrwpzc4fknsedu5fhapodma")\;
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "oroullgeimpp5wgsaqzgwm56hsve6kvaypv2quhg5kpvbmbpuo3tq")\;
 
 
 ## Dk.OpamBuild
@@ -98,6 +98,6 @@ Only the current OpamBuild revision ships. The retired Export@1.0.0-@1.0.15
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.30 -f ${RUNTIME}/OpamBuild.Export-1.0.29.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamBuild.Export@1.0.30 -f ${RUNTIME}/OpamBuild.Export-1.0.30.zip
   \test(pass)
   \dk.object(abi: "Release.Linux_x86_64", value-id: "ox2yguwbuo7ev3o5ovs5vcjgsljpqjev73hi6ze6isy6mmksrfasq")\;
