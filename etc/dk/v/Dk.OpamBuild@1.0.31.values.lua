@@ -1,5 +1,5 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamBuild@1.0.30"
+  id = "CommonsLang_OCaml.Dk.OpamBuild@1.0.31"
 }
 
 -- ==========================================================================
@@ -1245,6 +1245,54 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_28.synth_package(a)
       iabi = { { "dune", "install", "--prefix", "@IP@", pkg } }
     elseif iabi[1] == nil then
       iabi = { { "@INSTALL@", pkg } }
+    end
+    -- An explicit install field of a dune package can pass directories to
+    -- `dune install` (the diskuv-opam-repository tls-nogmp and x509-nogmp:
+    -- `"--prefix" "%{prefix}%" "--libdir" "%{lib}%" "--docdir" "%{doc}%"
+    -- "--mandir" "%{man}%"`). For a dune package %{prefix}% is the RELATIVE
+    -- ../../ip (see uses_dune above), so %{lib}% is ../../ip/lib, and dune
+    -- accepts a relative --prefix but aborts on a relative --libdir: "the path
+    -- must be absolute to avoid ambiguity". Drop each such directory flag whose
+    -- value is under the relative prefix. dune then uses its defaults under
+    -- --prefix (prefix/lib, prefix/doc, prefix/man, ...), the same directories
+    -- the dropped flags named, so the install layout is unchanged. Also give
+    -- `--prefix` the absolute @IP@ in place of ../../ip, as the no-install-field
+    -- command above does: dune bakes the resolved prefix into dune-package
+    -- `sections`, and the wrapper normalizes only an @IP@ prefix to @OPAM_IP@.
+    -- With ../../ip the build directory's absolute path leaked into
+    -- dune-package.
+    if uses_dune == 1 then
+      local ipslash = ip .. "/"
+      local nip = string.len(ipslash)
+      local ii0 = 1
+      while iabi[ii0] ~= nil do
+        local av = iabi[ii0]
+        if av[1] == "dune" and av[2] == "install" then
+          local rebuilt = {}
+          local k = 1
+          while av[k] ~= nil do
+            local a = av[k]
+            local isdir = nil
+            if a == "--libdir" or a == "--docdir" or a == "--mandir"
+              or a == "--bindir" or a == "--sbindir" or a == "--datadir"
+              or a == "--etcdir" or a == "--libexecdir" then
+              isdir = "t"
+            end
+            if isdir and av[k + 1] ~= nil and string.sub(av[k + 1], 1, nip) == ipslash then
+              k = k + 2
+            elseif a == "--prefix" and av[k + 1] == ip then
+              table.insert(rebuilt, "--prefix")
+              table.insert(rebuilt, "@IP@")
+              k = k + 2
+            else
+              table.insert(rebuilt, a)
+              k = k + 1
+            end
+          end
+          iabi[ii0] = rebuilt
+        end
+        ii0 = ii0 + 1
+      end
     end
     -- A package whose own build field runs `dune install --create-install-files`
     -- (e.g. crowbar, which ships a man page) needs an install prefix for dune to
