@@ -705,11 +705,12 @@ type pins = {
   pinned : (string * string) list; (* name, version *)
   floats : string list;
   archexcludes : (string * string) list; (* name, arch *)
+  osversion : string option;       (* the os-version every slot solves with *)
 }
 
 let parse_pins content =
   let repos = ref [] and reponames = ref [] and pinned = ref []
-  and floats = ref [] and arche = ref [] in
+  and floats = ref [] and arche = ref [] and osversion = ref None in
   List.iter
     (fun line ->
       if not (S.starts_with ~prefix:"#" line) then
@@ -718,11 +719,12 @@ let parse_pins content =
         | "pin" :: name :: ver :: _ -> pinned := (name, ver) :: !pinned
         | "float" :: name :: _ -> floats := name :: !floats
         | "archexclude" :: name :: arch :: _ -> arche := (name, arch) :: !arche
+        | "osversion" :: v :: _ -> osversion := Some v
         | _ -> ())
     (S.lines content);
   { repos = List.rev !repos; reponames = List.rev !reponames;
     pinned = List.rev !pinned; floats = List.rev !floats;
-    archexcludes = List.rev !arche }
+    archexcludes = List.rev !arche; osversion = !osversion }
 
 (* --------------------------------------------------------------------- *)
 (* Switch setup: generate the constraints repo + opamrc, init/add/create. *)
@@ -959,6 +961,28 @@ let slot_vars = function
   | "Release.Darwin_arm64" -> Some ("macos", "arm64")
   | _ -> None
 
+(* The DkML target-ABI package each slot resolves with, so a package that
+   filters on it solves the same on every machine. Linux_x86_64_musl and
+   Linux_arm64 have no such package yet. *)
+let slot_target_abi_pkg = function
+  | "Release.Windows_x86_64" -> Some "dkml-target-abi-windows_x86_64"
+  | "Release.Windows_x86" -> Some "dkml-target-abi-windows_x86"
+  | "Release.Linux_x86_64" -> Some "dkml-target-abi-linux_x86_64"
+  | "Release.Linux_x86" -> Some "dkml-target-abi-linux_x86"
+  | "Release.Darwin_x86_64" -> Some "dkml-target-abi-darwin_x86_64"
+  | "Release.Darwin_arm64" -> Some "dkml-target-abi-darwin_arm64"
+  | _ -> None
+
+(* The opam variables every slot solves with, beyond os and arch. Without
+   them, os-distribution, os-family and os-version come from the machine that
+   runs the solve, so a macOS solve and a Windows solve pick different packages
+   (a macOS solve dropped mingw-w64-shims from the Windows slots). os-version
+   comes from the pin table's `osversion` line; a table without one leaves it
+   to the machine, with a warning. *)
+let host_independent_vars pins =
+  [ ("os-distribution", "dk"); ("os-family", "dk") ]
+  @ (match pins.osversion with Some v -> [ ("os-version", v) ] | None -> [])
+
 let default_slots =
   [ "Release.Windows_x86_64"; "Release.Windows_x86";
     "Release.Linux_x86_64"; "Release.Linux_x86_64_musl"; "Release.Linux_x86";
@@ -1067,6 +1091,11 @@ let do_solve o =
     close_in ic;
     parse_pins content
   in
+  if pins.osversion = None then
+    Printf.eprintf
+      "[opam-lock] warning: %s has no `osversion <version>` line, so os-version \
+       comes from this machine and another machine may solve differently\n"
+      o.pins_file;
   let constraints_pkg, archpkgs, repos_decl =
     setup_switch ~opam:o.opam ~switch ~workdir ~pins ~local_opam_dir:o.local_opam_dir ~winlocs ~fresh:ephemeral
   in
@@ -1097,11 +1126,17 @@ let do_solve o =
           | Some v -> v
           | None -> Printf.eprintf "[opam-lock] FATAL: unknown slot %s\n" slot; exit 1
         in
-        let adds = [ ("OPAMVAR_os", os); ("OPAMVAR_arch", arch) ] in
+        let vars = [ ("os", os); ("arch", arch) ] @ host_independent_vars pins in
+        let adds = List.map (fun (k, v) -> ("OPAMVAR_" ^ k, v)) vars in
         let slotresolve =
           match List.assoc_opt arch archpkgs with
           | Some apkg -> rootscsv ^ "," ^ apkg
           | None -> rootscsv
+        in
+        let slotresolve =
+          match slot_target_abi_pkg slot with
+          | Some tpkg -> slotresolve ^ "," ^ tpkg
+          | None -> slotresolve
         in
         let args =
           [ "list"; "--resolve=" ^ slotresolve; "--columns=package"; "--short" ]
@@ -1115,12 +1150,13 @@ let do_solve o =
           List.filter
             (fun k ->
               let nm = match S.first_dot k with Some d -> String.sub k 0 d | None -> k in
-              not (S.starts_with ~prefix:"dk-solve-" nm))
+              not (S.starts_with ~prefix:"dk-solve-" nm)
+              && not (S.starts_with ~prefix:"dkml-target-abi-" nm))
             (S.lines r.stdout)
         in
         let keys = List.sort String.compare keys in
         List.iter add_key keys;
-        (slot, (os, arch), keys))
+        (slot, vars, keys))
       o.slots
   in
   (* name -> in closure? *)
@@ -1139,7 +1175,12 @@ let do_solve o =
         let name = String.sub ak 0 dot in
         let version = if dot < String.length ak then String.sub ak (dot + 1) (String.length ak - dot - 1) else "" in
         let m = try Hashtbl.find meta ak with Not_found -> [] in
-        let field f = try List.assoc f m with Not_found -> "" in
+        (* One line-ending form whatever machine runs the solve: opam on
+           Windows prints CRLF, so CRs are dropped. *)
+        let field f =
+          let v = try List.assoc f m with Not_found -> "" in
+          String.concat "" (String.split_on_char '\r' v)
+        in
         let url = S.unquote (field "url.src:") in
         let sums = ref (checksums (field "url.checksum:")) in
         let depends_raw = field "depends:" in
@@ -1241,10 +1282,10 @@ let do_solve o =
   (* 4. assemble *)
   let slots_json =
     List.map
-      (fun (slot, (os, arch), keys) ->
+      (fun (slot, vars, keys) ->
         ( slot,
           Json.Obj
-            [ ("opam_vars", Json.Obj [ ("os", Json.Str os); ("arch", Json.Str arch) ]);
+            [ ("opam_vars", Json.Obj (List.map (fun (k, v) -> (k, Json.Str v)) vars));
               ("solution", Json.Arr (List.map (fun k -> Json.Str k) keys)) ] ))
       slot_solutions
   in

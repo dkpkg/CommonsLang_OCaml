@@ -1,5 +1,5 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.24",
+  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.25",
   -- Declared capability manifest (engine >= 2.4.2.339; older engines ignore
   -- it). Each entry is the enforced upper bound of what that uirule may
   -- request, and the engine lists every declared capability in its trust
@@ -20,6 +20,20 @@ local M = {
     OpamVenv = { "run", "write" },
   },
 }
+
+-- 1.1.25 makes Solve give the same lock on every machine
+-- (Apparatus.OpamLockHelper@1.0.20). Through 1.1.24 each slot set only
+-- OPAMVAR_os and OPAMVAR_arch, so os-distribution, os-family and os-version
+-- came from the machine running the solve: a macOS solve dropped
+-- mingw-w64-shims from the Windows slots, which a Windows solve kept. Each
+-- slot now also sets os-distribution and os-family to "dk", and os-version to
+-- the pin table's `osversion <version>` line (a table without one keeps the
+-- machine's os-version, with a warning). The lock records all of them in the
+-- slot's opam_vars. Each slot also resolves its dkml-target-abi-<abi> package
+-- (none yet for Linux_x86_64_musl and Linux_arm64), which steers the solve
+-- and is left out of the slot's solution. The build, depends and other raw
+-- fields drop CR, so a Windows solve writes the same LF strings as a macOS
+-- one.
 
 -- 1.1.24 makes GenerateDriver import only the packages that an import source
 -- actually builds. Through 1.1.23 a package was imported whenever the
@@ -330,7 +344,7 @@ function uirules.Solve(command, request, continue_)
       end
     end
     local files = {
-      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.19 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
+      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.20 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
       amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.1 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
     }
     return {
