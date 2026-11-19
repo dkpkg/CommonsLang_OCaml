@@ -1,5 +1,5 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.23",
+  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.24",
   -- Declared capability manifest (engine >= 2.4.2.339; older engines ignore
   -- it). Each entry is the enforced upper bound of what that uirule may
   -- request, and the engine lists every declared capability in its trust
@@ -20,6 +20,18 @@ local M = {
     OpamVenv = { "run", "write" },
   },
 }
+
+-- 1.1.24 makes GenerateDriver import only the packages that an import source
+-- actually builds. Through 1.1.23 a package was imported whenever the
+-- source's lock pinned it at the same version, but a source lock can be wider
+-- than what the source publishes: CommonsBase_Dk's dk.opam-lock.jsonc also
+-- solves the DkOne_Exec packages, while its Dk0.Closure builds only the
+-- DkZero_Exec closure, so TestPkg.Closure named 13 Dk0.Pkg objects that do not
+-- exist. Each source is now narrowed to the closure of the roots stamped in its
+-- own driver: `impsrcdriver[]=PATH`, parallel to implib[], or by default
+-- etc/dk/v/<Library>/<Tail>.Closure.values.jsonc derived from an implib[] of
+-- the form <Library>.<Tail>.Pkg. A source with no readable driver keeps the
+-- 1.1.23 behavior, with a notice.
 
 -- 1.1.21 lets OpamVenv select a released merged prefix by form id: `formid=`
 -- names the get-object target directly (the driver discovery is skipped) and
@@ -863,13 +875,18 @@ function uirules.GenerateDriver(command, request)
   -- the first source that was built with the same `ocaml` compiler as this lock,
   -- pins the package at the same opam version, and (via H.import_compat) matches
   -- this lock on the package's resolved dependency environment; every other
-  -- package is built here.
+  -- package is built here. A package is also imported only if the source builds
+  -- it: the source's own driver (impsrcdriver[]=PATH, parallel to implib[], or
+  -- derived from implib[] <Library>.<Tail>.Pkg as
+  -- etc/dk/v/<Library>/<Tail>.Closure.values.jsonc) stamps its roots, and only
+  -- their closure over the source lock is published.
   local gate_ocaml = lock.ocaml
   if gate_ocaml == nil then gate_ocaml = "CommonsLang_OCaml.DkML@4.14.3002" end
   local imported = {}   -- bare opam name -> fully-qualified imported object id
   local implibs = request.user.implib
   local impvers = request.user.impver
   local impsrclocks = request.user.impsrclock
+  local impsrcdrivers = request.user.impsrcdriver
   if implibs ~= nil then
     assert(type(implibs) == "table" and type(impvers) == "table" and type(impsrclocks) == "table",
       "implib[]/impver[]/impsrclock[] must be parallel lists")
@@ -888,6 +905,7 @@ function uirules.GenerateDriver(command, request)
       if socaml == gate_ocaml then
         local sbyver = {}
         local sbydep = {}   -- source's bare name -> its depends array
+        local sbyname = {}  -- source's bare name -> its lock entry
         local sk = next(slock.packages)
         while sk do
           local sd = H.indexof_char(sk, ".")
@@ -895,9 +913,15 @@ function uirules.GenerateDriver(command, request)
             local sn = string.sub(sk, 1, sd - 1)
             sbyver[sn] = string.sub(sk, sd + 1)
             sbydep[sn] = slock.packages[sk].depends
+            sbyname[sn] = slock.packages[sk]
           end
           sk = next(slock.packages, sk)
         end
+        -- spub: the packages the source publishes as Pkg objects, or nil when
+        -- the source has no readable driver (then every same-version package
+        -- is a candidate, as through 1.1.23).
+        local spub = H.import_published(request, slib, impsrcdrivers, xi, sbyname, provided)
+        local unbuilt = {}
         -- Memoized per source: import_compat is a function of (this lock, this
         -- source), so its results and rejection reasons are reused across the
         -- package walk. env_local collects packages that pin at the right version
@@ -919,7 +943,16 @@ function uirules.GenerateDriver(command, request)
             local g_is_local = byname[gname] ~= nil and byname[gname]["local"] == "t"
             if imported[gname] == nil and sbyver[gname] == gver
                and not (skiplocal ~= nil and g_is_local) then
-              if H.import_compat(byname, byver, sbyver, sbydep, provided, gname, memo, why) == "t" then
+              local compat = H.import_compat(byname, byver, sbyver, sbydep, provided, gname, memo, why) == "t"
+              if compat and spub ~= nil and spub[gname] == nil then
+                -- Compatible, but the source does not build it, so it has no
+                -- object to import. A provided or virtual package is never
+                -- emitted, so only a buildable one is worth the notice.
+                local ge = byname[gname]
+                if provided[gname] == nil and (type(ge.source) == "table" or ge["local"] == "t") then
+                  table.insert(unbuilt, gname)
+                end
+              elseif compat then
                 -- `slib` is the full object namespace (ex. CommonsBase_Dk.Dk0.Pkg),
                 -- so the id is `<slib>.<Seg>@<ver>` -- do NOT insert another `.Pkg`.
                 imported[gname] = slib .. "." .. H.modsegment(gname) .. "@" .. sver
@@ -933,6 +966,11 @@ function uirules.GenerateDriver(command, request)
             end
           end
           gk = next(lock.packages, gk)
+        end
+        if unbuilt[1] ~= nil then
+          print(H.MODVER .. ": " .. slib .. ": " .. H.numstr(H.alen(unbuilt)) ..
+            " package(s) built locally because the import source does not build them: " ..
+            H.join(unbuilt, ", "))
         end
         if env_local[1] ~= nil then
           print(H.MODVER .. ": " .. slib .. ": " .. H.numstr(H.alen(env_local)) ..
@@ -1027,6 +1065,7 @@ function uirules.GenerateDriver(command, request)
   if request.user.implib ~= nil then table.insert(gm, "\"implib\": [\"" .. H.join(request.user.implib, "\", \"") .. "\"]") end
   if request.user.impver ~= nil then table.insert(gm, "\"impver\": [\"" .. H.join(request.user.impver, "\", \"") .. "\"]") end
   if request.user.impsrclock ~= nil then table.insert(gm, "\"impsrclock\": [\"" .. H.join(request.user.impsrclock, "\", \"") .. "\"]") end
+  if request.user.impsrcdriver ~= nil then table.insert(gm, "\"impsrcdriver\": [\"" .. H.join(request.user.impsrcdriver, "\", \"") .. "\"]") end
   local genblock = "  \"generated\": {" .. nl .. "    " .. H.join(gm, "," .. nl .. "    ") .. nl .. "  }," .. nl
 
   -- The minimal command that reproduces this file, for the banner. Derivable
@@ -1071,6 +1110,7 @@ function uirules.GenerateDriver(command, request)
   H.append_list_args(rb, "implib", request.user.implib)
   H.append_list_args(rb, "impver", request.user.impver)
   H.append_list_args(rb, "impsrclock", request.user.impsrclock)
+  H.append_list_args(rb, "impsrcdriver", request.user.impsrcdriver)
 
   local hdr = "// Driver for the per-package opam build of `" .. rootlabel .. "`: run-functions the" .. nl
     .. "// per-package build rule for every package in the root's dependency closure in" .. nl
@@ -2147,6 +2187,66 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.import_wants(request)
     closurefn = H.import_max(imp, "CommonsLang_OCaml.Dk.OpamBuild.F_BuildLockedClosure"),
     tool = H.import_max(imp, "CommonsLang_OCaml.Dk.OpamLock.GenerateDriver")
   }
+end
+
+-- The set of packages that import source `xi` (object namespace `slib`)
+-- publishes as Pkg objects: the closure, over the source lock `sbyname`, of the
+-- roots stamped in the source's own driver. The driver path is impsrcdriver[xi]
+-- when given (it must be readable), else derived from an `slib` of the form
+-- <Library>.<Tail>.Pkg as etc/dk/v/<Library>/<Tail>.Closure.values.jsonc.
+-- Returns nil, with a notice, when no driver is found, so the caller keeps the
+-- pre-1.1.24 behavior of importing every same-version package. A source driver
+-- with skiplocal=t does not publish its "local":"t" packages.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.import_published(request, slib, impsrcdrivers, xi, sbyname, provided)
+  local H = CommonsLang_OCaml__Dk_OpamLock__1_1_21
+  local dpath = nil
+  local explicit = false
+  if impsrcdrivers ~= nil then
+    assert(type(impsrcdrivers) == "table", "impsrcdriver[] must be a list parallel to implib[]")
+    dpath = assert(impsrcdrivers[xi], "impsrcdriver[] shorter than implib[]")
+    explicit = true
+  else
+    local suffix = ".Pkg"
+    local n = string.len(slib)
+    local d = H.indexof_char(slib, ".")
+    if d ~= nil and n > string.len(suffix) and string.sub(slib, n - string.len(suffix) + 1) == suffix then
+      local base = string.sub(slib, 1, n - string.len(suffix))
+      if string.len(base) > d then
+        dpath = "etc/dk/v/" .. string.sub(slib, 1, d - 1) .. "/" .. string.sub(base, d + 1) .. ".Closure.values.jsonc"
+      end
+    end
+  end
+  local text = nil
+  if dpath ~= nil then text = request.ui.readfile { path = dpath } end
+  if text == nil then
+    assert(not explicit, "could not read import source driver `" .. tostring(dpath) .. "`")
+    print(H.MODVER .. ": " .. slib .. ": no import source driver" ..
+      (dpath and (" at " .. dpath) or "") ..
+      ", so every package the source lock pins at the same version may be imported")
+    return nil
+  end
+  local stamp = H.read_stamp(text)
+  assert(stamp ~= nil, "import source driver `" .. dpath .. "` has no generated stamp")
+  local sroots = stamp.roots
+  if sroots == nil and stamp.root ~= nil then sroots = { stamp.root } end
+  assert(sroots ~= nil and sroots[1] ~= nil, "import source driver `" .. dpath .. "` stamps no roots")
+  local sprovided = provided
+  if stamp.provided ~= nil then sprovided = H.set_from_list(stamp.provided) end
+  local seen = {}
+  local order = {}
+  local ri = 1
+  while sroots[ri] ~= nil do
+    H.driver_visit(sbyname, sprovided, sroots[ri], seen, order)
+    ri = ri + 1
+  end
+  local pub = {}
+  local oi = 1
+  while order[oi] ~= nil do
+    local nm = order[oi]
+    if not (stamp.skiplocal ~= nil and sbyname[nm]["local"] == "t") then pub[nm] = nm end
+    oi = oi + 1
+  end
+  return pub
 end
 
 -- The decoded top-level `generated` stamp of a driver values.jsonc, or nil for
