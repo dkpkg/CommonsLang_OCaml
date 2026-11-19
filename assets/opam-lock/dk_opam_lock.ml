@@ -708,6 +708,22 @@ type pins = {
   osversion : string option;       (* the os-version every slot solves with *)
 }
 
+(* The pin table with LF line endings: CRLF and a lone CR become LF, so a
+   checkout with either line ending gives the same checksum. *)
+let lf_normalize content =
+  let b = Buffer.create (String.length content) in
+  let n = String.length content in
+  let i = ref 0 in
+  while !i < n do
+    (match content.[!i] with
+     | '\r' ->
+         Buffer.add_char b '\n';
+         if !i + 1 < n && content.[!i + 1] = '\n' then incr i
+     | c -> Buffer.add_char b c);
+    incr i
+  done;
+  Buffer.contents b
+
 let parse_pins content =
   let repos = ref [] and reponames = ref [] and pinned = ref []
   and floats = ref [] and arche = ref [] and osversion = ref None in
@@ -1089,8 +1105,9 @@ let do_solve o =
     let n = in_channel_length ic in
     let content = really_input_string ic n in
     close_in ic;
-    parse_pins content
+    (parse_pins content, Sha256.digest_string (lf_normalize content))
   in
+  let pins, pins_sha256 = pins in
   if pins.osversion = None then
     Printf.eprintf
       "[opam-lock] warning: %s has no `osversion <version>` line, so os-version \
@@ -1109,6 +1126,7 @@ let do_solve o =
     let base = String.concat "," o.roots in
     match constraints_pkg with Some c -> base ^ "," ^ c | None -> base
   in
+  (* The version of the opam that runs this solve, recorded as provenance. *)
   let opamver =
     let r = Proc.run o.opam [ "--version" ] in
     S.trim r.stdout
@@ -1295,10 +1313,19 @@ let do_solve o =
         ("schema_version", Json.Obj [ ("major", Json.Int 1); ("minor", Json.Int 0) ]);
         ("generated",
          Json.Obj
-           ([ ("tool", Json.Str o.tool);
-              ("opam_version", Json.Str opamver);
-              ("roots", Json.Arr (List.map (fun r -> Json.Str r) o.roots));
-              ("pins", Json.Str o.pins_name) ]
+           (* tools names what ran the solve: opam.version is the opam, and
+              opamlock.modver the Dk.OpamLock module. They are tools, not
+              packages of the solution, so they sit apart from the packages. The
+              roots are sorted, so their order on the command line does not
+              show in the lock. *)
+           ([ ("tools",
+               Json.Obj
+                 [ ("opam", Json.Obj [ ("version", Json.Str opamver) ]);
+                   ("opamlock", Json.Obj [ ("modver", Json.Str o.tool) ]) ]);
+              ("roots", Json.Arr (List.map (fun r -> Json.Str r) (List.sort String.compare o.roots)));
+              (* The pin table: its project path, and its sha256 after LF
+                 normalization, so a lock shows which pins produced it. *)
+              ("pins", Json.Obj [ ("path", Json.Str o.pins_name); ("sha256", Json.Str pins_sha256) ]) ]
             @ (if o.wtest then [ ("wtest", Json.Str "t") ] else [])
             @ (if o.wdoc then [ ("wdoc", Json.Str "t") ] else [])
             (* Stamp local_opam_dir only when it replays: a relative dir is a
@@ -1340,6 +1367,11 @@ let selftest () =
   check "sha256(56 chars)"
     (Sha256.digest_string "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")
     "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
+  (* The pin table checksum ignores the line endings of the checkout. *)
+  check "lf_normalize crlf" (lf_normalize "a\r\nb\rc\n") "a\nb\nc\n";
+  check "pins sha256 crlf = lf"
+    (Sha256.digest_string (lf_normalize "pin x 1\r\nfloat y\r\n"))
+    (Sha256.digest_string (lf_normalize "pin x 1\nfloat y\n"));
   (* JSON encoder shape *)
   check "json empty arr" (Json.to_string (Json.Arr [])) "[]";
   check "json local marker"

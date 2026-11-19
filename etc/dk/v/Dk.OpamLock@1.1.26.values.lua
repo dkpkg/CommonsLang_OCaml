@@ -1,5 +1,5 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.25",
+  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.26",
   -- Declared capability manifest (engine >= 2.4.2.339; older engines ignore
   -- it). Each entry is the enforced upper bound of what that uirule may
   -- request, and the engine lists every declared capability in its trust
@@ -20,6 +20,17 @@ local M = {
     OpamVenv = { "run", "write" },
   },
 }
+
+-- 1.1.26 changes what a lock records about its solve
+-- (Apparatus.OpamLockHelper@1.0.21). generated.tools.opam.version is the
+-- --version of the opam that ran the solve, and generated.tools.opamlock.modver
+-- the Dk.OpamLock module, in place of opam_version and tool. generated.pins is
+-- { path, sha256 }: the pin table's project path and its sha256 after CRLF and
+-- CR become LF, so a lock shows which pins produced it. generated.roots is
+-- sorted. When mode=solve replays a lock, its pin table path and its
+-- local_opam_dir must be strictly relative paths inside the project
+-- (stringdk.sanitizesubpath); a lock that names one outside fails. A lock
+-- written before 1.1.26, with pins as a path string, still replays.
 
 -- 1.1.25 makes Solve give the same lock on every machine
 -- (Apparatus.OpamLockHelper@1.0.20). Through 1.1.24 each slot set only
@@ -344,7 +355,7 @@ function uirules.Solve(command, request, continue_)
       end
     end
     local files = {
-      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.20 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
+      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.21 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
       amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.1 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
     }
     return {
@@ -2510,12 +2521,35 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.solve_user(request)
     "lock predates @1.1.8 (no generated.roots); run Solve once with explicit roots/pins to adopt the stamp")
   local u = {}
   u.roots = gen.roots
-  if gen.pins ~= nil then u.pins = gen.pins end
+  -- generated.pins is { path, sha256 } from 1.1.26, and a path string before.
+  -- The lock is project data, and the helper opens the pin table outside the
+  -- Lua sandbox, so the path must be a strictly relative path inside the
+  -- project: sanitizesubpath refuses an absolute path, a `..` escape and a
+  -- path with unsafe characters.
+  local pinspath = nil
+  if type(gen.pins) == "table" then
+    pinspath = gen.pins.path
+  elseif gen.pins ~= nil then
+    pinspath = gen.pins
+  end
+  if pinspath ~= nil then
+    local safe, why = stringdk.sanitizesubpath(pinspath)
+    assert(safe ~= nil, "the lock `" .. lockpath .. "` names a pin table outside the project: "
+      .. tostring(why))
+    u.pins = safe
+  end
   u.out = lockpath
   if lock.ocaml ~= nil then u.ocaml = lock.ocaml end
   if gen.wtest ~= nil then u.wtest = gen.wtest end
   if gen.wdoc ~= nil then u.wdoc = gen.wdoc end
-  if gen.local_opam_dir ~= nil then u.local_opam_dir = gen.local_opam_dir end
+  -- local_opam_dir also comes from the lock and reaches the helper, which
+  -- `opam pin add`s it, so it gets the same check as the pin table.
+  if gen.local_opam_dir ~= nil then
+    local safedir, whydir = stringdk.sanitizesubpath(gen.local_opam_dir)
+    assert(safedir ~= nil, "the lock `" .. lockpath .. "` names a local opam folder outside the project: "
+      .. tostring(whydir))
+    u.local_opam_dir = safedir
+  end
   local locals = {}
   local k = next(lock.packages)
   while k do

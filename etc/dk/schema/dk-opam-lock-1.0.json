@@ -14,8 +14,35 @@
       "description": "Non-authoritative provenance for humans; never read by the build.",
       "additionalProperties": true,
       "properties": {
-        "tool": { "type": "string" },
-        "opam_version": { "type": "string" }
+        "tool": { "type": "string", "description": "The Dk.OpamLock module that wrote the lock, in locks written before CommonsLang_OCaml.Dk.OpamLock@1.1.26." },
+        "opam_version": { "type": "string", "description": "The opam that ran the solve, in locks written before CommonsLang_OCaml.Dk.OpamLock@1.1.26." },
+        "pins": {
+          "description": "The pin table the solve read: its project path and its sha256 after CRLF and CR become LF. Locks written before CommonsLang_OCaml.Dk.OpamLock@1.1.26 hold only the path, as a string.",
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": { "path": { "type": "string" }, "sha256": { "type": "string" } }
+            }
+          ]
+        },
+        "tools": {
+          "type": "object",
+          "description": "The tools that ran the solve. They are not packages of the solution.",
+          "properties": {
+            "opam": {
+              "type": "object",
+              "description": "The opam that ran the solve.",
+              "properties": { "version": { "type": "string" } }
+            },
+            "opamlock": {
+              "type": "object",
+              "description": "The CommonsLang_OCaml.Dk.OpamLock module that wrote the lock.",
+              "properties": { "modver": { "type": "string" } }
+            }
+          },
+          "additionalProperties": { "type": "object" }
+        }
       }
     },
     "opam_repositories": {

@@ -39,7 +39,7 @@ Only the current OpamLock revision ships. The retired Export@1.0.0-@1.1.7
 ladder lives in pre-2026-08 release tags and git history (see dk.u
 "## Assets" for the keep-latest-only policy).
 
-  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.25 -f ${RUNTIME}/OpamLock.Export-1.1.25.zip
+  $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.26 -f ${RUNTIME}/OpamLock.Export-1.1.26.zip
   \test(pass)
   \dk.object(abi: "Release.Darwin_arm64", value-id: "oq6hrsreworgt3sqhjqgzsmmpeqkn36d53ejwytuz6x7ny4bd3glq")\;
 

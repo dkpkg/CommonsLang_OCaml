@@ -19,7 +19,7 @@ Apache-2.0 AND LGPL-2.1-only WITH OCaml-LGPL-linking-exception AND LGPL-2.0-only
 ## workspace
   %% actual_version("2.4.3.24")
   'actual_version'
-  '2.4.3.9'
+  '2.4.3.24'
 
   %% import { type="github-l2", repo="dkpkg/CommonsBase_FileMagic" }
   \dk.import(type: "github-l2", library: "CommonsBase_FileMagic",
@@ -265,10 +265,10 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
   % unified.asset { name="DkMLPatchStandardCompilerEnvMacosMin", file="assets/dkml/patch-standard-compiler-env-macos-min.sh" }
   \dk.asset(byteSize: "1197", checksum: (sha256: "9439caf0c798dbc310ef53d7436280f716b848d97ae0bcbe67fb9ba900957c17"))\;
 
-### CommonsLang_OCaml.Apparatus@1.0.20
+### CommonsLang_OCaml.Apparatus@1.0.21
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "64993", checksum: (sha256: "20dd190f38fcfc48abd6d6dc90c04278b9436c5335d06ddb4b9d9f1ae96ff711"))\;
+  \dk.asset(byteSize: "66642", checksum: (sha256: "2308e9a5eea38b11ca90788ba0218f8bd98cfdc271f38bcc2c42072e9aab941f"))\;
 
 ## Dk.OpamLock
 
