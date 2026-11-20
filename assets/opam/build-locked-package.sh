@@ -361,7 +361,14 @@ pabs="$root/p"
 for f in "$root"/p/lib/*/dune-package; do
   [ -f "$f" ] || continue
   if grep -q '@OPAM_IP@' "$f"; then
-    sed "s#@OPAM_IP@#$pabs#g" "$f" > "$f.dk-tmp" && mv "$f.dk-tmp" "$f"
+    # The prefix may hold a space (C:/with space/...), so each atom that starts
+    # with @OPAM_IP@ becomes a dune string, with its backslashes turned into
+    # slashes so that no escape is needed; an unquoted atom with a space would
+    # be two atoms, and dune would refuse the dune-package.
+    sed -E \
+      -e 's#(^|[^"])@OPAM_IP@([^ ()"]*)#\1"@OPAM_IP@\2"#g' \
+      -e ':a' -e 's#("@OPAM_IP@[^"\\]*)\\#\1/#' -e 'ta' \
+      -e "s#@OPAM_IP@#$pabs#g" "$f" > "$f.dk-tmp" && mv "$f.dk-tmp" "$f"
   fi
 done
 # Rewrite @IP@ -> absolute ip/ in every argument (POSIX-safe rotation).
