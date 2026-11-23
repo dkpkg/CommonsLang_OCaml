@@ -450,7 +450,7 @@ if [ "$rc" = 0 ] && [ -n "${_ocw:-}" ] && [ -f "$_ocw/compiler-libs/ocamlcommon.
       [ -d "$_d" ] || continue
       { printf 'ocaml_compiler_libs_sha256=%s\n' "$_tcsha"
         printf 'ocaml_version=%s\n' "$_ov"
-        printf 'recorded_by=OpamBuildWrapper@1.0.12\n'
+        printf 'recorded_by=OpamBuildWrapper@1.0.22\n'
       } > "$_d.dk-provenance"
     done
   fi

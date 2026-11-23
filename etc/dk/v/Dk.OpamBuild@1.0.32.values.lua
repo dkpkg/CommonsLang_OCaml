@@ -1,5 +1,5 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamBuild@1.0.31"
+  id = "CommonsLang_OCaml.Dk.OpamBuild@1.0.32"
 }
 
 -- ==========================================================================
@@ -1208,7 +1208,7 @@ function CommonsLang_OCaml__Dk_OpamBuild__1_0_28.synth_package(a)
   -- OCAML_TOPLEVEL_PATH=p/lib/findlib. This works for ANY such package because it
   -- always depends on ocamlfind (topfind IS findlib), so ocamlfind is in its p/
   -- closure -- nothing package-specific is required here.
-  local wrapperfetch = "$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildWrapper@1.0.12 -p assets/opam/build-locked-package.sh -f build-wrapper.sh)"
+  local wrapperfetch = "$(get-asset CommonsLang_OCaml.Apparatus.OpamBuildWrapper@1.0.22 -p assets/opam/build-locked-package.sh -f build-wrapper.sh)"
   -- The Windows POSIX shell is MSYS2's dash (its runtime translates the unix-form
   -- PATH into Windows form for the native dune.exe/cl.exe children, and provides
   -- cygpath). MSYS2 ships only the Windows_x86_64 tree; a Windows_x86 host runs

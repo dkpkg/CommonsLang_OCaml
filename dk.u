@@ -247,11 +247,6 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
   % unified.asset { name="OpamFileFormat", file="assets/opam-lock/opam_file_format.ml" }
   \dk.asset(byteSize: "178821", checksum: (sha256: "33f687e00841eb7e1bf9e9dbf4c282b9ee4d3985b225033ab95c481837fe3e7e"))\;
 
-### CommonsLang_OCaml.Apparatus@1.0.12
-
-  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
-  \dk.asset(byteSize: "25912", checksum: (sha256: "a52577de0468c27a6a47b2d083802803fdc3550914cc1aaa01594fb2fb7c78f4"))\;
-
 ### CommonsLang_OCaml.Apparatus@1.0.13
 
   % unified.asset { name="DkMLMuslEnv", file="assets/dkml/musl-compiler-env-to-ocaml-configure-env.sh" }
@@ -269,6 +264,11 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
   \dk.asset(byteSize: "71127", checksum: (sha256: "4cfabbefe21c5e01da9380b544a055d1522f7c533658ac84da548ca4004ea22d"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.22
+
+  % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
+  \dk.asset(byteSize: "26341", checksum: (sha256: "8437c0a31dcbfeb418ed953802fd1b90d0e921d40200dfb127e5c649e609c487"))\;
 
 ## Dk.OpamLock
 
