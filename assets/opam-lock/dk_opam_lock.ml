@@ -10,7 +10,7 @@
      ocamlc -w -a unix.cma opam_file_format.ml dk_opam_lock.ml -o dk_opam_lock.bc
    Run:
      ocamlrun dk_opam_lock.bc solve --opam <opam> --work-dir <dir> \
-       --pins-file <pins> [--pins-name <name>] --root <pkg> [--slot <slot> ...] [...]
+       --read-config <path> [--record-config-as <project-path>] --root <pkg> [--slot <slot> ...] [...]
      ocamlrun dk_opam_lock.bc selftest
 
    stdout carries ONLY the lock JSON (the rule writefiles it verbatim); every
@@ -708,7 +708,7 @@ type pins = {
   osversion : string option;       (* the os-version every slot solves with *)
 }
 
-(* The pin table with LF line endings: CRLF and a lone CR become LF, so a
+(* The configuration with LF line endings: CRLF and a lone CR become LF, so a
    checkout with either line ending gives the same checksum. *)
 let lf_normalize content =
   let b = Buffer.create (String.length content) in
@@ -723,6 +723,55 @@ let lf_normalize content =
     incr i
   done;
   Buffer.contents b
+
+(* The INI form of the configuration (dk-opam.ini). Sections: [solve] osversion =
+   VERSION; [repositories] NAME = URL; [pinned] NAME = VERSION; [unpinned]
+   NAME =; [archexcludes] NAME = ARCH,ARCH. ';' and '#' start a comment line.
+   An unknown section or key, or a line outside a section, is an error. *)
+let parse_config_ini content =
+  let repos = ref [] and pinned = ref [] and floats = ref [] and arche = ref []
+  and osversion = ref None and section = ref "" in
+  let fail fmt = Printf.ksprintf (fun m -> Printf.eprintf "[opam-lock] FATAL: %s\n" m; exit 1) fmt in
+  List.iter
+    (fun line ->
+      if S.starts_with ~prefix:";" line || S.starts_with ~prefix:"#" line then ()
+      else if S.starts_with ~prefix:"[" line then begin
+        let n = String.length line in
+        if n < 2 || line.[n - 1] <> ']' then fail "the configuration line `%s` is not a [section]" line;
+        let name = S.trim (String.sub line 1 (n - 2)) in
+        (match name with
+         | "solve" | "repositories" | "pinned" | "unpinned" | "archexcludes" -> ()
+         | _ -> fail "the configuration has an unknown section [%s]" name);
+        section := name
+      end else begin
+        let key, value =
+          match String.index_opt line '=' with
+          | Some i -> (S.trim (String.sub line 0 i), S.trim (String.sub line (i + 1) (String.length line - i - 1)))
+          | None -> fail "the configuration line `%s` is not KEY = VALUE" line
+        in
+        if key = "" then fail "the configuration line `%s` has no key" line;
+        match !section with
+        | "" -> fail "the configuration line `%s` is outside a section" line
+        | "solve" ->
+            if key = "osversion" then osversion := Some value
+            else fail "the configuration has an unknown [solve] key `%s`" key
+        | "repositories" -> repos := (key, value) :: !repos
+        | "pinned" -> pinned := (key, value) :: !pinned
+        | "unpinned" -> floats := key :: !floats
+        | _ ->
+            List.iter
+              (fun a -> let a = S.trim a in if a <> "" then arche := (key, a) :: !arche)
+              (String.split_on_char ',' value)
+      end)
+    (S.lines content);
+  { repos = List.rev !repos; reponames = List.rev_map fst !repos;
+    pinned = List.rev !pinned; floats = List.rev !floats;
+    archexcludes = List.rev !arche; osversion = !osversion }
+
+(* A configuration is INI when a non-comment line starts with '['; otherwise it is
+   the line form of dk-opam-pins.txt. *)
+let is_ini_config content =
+  List.exists (fun l -> S.starts_with ~prefix:"[" l) (S.lines content)
 
 let parse_pins content =
   let repos = ref [] and reponames = ref [] and pinned = ref []
@@ -858,7 +907,7 @@ let setup_switch ~opam ~switch ~workdir ~pins ~local_opam_dir ~winlocs ~fresh =
     ignore (Proc.run_checked opam !initargs)
   end;
   (* Register each pin-table repository under a dk-owned name derived from
-     its URL. Registering under the pin table's own name (`default`) silently
+     its URL. Registering under the configuration's own name (`default`) silently
      loses on a machine whose opam root already has that name: `repository
      add` fails "already exists", the failure was ignored, and the solve then
      ran against whatever the pre-existing repository serves -- on one
@@ -916,7 +965,7 @@ let setup_switch ~opam ~switch ~workdir ~pins ~local_opam_dir ~winlocs ~fresh =
      in the solve; with it, the failure names the repository that should
      have supplied the version. Enumerate the whole universe once and check
      the pins in memory: one `opam list` reloads the switch state once,
-     whereas a call per pin paid that cost hundreds of times (the pin table
+     whereas a call per pin paid that cost hundreds of times (the configuration
      dominated the solve wall-clock). *)
   if p.pinned <> [] then begin
     let r = Proc.run opam [ "list"; "--all-versions"; "-A"; "--columns=package"; "--short"; "--switch=" ^ switch ] in
@@ -927,7 +976,7 @@ let setup_switch ~opam ~switch ~workdir ~pins ~local_opam_dir ~winlocs ~fresh =
         if not (Hashtbl.mem universe (name ^ "." ^ ver)) then begin
           Printf.eprintf
             "[opam-lock] FATAL: pinned %s.%s is not in the solve universe.\n\
-             The pin table's repositories (%s) do not contain that version;\n\
+             The configuration's repositories (%s) do not contain that version;\n\
              check the `repo` lines (a #COMMIT snapshot must include it).\n"
             name ver
             (String.concat ", " (List.map (fun (n, u) -> n ^ " -> " ^ u) p.repos));
@@ -993,7 +1042,7 @@ let slot_target_abi_pkg = function
    them, os-distribution, os-family and os-version come from the machine that
    runs the solve, so a macOS solve and a Windows solve pick different packages
    (a macOS solve dropped mingw-w64-shims from the Windows slots). os-version
-   comes from the pin table's `osversion` line; a table without one leaves it
+   comes from the configuration's osversion; a configuration without one leaves it
    to the machine, with a warning. *)
 let host_independent_vars pins =
   [ ("os-distribution", "dk"); ("os-family", "dk") ]
@@ -1012,7 +1061,7 @@ let default_slots =
 type opts = {
   opam : string;
   workdir : string;
-  pins_file : string;
+  read_config : string;
   switch : string option;         (* None -> ephemeral under workdir *)
   slots : string list;
   roots : string list;
@@ -1025,7 +1074,10 @@ type opts = {
   repo_commit : string option;
   repo_url : string option;
   tool : string;
-  pins_name : string;             (* project-relative pin table name for the stamp *)
+  record_config_as : string option;
+      (* the configuration's project-relative path, recorded in generated.config;
+         None (no --record-config-as) when the project has no configuration and
+         --read-config holds the default *)
 }
 
 (* --------------------------------------------------------------------- *)
@@ -1101,18 +1153,20 @@ let do_solve o =
   let switchargs = [ "--switch=" ^ switch ] in
   let winlocs = match (o.msys2, o.git) with Some m, Some g -> Some (m, g) | _ -> None in
   let pins =
-    let ic = open_in_bin o.pins_file in
+    let ic = open_in_bin o.read_config in
     let n = in_channel_length ic in
     let content = really_input_string ic n in
     close_in ic;
-    (parse_pins content, Sha256.digest_string (lf_normalize content))
+    let parse = if is_ini_config content then parse_config_ini else parse_pins in
+    (parse content, Sha256.digest_string (lf_normalize content))
   in
-  let pins, pins_sha256 = pins in
+  let pins, config_sha256 = pins in
   if pins.osversion = None then
     Printf.eprintf
-      "[opam-lock] warning: %s has no `osversion <version>` line, so os-version \
-       comes from this machine and another machine may solve differently\n"
-      o.pins_file;
+      "[opam-lock] warning: %s sets no osversion ([solve] osversion = VERSION), \
+       so os-version comes from this machine and another machine may solve \
+       differently\n"
+      o.read_config;
   let constraints_pkg, archpkgs, repos_decl =
     setup_switch ~opam:o.opam ~switch ~workdir ~pins ~local_opam_dir:o.local_opam_dir ~winlocs ~fresh:ephemeral
   in
@@ -1130,6 +1184,19 @@ let do_solve o =
   let opamver =
     let r = Proc.run o.opam [ "--version" ] in
     S.trim r.stdout
+  in
+  (* The dkml-target-abi packages are in the diskuv opam repository only. A
+     configuration without it (the default one) has none of them, and asking
+     for an unknown package fails the solve, so a slot asks for its package
+     only when the solve's repositories have it. *)
+  let known_target_abi_pkgs =
+    let wanted = List.filter_map slot_target_abi_pkg o.slots in
+    if wanted = [] then []
+    else begin
+      let r = Proc.run o.opam ([ "list"; "-A"; "--short"; "--columns=name" ] @ switchargs @ wanted) in
+      let names = S.lines r.stdout in
+      List.filter (fun w -> List.mem w names) wanted
+    end
   in
   (* 1. solve each slot *)
   let all_keys = Hashtbl.create 256 in
@@ -1153,8 +1220,8 @@ let do_solve o =
         in
         let slotresolve =
           match slot_target_abi_pkg slot with
-          | Some tpkg -> slotresolve ^ "," ^ tpkg
-          | None -> slotresolve
+          | Some tpkg when List.mem tpkg known_target_abi_pkgs -> slotresolve ^ "," ^ tpkg
+          | _ -> slotresolve
         in
         let args =
           [ "list"; "--resolve=" ^ slotresolve; "--columns=package"; "--short" ]
@@ -1289,7 +1356,7 @@ let do_solve o =
         (ak, Json.Obj base))
       keylist
   in
-  (* 3. repositories from the pin table *)
+  (* 3. repositories from the configuration *)
   let commit = match o.repo_commit with Some c -> Json.Str c | None -> Json.Null in
   let repos_json =
     if repos_decl <> [] then
@@ -1323,9 +1390,12 @@ let do_solve o =
                  [ ("opam", Json.Obj [ ("version", Json.Str opamver) ]);
                    ("opamlock", Json.Obj [ ("modver", Json.Str o.tool) ]) ]);
               ("roots", Json.Arr (List.map (fun r -> Json.Str r) (List.sort String.compare o.roots)));
-              (* The pin table: its project path, and its sha256 after LF
-                 normalization, so a lock shows which pins produced it. *)
-              ("pins", Json.Obj [ ("path", Json.Str o.pins_name); ("sha256", Json.Str pins_sha256) ]) ]
+              (* The configuration: its project path, and its sha256 after LF
+                 normalization, so a lock shows which configuration produced it. *)
+              ]
+            @ (match o.record_config_as with
+               | Some n -> [ ("config", Json.Obj [ ("path", Json.Str n); ("sha256", Json.Str config_sha256) ]) ]
+               | None -> [])
             @ (if o.wtest then [ ("wtest", Json.Str "t") ] else [])
             @ (if o.wdoc then [ ("wdoc", Json.Str "t") ] else [])
             (* Stamp local_opam_dir only when it replays: a relative dir is a
@@ -1367,9 +1437,17 @@ let selftest () =
   check "sha256(56 chars)"
     (Sha256.digest_string "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")
     "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
-  (* The pin table checksum ignores the line endings of the checkout. *)
+  (* The INI configuration gives the same table as the line form. *)
+  (let ini = parse_config_ini
+     "; c\n[solve]\nosversion = 2.4.3.29\n[repositories]\nr = git+https://x/y#c\n[unpinned]\nppxlib =\n[pinned]\na = 1.0\n[archexcludes]\nm = x86_32, arm64\n" in
+   let txt = parse_pins
+     "repo r git+https://x/y#c\nfloat ppxlib\npin a 1.0\narchexclude m x86_32\narchexclude m arm64\nosversion 2.4.3.29\n" in
+   check "ini = txt configuration" (string_of_bool (ini = txt)) "true";
+   check "ini detected" (string_of_bool (is_ini_config "# x\n[pinned]\na = 1\n")) "true";
+   check "txt not ini" (string_of_bool (is_ini_config "pin a 1\n")) "false");
+  (* The configuration checksum ignores the line endings of the checkout. *)
   check "lf_normalize crlf" (lf_normalize "a\r\nb\rc\n") "a\nb\nc\n";
-  check "pins sha256 crlf = lf"
+  check "config sha256 crlf = lf"
     (Sha256.digest_string (lf_normalize "pin x 1\r\nfloat y\r\n"))
     (Sha256.digest_string (lf_normalize "pin x 1\nfloat y\n"));
   (* JSON encoder shape *)
@@ -1422,20 +1500,21 @@ let () =
     Printf.eprintf "usage: dk_opam_lock (solve <opts> | selftest)\n";
     exit 2
   end;
-  let opam = ref "" and workdir = ref "" and pins_file = ref "" in
+  let opam = ref "" and workdir = ref "" and read_config = ref "" in
   let switch = ref None and slots = ref [] and roots = ref [] in
   let locals = ref None and local_opam_dir = ref None in
   let wtest = ref false and wdoc = ref false in
   let msys2 = ref None and git = ref None in
   let repo_commit = ref None and repo_url = ref None in
   let tool = ref "CommonsLang_OCaml.Dk.OpamLock@1.0.0" in
-  let pins_name = ref "" in
+  let record_config_as = ref "" in
   let add r v = r := !r @ [ v ] in
   let addo r v = r := Some (match !r with Some l -> l @ [ v ] | None -> [ v ]) in
   let spec =
     [ ("--opam", Arg.Set_string opam, "opam executable (required)");
       ("--work-dir", Arg.Set_string workdir, "sandbox work dir (required)");
-      ("--pins-file", Arg.Set_string pins_file, "pin table path (required)");
+      ("--read-config", Arg.Set_string read_config,
+       "the configuration to read (dk-opam.ini or the line form), a path the helper can open (required)");
       ("--switch", Arg.String (fun s -> switch := Some s), "reuse a named switch");
       ("--slot", Arg.String (add slots), "output slot (repeatable)");
       ("--root", Arg.String (add roots), "root package (repeatable, required)");
@@ -1448,18 +1527,19 @@ let () =
       ("--repo-commit", Arg.String (fun s -> repo_commit := Some s), "recorded repo commit");
       ("--repo-url", Arg.String (fun s -> repo_url := Some s), "fallback repo url");
       ("--tool", Arg.Set_string tool, "generated.tool string");
-      ("--pins-name", Arg.Set_string pins_name, "project-relative pin table name (stamped into generated.pins)") ]
+      ("--record-config-as", Arg.Set_string record_config_as,
+       "the configuration's project-relative path, recorded in generated.config; without it the lock has no generated.config") ]
   in
   Arg.parse_argv (Array.sub argv 1 (Array.length argv - 1)) spec
     (fun a -> Printf.eprintf "unexpected argument: %s\n" a; exit 2)
     "dk_opam_lock solve <opts>";
-  if !opam = "" || !workdir = "" || !pins_file = "" then
-    (Printf.eprintf "[opam-lock] FATAL: --opam, --work-dir and --pins-file are required\n"; exit 1);
+  if !opam = "" || !workdir = "" || !read_config = "" then
+    (Printf.eprintf "[opam-lock] FATAL: --opam, --work-dir and --read-config are required\n"; exit 1);
   if !roots = [] then (Printf.eprintf "[opam-lock] FATAL: at least one --root is required\n"; exit 1);
   let slots = if !slots = [] then default_slots else !slots in
   do_solve
-    { opam = !opam; workdir = !workdir; pins_file = !pins_file; switch = !switch;
+    { opam = !opam; workdir = !workdir; read_config = !read_config; switch = !switch;
       slots; roots = !roots; locals = !locals; local_opam_dir = !local_opam_dir;
       wtest = !wtest; wdoc = !wdoc; msys2 = !msys2; git = !git;
       repo_commit = !repo_commit; repo_url = !repo_url; tool = !tool;
-      pins_name = (if !pins_name = "" then Filename.basename !pins_file else !pins_name) }
+      record_config_as = (if !record_config_as = "" then None else Some !record_config_as) }

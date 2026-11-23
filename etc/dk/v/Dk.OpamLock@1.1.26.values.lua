@@ -21,16 +21,26 @@ local M = {
   },
 }
 
+-- 1.1.26 also reads the configuration in INI form, dk-opam.ini, with the
+-- sections [solve] (osversion), [repositories], [pinned], [unpinned] and
+-- [archexcludes]. Solve reads config=PATH, else dk-opam.ini, else
+-- dk-opam-pins.txt in the line form, which still works. pins=PATH, the
+-- parameter's name before, now fails, so an older script is found. The
+-- configuration is optional: without one, Solve uses the default
+-- configuration, and the lock records no generated.config. Adopt seeds that
+-- default as dk-opam.ini (dk-opam-pins.txt before).
+
 -- 1.1.26 changes what a lock records about its solve
 -- (Apparatus.OpamLockHelper@1.0.21). generated.tools.opam.version is the
 -- --version of the opam that ran the solve, and generated.tools.opamlock.modver
--- the Dk.OpamLock module, in place of opam_version and tool. generated.pins is
--- { path, sha256 }: the pin table's project path and its sha256 after CRLF and
--- CR become LF, so a lock shows which pins produced it. generated.roots is
--- sorted. When mode=solve replays a lock, its pin table path and its
+-- the Dk.OpamLock module, in place of opam_version and tool. generated.config
+-- (in place of generated.pins) is { path, sha256 }: the configuration's project
+-- path and its sha256 after CRLF and CR become LF, so a lock shows which
+-- configuration produced it. generated.roots is
+-- sorted. When mode=solve replays a lock, its configuration path and its
 -- local_opam_dir must be strictly relative paths inside the project
 -- (stringdk.sanitizesubpath); a lock that names one outside fails. A lock
--- written before 1.1.26, with pins as a path string, still replays.
+-- written before 1.1.26, with generated.pins as a path string, still replays.
 
 -- 1.1.25 makes Solve give the same lock on every machine
 -- (Apparatus.OpamLockHelper@1.0.20). Through 1.1.24 each slot set only
@@ -333,6 +343,8 @@ function uirules.Solve(command, request, continue_)
     return
   end
   if command ~= "submit" then return end
+  -- Before anything is materialized, so an older script fails at once.
+  H.refuse_pins_param(request)
 
   local iswin = nil
   if request.execution and request.execution.OSFamily == "windows" then iswin = 1 end
@@ -404,17 +416,37 @@ function uirules.Solve(command, request, continue_)
   local workdir = H.dirname(H.trim(request.io.realpath(anchor)))
   request.io.close(anchor)
 
-  -- Copy the project pin table into the sandbox. request.ui.readfile reads the
-  -- checked-in project tree (request.io reads the sandbox); the helper then
+  -- Copy the project configuration into the sandbox. request.ui.readfile reads
+  -- the checked-in project tree (request.io reads the sandbox); the helper then
   -- reads it as an ordinary file.
-  local pinsproj = request.user.pins or "dk-opam-pins.txt"
-  local pincontent = assert(request.ui.readfile { path = pinsproj },
-    "could not read pin table `" .. pinsproj .. "`")
-  local pf = assert(request.io.open("dk-opam-pins.txt", "w"),
-    "could not open the sandbox pin copy")
-  request.io.write(pf, pincontent)
+  -- The configuration: config=PATH, else dk-opam.ini, else the older
+  -- dk-opam-pins.txt. It is optional: a project with neither solves with the
+  -- default table (the default opam-repository and the DkML toolchain's ocaml
+  -- and dune pins) and its lock records no generated.config. pins=PATH, the
+  -- parameter's name before 1.1.26, fails, so a script written for the older
+  -- rule stops instead of solving with another configuration (checked at the
+  -- top of Solve).
+  local recordconfigas = request.user.config
+  if recordconfigas == nil then
+    if request.ui.checksum { path = "dk-opam.ini" } ~= nil then
+      recordconfigas = "dk-opam.ini"
+    elseif request.ui.checksum { path = "dk-opam-pins.txt" } ~= nil then
+      recordconfigas = "dk-opam-pins.txt"
+    end
+  end
+  local configcontent = nil
+  if recordconfigas ~= nil then
+    configcontent = assert(request.ui.readfile { path = recordconfigas },
+      "could not read the configuration `" .. recordconfigas .. "`")
+  else
+    print("[opam-lock] no dk-opam.ini: solving with the default configuration")
+    configcontent = H.default_config()
+  end
+  local pf = assert(request.io.open("dk-opam-config", "w"),
+    "could not open the sandbox copy of the configuration")
+  request.io.write(pf, configcontent)
   request.io.flush(pf)
-  local pinsfile = H.trim(request.io.realpath(pf))
+  local readconfig = H.trim(request.io.realpath(pf))
   request.io.close(pf)
 
   -- Compile the helper with the materialized DkML compiler. OCAMLLIB points the
@@ -442,9 +474,13 @@ function uirules.Solve(command, request, continue_)
     "could not compile the opam-lock helper: " .. tostring(cres.stderr))
 
   -- Build the helper argv.
-  local args = { bc, "solve", "--opam", opamexe, "--work-dir", workdir, "--pins-file", pinsfile,
-    "--pins-name", pinsproj,
+  local args = { bc, "solve", "--opam", opamexe, "--work-dir", workdir, "--read-config", readconfig,
     "--tool", H.MODVER }
+  -- Without --record-config-as the project has no configuration, and the lock
+  -- records no generated.config.
+  if recordconfigas ~= nil then
+    table.insert(args, "--record-config-as"); table.insert(args, recordconfigas)
+  end
   local out = request.user.out or "dk.opam-lock.jsonc"
   if request.user.switch then table.insert(args, "--switch"); table.insert(args, request.user.switch) end
   if request.user.local_opam_dir then table.insert(args, "--local-opam-dir"); table.insert(args, request.user.local_opam_dir) end
@@ -1820,26 +1856,42 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.scrape_paren(text, key)
   return string.sub(text, s, i - 1)
 end
 
--- The default pin table seeded when dk-opam-pins.txt is absent (the same
--- bytes the ocaml/opam414 quickstart recipe seeds, so either owner wins).
-function CommonsLang_OCaml__Dk_OpamLock__1_1_21.default_pins()
-  return "# Pin table for CommonsLang_OCaml.Dk.OpamLock.Solve.\n"
-    .. "# Line forms:\n"
-    .. "#   repo NAME URL          opam repository (append #COMMIT to pin a commit)\n"
-    .. "#   pin NAME VERSION       hard version lock for one opam package\n"
-    .. "#   float NAME             remove a pin inherited from an existing switch\n"
-    .. "#   archexclude NAME ARCH  exclude a package on one architecture\n"
-    .. "#\n"
-    .. "# opam-repository. Append #COMMIT to pin a commit for a reproducible closure.\n"
-    .. "repo default git+https://github.com/ocaml/opam-repository.git\n"
-    .. "#\n"
-    .. "# Lock the compiler to the 4.14.3 toolchain (CommonsLang_OCaml.DkML@4.14.3002) so\n"
-    .. "# the solved closure compiles under 4.14, not 5.x:\n"
-    .. "pin ocaml 4.14.3\n"
-    .. "pin ocaml-base-compiler 4.14.3\n"
-    .. "#\n"
-    .. "# Pin dune to the toolchain-provided version (CommonsLang_OCaml.Dune@3.23.3):\n"
-    .. "pin dune 3.23.1\n"
+-- pins=PATH was renamed config=PATH in 1.1.26. Fail fast on the old name, so a
+-- script written for the older rule is found instead of silently solving with
+-- the default configuration.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.refuse_pins_param(request)
+  assert(request.user.pins == nil,
+    "pins=" .. tostring(request.user.pins) .. " is no longer a parameter of "
+      .. CommonsLang_OCaml__Dk_OpamLock__1_1_21.MODVER
+      .. ": use config=PATH (the configuration, dk-opam.ini or dk-opam-pins.txt)")
+end
+
+-- The default configuration (dk-opam.ini): what Adopt seeds when a project has
+-- none, and what Solve uses when a project has no configuration. The same text
+-- as the ocaml/opam414 quickstart recipe seeds, so either owner wins.
+function CommonsLang_OCaml__Dk_OpamLock__1_1_21.default_config()
+  return "; dk-opam.ini - configuration of the dk opam lock\n"
+    .. "; (CommonsLang_OCaml.Dk.OpamLock.Solve).\n"
+    .. "; Concepts: https://diskuv.com/dk/help/latest/guides/opam/\n"
+    .. ";\n"
+    .. "; Sections (';' or '#' starts a comment line):\n"
+    .. ";   [solve]         osversion = VERSION: the os-version every slot solves with\n"
+    .. ";   [repositories]  NAME = URL     opam repository (append #COMMIT to pin a commit)\n"
+    .. ";   [unpinned]      NAME =         remove a pin inherited from an existing switch\n"
+    .. ";   [pinned]        NAME = VERSION hard version lock for one opam package\n"
+    .. ";   [archexcludes]  NAME = ARCH    exclude a package on one architecture\n"
+    .. "\n"
+    .. "[repositories]\n"
+    .. "; opam-repository. Append #COMMIT to pin a commit for a reproducible closure.\n"
+    .. "default = git+https://github.com/ocaml/opam-repository.git\n"
+    .. "\n"
+    .. "[pinned]\n"
+    .. "; Lock the compiler to the 4.14.3 toolchain (CommonsLang_OCaml.DkML@4.14.3002) so\n"
+    .. "; the solved closure compiles under 4.14, not 5.x:\n"
+    .. "ocaml = 4.14.3\n"
+    .. "ocaml-base-compiler = 4.14.3\n"
+    .. "; Pin dune to the toolchain-provided version (CommonsLang_OCaml.Dune@3.23.3):\n"
+    .. "dune = 3.23.1\n"
 end
 
 -- ---------------------------------------------------------------------------
@@ -1863,6 +1915,7 @@ function uirules.Adopt(command, request, continue_)
     return
   end
   if command ~= "submit" then return end
+  H.refuse_pins_param(request)
 
   local version = assert(request.user.version,
     "please provide 'version=VER' (the version to publish, ex. 1.3.6)")
@@ -1883,13 +1936,13 @@ function uirules.Adopt(command, request, continue_)
     reuse = "t"
   end
 
-  -- Round 1: seed the pin table when absent, then stage the Solve toolchain
+  -- Round 1: seed the configuration (dk-opam.ini) when absent, then stage the Solve toolchain
   -- expressions and re-enter (the Refresh mode=solve pattern).
   if continue_ ~= "adopt2" and reuse == nil then
-    local pinspath = request.user.pins or "dk-opam-pins.txt"
-    if request.ui.checksum { path = pinspath } == nil then
-      H.write_projfile(request, pinspath, H.default_pins())
-      print("seeded " .. pinspath .. " (edit its pins to match your toolchain)")
+    local configpath = request.user.config or "dk-opam.ini"
+    if request.ui.checksum { path = configpath } == nil then
+      H.write_projfile(request, configpath, H.default_config())
+      print("seeded " .. configpath .. " (edit its pins to match your toolchain)")
     end
     local s1 = H.Solve("submit", { user = {}, execution = request.execution }, nil)
     return {
@@ -2521,29 +2574,29 @@ function CommonsLang_OCaml__Dk_OpamLock__1_1_21.solve_user(request)
     "lock predates @1.1.8 (no generated.roots); run Solve once with explicit roots/pins to adopt the stamp")
   local u = {}
   u.roots = gen.roots
-  -- generated.pins is { path, sha256 } from 1.1.26, and a path string before.
-  -- The lock is project data, and the helper opens the pin table outside the
-  -- Lua sandbox, so the path must be a strictly relative path inside the
-  -- project: sanitizesubpath refuses an absolute path, a `..` escape and a
-  -- path with unsafe characters.
-  local pinspath = nil
-  if type(gen.pins) == "table" then
-    pinspath = gen.pins.path
+  -- generated.config is { path, sha256 } from 1.1.26; earlier locks have
+  -- generated.pins, a path string. The lock is project data, and the helper
+  -- opens the configuration outside the Lua sandbox, so the path must be a
+  -- strictly relative path inside the project: sanitizesubpath refuses an
+  -- absolute path, a `..` escape and a path with unsafe characters.
+  local configpath = nil
+  if type(gen.config) == "table" then
+    configpath = gen.config.path
   elseif gen.pins ~= nil then
-    pinspath = gen.pins
+    configpath = gen.pins
   end
-  if pinspath ~= nil then
-    local safe, why = stringdk.sanitizesubpath(pinspath)
-    assert(safe ~= nil, "the lock `" .. lockpath .. "` names a pin table outside the project: "
+  if configpath ~= nil then
+    local safe, why = stringdk.sanitizesubpath(configpath)
+    assert(safe ~= nil, "the lock `" .. lockpath .. "` names a configuration outside the project: "
       .. tostring(why))
-    u.pins = safe
+    u.config = safe
   end
   u.out = lockpath
   if lock.ocaml ~= nil then u.ocaml = lock.ocaml end
   if gen.wtest ~= nil then u.wtest = gen.wtest end
   if gen.wdoc ~= nil then u.wdoc = gen.wdoc end
   -- local_opam_dir also comes from the lock and reaches the helper, which
-  -- `opam pin add`s it, so it gets the same check as the pin table.
+  -- `opam pin add`s it, so it gets the same check as the configuration.
   if gen.local_opam_dir ~= nil then
     local safedir, whydir = stringdk.sanitizesubpath(gen.local_opam_dir)
     assert(safedir ~= nil, "the lock `" .. lockpath .. "` names a local opam folder outside the project: "

@@ -268,7 +268,7 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
 ### CommonsLang_OCaml.Apparatus@1.0.21
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "66642", checksum: (sha256: "2308e9a5eea38b11ca90788ba0218f8bd98cfdc271f38bcc2c42072e9aab941f"))\;
+  \dk.asset(byteSize: "71127", checksum: (sha256: "4cfabbefe21c5e01da9380b544a055d1522f7c533658ac84da548ca4004ea22d"))\;
 
 ## Dk.OpamLock
 
