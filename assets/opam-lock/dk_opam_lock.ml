@@ -1044,6 +1044,13 @@ let slot_target_abi_pkg = function
    (a macOS solve dropped mingw-w64-shims from the Windows slots). os-version
    comes from the configuration's osversion; a configuration without one leaves it
    to the machine, with a warning. *)
+(* The environment variable that sets opam variable [k] for one command. opam
+   reads OPAMVAR_ and the variable's name with each '-' as '_'
+   (OpamVariable's undash), so OPAMVAR_os-distribution would be ignored and
+   the solve would see the host's os-distribution. *)
+let opamvar_name k =
+  "OPAMVAR_" ^ String.map (fun c -> if Char.equal c '-' then '_' else c) k
+
 let host_independent_vars pins =
   [ ("os-distribution", "dk"); ("os-family", "dk") ]
   @ (match pins.osversion with Some v -> [ ("os-version", v) ] | None -> [])
@@ -1212,7 +1219,7 @@ let do_solve o =
           | None -> Printf.eprintf "[opam-lock] FATAL: unknown slot %s\n" slot; exit 1
         in
         let vars = [ ("os", os); ("arch", arch) ] @ host_independent_vars pins in
-        let adds = List.map (fun (k, v) -> ("OPAMVAR_" ^ k, v)) vars in
+        let adds = List.map (fun (k, v) -> (opamvar_name k, v)) vars in
         let slotresolve =
           match List.assoc_opt arch archpkgs with
           | Some apkg -> rootscsv ^ "," ^ apkg
@@ -1445,6 +1452,10 @@ let selftest () =
    check "ini = txt configuration" (string_of_bool (ini = txt)) "true";
    check "ini detected" (string_of_bool (is_ini_config "# x\n[pinned]\na = 1\n")) "true";
    check "txt not ini" (string_of_bool (is_ini_config "pin a 1\n")) "false");
+  (* opam reads OPAMVAR_ names with '-' as '_'. *)
+  check "opamvar os-distribution" (opamvar_name "os-distribution") "OPAMVAR_os_distribution";
+  check "opamvar os-version" (opamvar_name "os-version") "OPAMVAR_os_version";
+  check "opamvar arch" (opamvar_name "arch") "OPAMVAR_arch";
   (* The configuration checksum ignores the line endings of the checkout. *)
   check "lf_normalize crlf" (lf_normalize "a\r\nb\rc\n") "a\nb\nc\n";
   check "config sha256 crlf = lf"

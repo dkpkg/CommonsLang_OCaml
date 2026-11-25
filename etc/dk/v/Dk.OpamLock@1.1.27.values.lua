@@ -1,5 +1,5 @@
 local M = {
-  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.26",
+  id = "CommonsLang_OCaml.Dk.OpamLock@1.1.27",
   -- Declared capability manifest (engine >= 2.4.2.339; older engines ignore
   -- it). Each entry is the enforced upper bound of what that uirule may
   -- request, and the engine lists every declared capability in its trust
@@ -20,6 +20,15 @@ local M = {
     OpamVenv = { "run", "write" },
   },
 }
+
+-- 1.1.27 fixes the per-slot variables of 1.1.25 (Apparatus.OpamLockHelper@1.0.23).
+-- The helper set OPAMVAR_os-distribution, OPAMVAR_os-family and
+-- OPAMVAR_os-version with a dash, and opam reads only the underscore form
+-- (OPAMVAR_os_distribution and the rest), so those three were ignored and each
+-- solve saw the host's values; only os and arch took effect. On Windows that
+-- made opam's os-distribution "cygwin" pull in mingw-w64-shims, which a Linux
+-- or macOS solve left out. The helper now writes the underscore form, so a
+-- lock is the same from any machine.
 
 -- 1.1.26 also reads the configuration in INI form, dk-opam.ini, with the
 -- sections [solve] (osversion), [repositories], [pinned], [unpinned] and
@@ -367,7 +376,7 @@ function uirules.Solve(command, request, continue_)
       end
     end
     local files = {
-      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.21 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
+      helper = "$(get-asset CommonsLang_OCaml.Apparatus.OpamLockHelper@1.0.23 -p assets/opam-lock/dk_opam_lock.ml -f dk_opam_lock.ml)",
       amalgam = "$(get-asset CommonsLang_OCaml.Apparatus.OpamFileFormat@1.0.1 -p assets/opam-lock/opam_file_format.ml -f opam_file_format.ml)"
     }
     return {

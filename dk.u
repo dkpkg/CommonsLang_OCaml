@@ -260,15 +260,15 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
   % unified.asset { name="DkMLPatchStandardCompilerEnvMacosMin", file="assets/dkml/patch-standard-compiler-env-macos-min.sh" }
   \dk.asset(byteSize: "1197", checksum: (sha256: "9439caf0c798dbc310ef53d7436280f716b848d97ae0bcbe67fb9ba900957c17"))\;
 
-### CommonsLang_OCaml.Apparatus@1.0.21
-
-  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
-  \dk.asset(byteSize: "71127", checksum: (sha256: "4cfabbefe21c5e01da9380b544a055d1522f7c533658ac84da548ca4004ea22d"))\;
-
 ### CommonsLang_OCaml.Apparatus@1.0.22
 
   % unified.asset { name="OpamBuildWrapper", file="assets/opam/build-locked-package.sh" }
   \dk.asset(byteSize: "26341", checksum: (sha256: "8437c0a31dcbfeb418ed953802fd1b90d0e921d40200dfb127e5c649e609c487"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.23
+
+  % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
+  \dk.asset(byteSize: "71780", checksum: (sha256: "d34044804b9cb86a7029533815c410e82b5cdbef31801a58cee430cad2d9a93a"))\;
 
 ## Dk.OpamLock
 
