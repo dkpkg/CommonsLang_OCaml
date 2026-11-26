@@ -660,13 +660,14 @@ The Windows slots build the compiler with `DKML_MSVC_CRT=static` in
 DkMLStatic has no dynamic loading on Windows:
 
 - `Dynlink.loadfile` fails with the stub's message.
-- `bin/ocamlrun.exe` loads no `dll*.dll` stub library. A bytecode executable
-  that needs C stubs, such as one linked with `unix.cma`, stops at startup
-  with "cannot load shared library" and the stub's message. `ocamlc -custom`
-  and `ocamlc -output-complete-exe` put the C stubs into the executable, and
-  such an executable runs.
+- `bin/ocamlrun.exe` loads no `dll*.dll` stub library. Without shared
+  libraries, `ocamlc` links a bytecode executable that needs C stubs, such as
+  one linked with `unix.cma`, with no stub library to load, and `ocamlrun`
+  stops at startup with "unknown C primitive" (exit code 127). `ocamlc
+  -custom` and `ocamlc -output-complete-exe` put the C stubs into the
+  executable, and such an executable runs.
 - The toplevel `bin/ocaml.exe` runs, and a `#load` of a library with C stubs
-  fails with the stub's message. A `Dk.OpamBuild` package build that runs such
+  fails. A `Dk.OpamBuild` package build that runs such
   a bytecode helper, for example an `ocaml pkg/pkg.ml` script that loads
   `unix`, fails under DkMLStatic.
 - DkMLStatic switches shared libraries off (`SUPPORTS_SHARED_LIBRARIES=false`
