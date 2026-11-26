@@ -270,7 +270,7 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
 ### CommonsLang_OCaml.Apparatus@1.0.24
 
   % unified.asset { name="DkMLRunBuildHost", file="assets/dkml/run-build-host.sh" }
-  \dk.asset(byteSize: "24425", checksum: (sha256: "ca13a8562f509b945d1164235c2af38b73fa8a9d6ee45006370e58d48331ba94"))\;
+  \dk.asset(byteSize: "24860", checksum: (sha256: "e314273f7f64dadf2592345c9137a74826655272bc9ea6e216cb4f3333688101"))\;
 
   % unified.asset { name="DkMLNoFlexdllStub", file="assets/dkml/noflexdll-stub.c" }
   \dk.asset(byteSize: "1420", checksum: (sha256: "308082ca9132c9108aa8dc6399399dbc96d18ac43acdcd6f25ca59fddd7b8c5b"))\;

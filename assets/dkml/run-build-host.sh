@@ -295,6 +295,18 @@ dkml_rewrite src-ocaml/flexdll/Makefile '
   END { if (!found) exit 3 }
 '
 
+# CFLAGS_MSVC defines NDEBUG, and ocamlyacc's yacc/defs.h defines it again,
+# which cl reports as C4005 and -WX makes fatal. Define it there only when the
+# command line has not.
+if [ ! -f src-ocaml/yacc/defs.h ]; then
+  dkml_fatal "no src-ocaml/yacc/defs.h"
+fi
+dkml_rewrite src-ocaml/yacc/defs.h '
+  $0 == "#define NDEBUG" { found = 1; print "#ifndef NDEBUG"; print; print "#endif"; next }
+  { print }
+  END { if (!found) exit 3 }
+'
+
 if [ "$dkml_msvc_crt" = static ]; then
   if [ -z "${DKML_NOFLEXDLL_STUB:-}" ] || [ ! -f "$DKML_NOFLEXDLL_STUB" ]; then
     dkml_fatal "DKML_MSVC_CRT=static needs DKML_NOFLEXDLL_STUB to name noflexdll-stub.c"
