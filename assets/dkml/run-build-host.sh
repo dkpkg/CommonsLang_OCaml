@@ -221,8 +221,104 @@ if [ -n "${DKML_COMPILE_VS_DIR:-}" ]; then
   export DKML_COMPILE_TYPE=VS
 fi
 
-: "${CFLAGS_MSVC:=/Wv:18}"
+# MSVC C runtime. DKML_MSVC_CRT selects one of two consistent builds:
+#
+#   dynamic (the default; CommonsLang_OCaml.DkML) compiles every C object /MD
+#   and links every image against the DLL C runtime. FlexDLL's Makefile also
+#   compiles its objects /MD, and flexlink adds msvcrt.lib to every link.
+#
+#   static (CommonsLang_OCaml.DkMLStatic) compiles every C object /MT,
+#   FlexDLL's objects included, and links every image against the static C
+#   runtime. The file that DKML_NOFLEXDLL_STUB names takes the place of the
+#   FlexDLL runtime source, and the executables carry no dynamic loader. On
+#   x64 every image gets a preferred base address above 4 GB.
+#
+# CFLAGS_MSVC takes the place of the `-O2 -MD` that OCaml's configure puts in
+# OC_CFLAGS (dkml-compiler patch ocaml-common-4_14-b05-msvccflags), and it
+# carries the optimization and C runtime flags itself. dkml-compiler computes
+# CFLAGS_MSVC only for a CMake MSVC compiler spec; this Visual Studio build
+# takes the default below. /Wv:18 keeps the MSVC 19.50 warning baseline, and
+# -WX stays usable on the OCaml 4.14 runtime sources.
+dkml_msvc_crt=${DKML_MSVC_CRT:-dynamic}
+case "$dkml_msvc_crt" in
+  dynamic) : "${CFLAGS_MSVC:=-O2 -MD /Wv:18}" ;;
+  static) : "${CFLAGS_MSVC:=-O2 -MT /Wv:18}" ;;
+  *)
+    printf 'FATAL: DKML_MSVC_CRT must be dynamic or static, not "%s"\n' "$dkml_msvc_crt" >&2
+    exit 1
+    ;;
+esac
 export CFLAGS_MSVC
+
+dkml_fatal() {
+  printf 'FATAL: %s\n' "$*" >&2
+  exit 1
+}
+
+# Rewrite FILE through an awk PROGRAM; any further arguments go to awk first.
+# The awk program exits nonzero when the line it rewrites is missing.
+dkml_rewrite() {
+  _dkml_rewrite_file=$1
+  shift
+  hermetic_util chmod u+w "$_dkml_rewrite_file"
+  if hermetic_util awk "$@" "$_dkml_rewrite_file" > "$_dkml_rewrite_file.new"; then
+    hermetic_util mv "$_dkml_rewrite_file.new" "$_dkml_rewrite_file"
+  else
+    hermetic_util rm -f "$_dkml_rewrite_file.new"
+    dkml_fatal "could not rewrite $_dkml_rewrite_file for DKML_MSVC_CRT=$dkml_msvc_crt"
+  fi
+}
+
+# flexlink options for every DkMLStatic link (executables, DLLs and .cmxs):
+#   -custom-crt        drops the msvcrt.lib that flexlink adds and tells link.exe
+#                      /nodefaultlib:LIBCMT /nodefaultlib:MSVCRT
+#   -defaultlib LIB    names each static C runtime library; flexlink resolves
+#                      C runtime symbols against them and passes them to link.exe
+#   -base 0x140000000  preferred image base; flexlink passes it to link.exe as
+#                      /base: on x64 only
+# They go into FLEXLINK_FLAGS in Makefile.config, which OCaml bakes into
+# `ocamlopt -config`'s mkexe, mkdll and mkmaindll. Every executable that a
+# DkMLStatic ocamlopt or ocamlc -custom links gets them with no extra flags.
+dkml_static_flexlink_flags='-custom-crt -base 0x140000000 -defaultlib libcmt.lib -defaultlib libvcruntime.lib -defaultlib libucrt.lib -defaultlib oldnames.lib'
+
+if [ "$dkml_msvc_crt" = static ]; then
+  if [ -z "${DKML_NOFLEXDLL_STUB:-}" ] || [ ! -f "$DKML_NOFLEXDLL_STUB" ]; then
+    dkml_fatal "DKML_MSVC_CRT=static needs DKML_NOFLEXDLL_STUB to name noflexdll-stub.c"
+  fi
+  _dkml_flexdir=src-ocaml/flexdll
+  if [ ! -f "$_dkml_flexdir/flexdll.c" ] || [ ! -f "$_dkml_flexdir/Makefile" ]; then
+    dkml_fatal "no FlexDLL sources in $_dkml_flexdir"
+  fi
+
+  # The FlexDLL runtime object (flexdll_msvc.obj, flexdll_msvc64.obj) becomes
+  # the stub. flexlink links it into every executable.
+  hermetic_util chmod u+w "$_dkml_flexdir/flexdll.c"
+  hermetic_util rm -f "$_dkml_flexdir/flexdll.c"
+  hermetic_util cp "$DKML_NOFLEXDLL_STUB" "$_dkml_flexdir/flexdll.c"
+
+  # FlexDLL compiles its objects with MSVC_FLAGS=/nologo /MD ...
+  dkml_rewrite "$_dkml_flexdir/Makefile" '
+    /^MSVC_FLAGS=/ { sub(/ \/MD /, " /MT "); if ($0 ~ / \/MT /) found = 1 }
+    { print }
+    END { if (!found) exit 3 }
+  '
+
+  for _dkml_mc in src-ocaml/Makefile.config.in src-ocaml/Makefile.config; do
+    if [ -f "$_dkml_mc" ]; then
+      dkml_rewrite "$_dkml_mc" -v extra="$dkml_static_flexlink_flags" '
+        /^FLEXLINK_FLAGS=/ {
+          found = 1
+          if (index($0, "-custom-crt") == 0) $0 = $0 " " extra
+        }
+        { print }
+        END { if (!found) exit 3 }
+      '
+    fi
+  done
+  if [ ! -f src-ocaml/Makefile.config.in ]; then
+    dkml_fatal "no src-ocaml/Makefile.config.in to carry the DkMLStatic flexlink flags"
+  fi
+fi
 
 : "${NUMCPUS:=1}"
 export NUMCPUS
@@ -289,4 +385,127 @@ if [ -n "${COMSPEC:-}" ]; then
   export DKML_TMP_PARENTDIR
 fi
 
-exec sh "$host_noargs"
+# Build log and warning scan. The OCaml build runs with its output copied to
+# share/dkml/repro/dkml-build.log, which cleanup-dkml-slot.sh removes with the
+# rest of share/dkml/repro. These warnings fail the build:
+#
+#   D9025    cl overrode one option with another (for example /MD with /MT)
+#   D9002    cl ignored an unknown option
+#   LNK4098  a default library conflicts with the other C runtime libraries
+#   LNK4217  an object imports a symbol that another object defines locally,
+#   LNK4286  as an object compiled /MD does in a static C runtime link
+#   LNK4281  an x64 image has a base address below 4 GB (DkMLStatic only)
+#
+# DkML allows LNK4281. flexlink gives every x64 image /base:0x10000, which
+# keeps a program and the DLLs that FlexDLL loads within 32-bit relative
+# reach of each other.
+#
+# flexlink discards link.exe's output when the link succeeds. A warning from
+# a flexlink link reaches the log only when that link fails. The audit
+# after the scan reads the installed images instead: it checks the C runtime
+# that each library and object names, and for DkMLStatic the DLLs that each
+# image imports and the x64 image base.
+dkml_log_dir=share/dkml/repro
+build_log="$dkml_log_dir/dkml-build.log"
+build_status_file="$dkml_log_dir/dkml-build.status"
+hermetic_util mkdir -p "$dkml_log_dir"
+hermetic_util rm -f "$build_log" "$build_status_file"
+{ sh "$host_noargs" 2>&1 || echo "$?" > "$build_status_file"; } | hermetic_util tee "$build_log"
+if [ -s "$build_status_file" ]; then
+  build_status=$(hermetic_util cat "$build_status_file")
+  printf 'FATAL: the OCaml build failed with exit code %s\n' "$build_status" >&2
+  exit "$build_status"
+fi
+
+dkml_fatal_warnings='D9025|D9002|LNK4098|LNK4217|LNK4286'
+if [ "$dkml_msvc_crt" = static ]; then
+  dkml_fatal_warnings="$dkml_fatal_warnings|LNK4281"
+fi
+_dkml_rc=0
+hermetic_util grep -E -i "warning ($dkml_fatal_warnings)" "$build_log" > "$build_log.hits" || _dkml_rc=$?
+case "$_dkml_rc" in
+  0)
+    printf 'FATAL: the OCaml build printed warnings that mean wrong compile or link flags:\n' >&2
+    hermetic_util cat "$build_log.hits" >&2
+    exit 1
+    ;;
+  1) ;;
+  *) dkml_fatal "could not scan $build_log (grep exit code $_dkml_rc)" ;;
+esac
+printf 'INFO: no %s warnings in the OCaml build log\n' "$dkml_fatal_warnings" >&2
+
+# C runtime audit with dumpbin from the Visual Studio installation that
+# detect-vsenv.bat found. DKML_SKIP_CRT_AUDIT=1 skips it.
+dkml_find_dumpbin() {
+  _dkml_vs=$(printf '%s' "${VSINSTALLDIR:-}" | hermetic_util tr '\\' '/')
+  _dkml_vs=${_dkml_vs%/}
+  if [ -z "$_dkml_vs" ] || [ -z "${VCToolsVersion:-}" ]; then
+    return 1
+  fi
+  for _dkml_host in Hostx64/x64 Hostx86/x86 HostARM64/arm64; do
+    _dkml_dumpbin="$_dkml_vs/VC/Tools/MSVC/$VCToolsVersion/bin/$_dkml_host/dumpbin.exe"
+    if [ -f "$_dkml_dumpbin" ]; then
+      printf '%s\n' "$_dkml_dumpbin"
+      return 0
+    fi
+  done
+  return 1
+}
+
+dkml_audit_failed=0
+dkml_audit_error() {
+  printf 'FATAL: %s\n' "$*" >&2
+  dkml_audit_failed=1
+}
+
+if [ "${DKML_SKIP_CRT_AUDIT:-0}" = 1 ]; then
+  printf 'WARNING: DKML_SKIP_CRT_AUDIT=1; the C runtime audit is skipped\n' >&2
+else
+  if ! dumpbin=$(dkml_find_dumpbin); then
+    dkml_fatal "dumpbin.exe not found for VSINSTALLDIR=${VSINSTALLDIR:-} VCToolsVersion=${VCToolsVersion:-}; DKML_SKIP_CRT_AUDIT=1 skips the C runtime audit"
+  fi
+  if ! "$dumpbin" /nologo /headers bin/ocamlrun.exe | hermetic_util tr -d '\r' | hermetic_util grep -q 'FILE HEADER VALUES'; then
+    dkml_fatal "$dumpbin could not read bin/ocamlrun.exe"
+  fi
+
+  # Each C library or object may name only the C runtime of this build.
+  case "$dkml_msvc_crt" in
+    dynamic) dkml_wrong_crt='LIBCMTD?' ;;
+    static) dkml_wrong_crt='MSVCRTD?' ;;
+  esac
+  hermetic_util find bin lib -type f '(' -name '*.lib' -o -name '*.obj' ')' > "$dkml_log_dir/dkml-audit-libs.txt"
+  while IFS= read -r _dkml_f; do
+    if "$dumpbin" /nologo /directives "$_dkml_f" | hermetic_util tr -d '\r' |
+        hermetic_util grep -q -i -E "/DEFAULTLIB:\"?$dkml_wrong_crt(\\.lib)?\"?([^A-Za-z0-9]|\$)"; then
+      dkml_audit_error "$_dkml_f names the C runtime library $dkml_wrong_crt"
+    fi
+  done < "$dkml_log_dir/dkml-audit-libs.txt"
+
+  if [ "$dkml_msvc_crt" = static ]; then
+    hermetic_util find bin lib -type f '(' -name '*.exe' -o -name '*.dll' ')' > "$dkml_log_dir/dkml-audit-images.txt"
+    while IFS= read -r _dkml_f; do
+      # No image may import the DLL C runtime.
+      if "$dumpbin" /nologo /dependents "$_dkml_f" | hermetic_util tr -d '\r' |
+          hermetic_util grep -i -E '^[[:space:]]+(vcruntime[0-9_]*|msvcp[0-9_]*|msvcr[0-9]*|ucrtbased?|api-ms-win-crt-[a-z0-9-]*)\.dll[[:space:]]*$' > "$dkml_log_dir/dkml-audit-hits.txt"; then
+        dkml_audit_error "$_dkml_f imports the DLL C runtime: $(hermetic_util tr -s ' \n' ' ' < "$dkml_log_dir/dkml-audit-hits.txt")"
+      fi
+      # Every x64 executable has a preferred base address above 4 GB.
+      case "$_dkml_f" in
+        *.exe)
+          "$dumpbin" /nologo /headers "$_dkml_f" | hermetic_util tr -d '\r' > "$dkml_log_dir/dkml-audit-headers.txt"
+          if hermetic_util grep -q -i 'machine (x64)' "$dkml_log_dir/dkml-audit-headers.txt"; then
+            _dkml_base=$(hermetic_util awk '/ image base / { print $1; exit }' "$dkml_log_dir/dkml-audit-headers.txt" | hermetic_util sed 's/^0*//')
+            if [ -z "$_dkml_base" ] || [ "${#_dkml_base}" -le 8 ]; then
+              dkml_audit_error "$_dkml_f has the x64 image base 0x$_dkml_base, below 4 GB"
+            fi
+          fi
+          ;;
+      esac
+    done < "$dkml_log_dir/dkml-audit-images.txt"
+  fi
+
+  if [ "$dkml_audit_failed" != 0 ]; then
+    dkml_fatal "the C runtime audit failed for DKML_MSVC_CRT=$dkml_msvc_crt"
+  fi
+  printf 'INFO: the C runtime audit passed for DKML_MSVC_CRT=%s\n' "$dkml_msvc_crt" >&2
+fi

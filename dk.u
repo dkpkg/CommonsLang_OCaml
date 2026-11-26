@@ -104,9 +104,9 @@ sources in precedence order.
 
 4. **The compiler matches through the top-level `ocaml` field.** Each lock records
    the OCaml compiler its packages are built with in a top-level `ocaml` field, a
-   full module id such as `CommonsLang_OCaml.DkML@4.14.3002` (or a
+   full module id such as `CommonsLang_OCaml.DkML@4.14.3003` (or a
    `CommonsLang_OCaml.Base@5.5.x` for a 5.5 toolchain); a lock without the field
-   takes the default `CommonsLang_OCaml.DkML@4.14.3002`.
+   takes the default `CommonsLang_OCaml.DkML@4.14.3003`.
    `Dk.OpamLock.GenerateDriver` reads the `ocaml` field from both the consumer's
    lock and each source's lock (already fetched in step 1) and passes it to
    `F_BuildLockedPackage` as the `ocaml=` argument, along with
@@ -135,7 +135,7 @@ sources in precedence order.
 `Dk.OpamLock.GenerateDriver` imports a package `P` from a source `S` when each of
 these variables is equal between the consumer's lock and `S`'s lock:
 
-- `ocaml`: the top-level compiler module id (a lock without the field carries `CommonsLang_OCaml.DkML@4.14.3002`)
+- `ocaml`: the top-level compiler module id (a lock without the field carries `CommonsLang_OCaml.DkML@4.14.3003`)
 - `version(P)`: the opam version `S` pins for `P`
 - `depends(P)`: `P`'s `depends` name-set, with the solved-closure optional dependencies folded in, compared as a set
 - `version(D)`: for every package `D` in `P`'s dependency closure, the opam version `S` pins for `D`
@@ -195,9 +195,6 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
 
   % unified.asset { name="DkMLPatchRelocatableVersion", file="assets/dkml/patch-r-c-ocaml-1-setup-relocatable-version.sh" }
   \dk.asset(byteSize: "1987", checksum: (sha256: "741306e16101152f5aca9a1ec073166d5e92126953c3a27413c9176a4c4d56b7"))\;
-
-  % unified.asset { name="DkMLRunBuildHost", file="assets/dkml/run-build-host.sh" }
-  \dk.asset(byteSize: "11901", checksum: (sha256: "a669842d3a978b43ef8fddb31629e8092351086705ef2f6594162160c6c7e70b"))\;
 
   % unified.asset { name="DkMLDetectVsEnvBat", file="assets/dkml/detect-vsenv.bat" }
   \dk.asset(byteSize: "4845", checksum: (sha256: "71ad1b60c3b21822e078f7c92d5d7dadbb470445a685ba835c1153cbcedf50df"))\;
@@ -269,6 +266,11 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
 
   % unified.asset { name="OpamLockHelper", file="assets/opam-lock/dk_opam_lock.ml" }
   \dk.asset(byteSize: "71780", checksum: (sha256: "d34044804b9cb86a7029533815c410e82b5cdbef31801a58cee430cad2d9a93a"))\;
+
+### CommonsLang_OCaml.Apparatus@1.0.24
+
+  % unified.asset { name="DkMLRunBuildHost", file="assets/dkml/run-build-host.sh" }
+  \dk.asset(byteSize: "21973", checksum: (sha256: "c83b28e4ffd201df0b615c5d9fc2f756195d4ce390fe3bb47623e93a34dc48e7"))\;
 
 ## Dk.OpamLock
 
@@ -645,5 +647,12 @@ check that performs it or marked as unchecked:
   `LIBPATH` and `PATH`, and the slot to `vcvarsall` architecture mapping is the
   CommonsLang_OCaml table `assets/table/msvc-arch/Release.<slot>`. No check
   confirms the captured variables.
+- `Windows_*`: the CommonsLang_OCaml script `assets/dkml/run-build-host.sh`
+  fails a DkML Windows build when its log shows the `cl` warning D9025 or
+  D9002 or the linker warning LNK4098, LNK4217 or LNK4286. flexlink discards
+  the output of a link that succeeds, and those links reach the log only when
+  they fail. The same script then runs `dumpbin /directives` on every
+  installed `.lib` and `.obj` and fails when one names the static C runtime
+  library `LIBCMT`. No check covers other linker warnings from flexlink links.
 - A package's distscript can check them, as the CommonsLang_OCaml distscript
   `dist/Linux_x86_64.u` does by running `file -b` on its `bin/ocamlopt`.
