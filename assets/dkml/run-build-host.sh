@@ -274,12 +274,14 @@ dkml_rewrite() {
 #                      /nodefaultlib:LIBCMT /nodefaultlib:MSVCRT
 #   -defaultlib LIB    names each static C runtime library; flexlink resolves
 #                      C runtime symbols against them and passes them to link.exe
-#   -base 0x140000000  preferred image base; flexlink passes it to link.exe as
-#                      /base: on x64 only
+#   -base ADDR         preferred image base, from DKML_STATIC_IMAGE_BASE, which
+#                      only the x64 form sets (0x140000000, above 4 GB);
+#                      flexlink honours -base on x64 only, so x86 keeps the
+#                      default 0x400000
 # They go into FLEXLINK_FLAGS in Makefile.config, which OCaml bakes into
 # `ocamlopt -config`'s mkexe, mkdll and mkmaindll. Every executable that a
 # DkMLStatic ocamlopt or ocamlc -custom links gets them with no extra flags.
-dkml_static_flexlink_flags='-custom-crt -base 0x140000000 -defaultlib libcmt.lib -defaultlib libvcruntime.lib -defaultlib libucrt.lib -defaultlib oldnames.lib'
+dkml_static_flexlink_flags="-custom-crt${DKML_STATIC_IMAGE_BASE:+ -base $DKML_STATIC_IMAGE_BASE} -defaultlib libcmt.lib -defaultlib libvcruntime.lib -defaultlib libucrt.lib -defaultlib oldnames.lib"
 
 if [ "$dkml_msvc_crt" = static ]; then
   if [ -z "${DKML_NOFLEXDLL_STUB:-}" ] || [ ! -f "$DKML_NOFLEXDLL_STUB" ]; then
@@ -482,6 +484,10 @@ else
   done < "$dkml_log_dir/dkml-audit-libs.txt"
 
   if [ "$dkml_msvc_crt" = static ]; then
+    # DkMLStatic is configured --disable-shared: nothing it builds loads a DLL.
+    if ! hermetic_util grep -q -x 'SUPPORTS_SHARED_LIBRARIES=false' lib/ocaml/Makefile.config; then
+      dkml_audit_error "lib/ocaml/Makefile.config does not say SUPPORTS_SHARED_LIBRARIES=false"
+    fi
     hermetic_util find bin lib -type f '(' -name '*.exe' -o -name '*.dll' ')' > "$dkml_log_dir/dkml-audit-images.txt"
     while IFS= read -r _dkml_f; do
       # No image may import the DLL C runtime.

@@ -270,7 +270,7 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
 ### CommonsLang_OCaml.Apparatus@1.0.24
 
   % unified.asset { name="DkMLRunBuildHost", file="assets/dkml/run-build-host.sh" }
-  \dk.asset(byteSize: "21973", checksum: (sha256: "c83b28e4ffd201df0b615c5d9fc2f756195d4ce390fe3bb47623e93a34dc48e7"))\;
+  \dk.asset(byteSize: "22443", checksum: (sha256: "dd998ba64b6a0e1dd578d3e6eee2f9662ef3aa7a8e1a16bb1fb77af8229643d5"))\;
 
   % unified.asset { name="DkMLNoFlexdllStub", file="assets/dkml/noflexdll-stub.c" }
   \dk.asset(byteSize: "1420", checksum: (sha256: "308082ca9132c9108aa8dc6399399dbc96d18ac43acdcd6f25ca59fddd7b8c5b"))\;
@@ -646,9 +646,10 @@ The Windows slots build the compiler with `DKML_MSVC_CRT=static` in
   every executable. Its loader functions fail with the message "dynamic
   loading is not available in this executable".
 - `FLEXLINK_FLAGS` carries `-custom-crt`, a `-defaultlib` for each of
-  `libcmt.lib`, `libvcruntime.lib`, `libucrt.lib` and `oldnames.lib`, and
-  `-base 0x140000000`. OCaml bakes these flags into the `mkexe`, `mkdll` and
-  `mkmaindll` commands of `ocamlopt` and `ocamlc`. An executable that
+  `libcmt.lib`, `libvcruntime.lib`, `libucrt.lib` and `oldnames.lib`, and on
+  x64 `-base 0x140000000` (x86 keeps the default base, 0x400000). OCaml bakes
+  these flags into the `mkexe`, `mkdll` and `mkmaindll` commands of `ocamlopt`
+  and `ocamlc`. An executable that
   `ocamlopt`, `ocamlc -custom` or `ocamlc -output-complete-exe` links imports
   no C runtime DLL, and on x64 its preferred image base is 0x140000000.
 - A C stub that `ocamlopt`, `ocamlc` or dune compiles takes `/MT` from the
@@ -668,9 +669,9 @@ DkMLStatic has no dynamic loading on Windows:
   fails with the stub's message. A `Dk.OpamBuild` package build that runs such
   a bytecode helper, for example an `ocaml pkg/pkg.ml` script that loads
   `unix`, fails under DkMLStatic.
-- DkMLStatic installs the `lib/ocaml/stublibs` DLLs and the `.cmxs` plugins in
-  the layout of DkML, linked against the static C runtime. No DkMLStatic
-  executable loads them.
+- DkMLStatic is configured `--disable-shared`, so `ocamlc -config` says
+  `supports_shared_libraries: false` and the toolchain builds no
+  `lib/ocaml/stublibs` DLLs and no `.cmxs` plugins.
 
 ## Toolchain checks
 
