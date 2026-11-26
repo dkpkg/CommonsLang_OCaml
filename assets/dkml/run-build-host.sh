@@ -299,10 +299,14 @@ if [ "$dkml_msvc_crt" = static ]; then
   hermetic_util cp "$DKML_NOFLEXDLL_STUB" "$_dkml_flexdir/flexdll.c"
 
   # FlexDLL compiles its objects with MSVC_FLAGS=/nologo /MD ...
+  # With NATDYNLINK=false (below), FlexDLL's Makefile also passes its
+  # version.res to flexlink as an input (LINKFLAGS = -cclib "$(RES)"), which
+  # flexlink cannot read; keep it on the link.exe side, as with NATDYNLINK=true.
   dkml_rewrite "$_dkml_flexdir/Makefile" '
-    /^MSVC_FLAGS=/ { sub(/ \/MD /, " /MT "); if ($0 ~ / \/MT /) found = 1 }
+    /^MSVC_FLAGS=/ { sub(/ \/MD /, " /MT "); if ($0 ~ / \/MT /) found = found + 1 }
+    /^LINKFLAGS = -cclib "\$\(RES\)"/ { $0 = "LINKFLAGS = -cclib \"-link $(RES)\""; found = found + 1 }
     { print }
-    END { if (!found) exit 3 }
+    END { if (found != 2) exit 3 }
   '
 
   for _dkml_mc in src-ocaml/Makefile.config.in src-ocaml/Makefile.config; do
