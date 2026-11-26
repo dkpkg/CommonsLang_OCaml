@@ -272,6 +272,9 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
   % unified.asset { name="DkMLRunBuildHost", file="assets/dkml/run-build-host.sh" }
   \dk.asset(byteSize: "21973", checksum: (sha256: "c83b28e4ffd201df0b615c5d9fc2f756195d4ce390fe3bb47623e93a34dc48e7"))\;
 
+  % unified.asset { name="DkMLNoFlexdllStub", file="assets/dkml/noflexdll-stub.c" }
+  \dk.asset(byteSize: "1420", checksum: (sha256: "308082ca9132c9108aa8dc6399399dbc96d18ac43acdcd6f25ca59fddd7b8c5b"))\;
+
 ## Dk.OpamLock
 
 Run one rule of the CommonsLang_OCaml.Dk.OpamLock scriptmodule so its
@@ -624,6 +627,51 @@ releases even though their DkML module-id string matches. The gate is fail-open
 for a dependency with no recorded fingerprint and fail-closed only when a
 present fingerprint differs.
 
+## DkMLStatic
+
+`CommonsLang_OCaml.DkMLStatic` is the OCaml 4.14 toolchain for native
+executables that run on a Windows machine with no Visual C++ Redistributable,
+such as Windows Server Core. dk0, dk1 and mlfront-signify build with it. Its
+Linux and macOS slots hold the `DkML.Unix` objects that
+`CommonsLang_OCaml.DkML` holds.
+
+The Windows slots build the compiler with `DKML_MSVC_CRT=static` in
+`assets/dkml/run-build-host.sh`:
+
+- Every C object is compiled `/MT` (`CFLAGS_MSVC=-O2 -MT /Wv:18`): the
+  runtime libraries, the C stubs of the bundled libraries and FlexDLL's
+  objects.
+- `bin/flexdll_msvc64.obj` (x64) and `bin/flexdll_msvc.obj` (x86) hold the
+  stub in `assets/dkml/noflexdll-stub.c`. flexlink links that object into
+  every executable. Its loader functions fail with the message "dynamic
+  loading is not available in this executable".
+- `FLEXLINK_FLAGS` carries `-custom-crt`, a `-defaultlib` for each of
+  `libcmt.lib`, `libvcruntime.lib`, `libucrt.lib` and `oldnames.lib`, and
+  `-base 0x140000000`. OCaml bakes these flags into the `mkexe`, `mkdll` and
+  `mkmaindll` commands of `ocamlopt` and `ocamlc`. An executable that
+  `ocamlopt`, `ocamlc -custom` or `ocamlc -output-complete-exe` links imports
+  no C runtime DLL, and on x64 its preferred image base is 0x140000000.
+- A C stub that `ocamlopt`, `ocamlc` or dune compiles takes `/MT` from the
+  `ocamlc_cflags` of `ocamlc -config`. A C library from outside the toolchain
+  must also be compiled `/MT`; an `/MD` object in a DkMLStatic link makes
+  link.exe warn LNK4098 or LNK4217.
+
+DkMLStatic has no dynamic loading on Windows:
+
+- `Dynlink.loadfile` fails with the stub's message.
+- `bin/ocamlrun.exe` loads no `dll*.dll` stub library. A bytecode executable
+  that needs C stubs, such as one linked with `unix.cma`, stops at startup
+  with "cannot load shared library" and the stub's message. `ocamlc -custom`
+  and `ocamlc -output-complete-exe` put the C stubs into the executable, and
+  such an executable runs.
+- The toplevel `bin/ocaml.exe` runs, and a `#load` of a library with C stubs
+  fails with the stub's message. A `Dk.OpamBuild` package build that runs such
+  a bytecode helper, for example an `ocaml pkg/pkg.ml` script that loads
+  `unix`, fails under DkMLStatic.
+- DkMLStatic installs the `lib/ocaml/stublibs` DLLs and the `.cmxs` plugins in
+  the layout of DkML, linked against the static C runtime. No DkMLStatic
+  executable loads them.
+
 ## Toolchain checks
 
 What the distscripts and scripts check about the toolchain, each tied to the
@@ -654,5 +702,10 @@ check that performs it or marked as unchecked:
   they fail. The same script then runs `dumpbin /directives` on every
   installed `.lib` and `.obj` and fails when one names the static C runtime
   library `LIBCMT`. No check covers other linker warnings from flexlink links.
+- `Windows_*` DkMLStatic: the same script also fails on the linker warning
+  LNK4281, and its audit fails when an installed `.lib` or `.obj` names the
+  DLL C runtime library `MSVCRT`, when an installed `.exe` or `.dll` imports
+  a `VCRUNTIME*`, `MSVCP*`, `ucrtbase` or `api-ms-win-crt-*` DLL, and when an
+  installed x64 `.exe` has a preferred image base below 4 GB.
 - A package's distscript can check them, as the CommonsLang_OCaml distscript
   `dist/Linux_x86_64.u` does by running `file -b` on its `bin/ocamlopt`.

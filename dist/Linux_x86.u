@@ -12,6 +12,14 @@
   \dk.target(abi: "Linux_x86")[ELF 32-bit LSB executable, Intel i386, version 1 (SYSV)
   ]\;
 
+## DkMLStatic
+
+On Linux_x86 DkMLStatic holds the DkML.Unix compiler that DkML holds.
+
+  $ get-object CommonsLang_OCaml.DkMLStatic@4.14.3003 -s Release.Linux_x86 -d ${RUNTIME}/Linux_x86-DkMLStatic-4.14.3
+  \test(pass)
+  \dk.object(abi: "Release.Linux_x86", value-id: "o0000000000000000000000000000000000000000000000000000")\;
+
 ## Dune
 
   $ run-object CommonsLang_OCaml.Dune@3.23.4 -s Release.Linux_x86 -e 'bin/*' -c bin/dune.exe -- --version

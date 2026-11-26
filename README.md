@@ -11,6 +11,7 @@ The planned package targets in this repository are:
 - `CommonsLang_OCaml.Base@4.14.3`
 - `CommonsLang_OCaml.Base@5.5.0-beta1`
 - `CommonsLang_OCaml.DkML@4.14.3003`
+- `CommonsLang_OCaml.DkMLStatic@4.14.3003`
 - `CommonsLang_OCaml.Opam@2.5.4`
 - `CommonsLang_OCaml.Dune@3.23.4`
 
@@ -28,6 +29,13 @@ setup/build scripts directly without invoking opam.
 
 The first implemented `CommonsLang_OCaml.DkML@4.14.3003` surface is a
 Windows_x86_64 host build.
+
+`CommonsLang_OCaml.DkML` is the OCaml 4.14 toolchain for general builds, with
+dynamic loading through FlexDLL and the DLL C runtime on Windows.
+
+`CommonsLang_OCaml.DkMLStatic` is the OCaml 4.14 toolchain for native static
+executables, linked on Windows against the static C runtime with no dynamic
+loading. dk0, dk1 and mlfront-signify build with DkMLStatic.
 
 Local validation of the toolchain packages also expects sibling checkouts of
 `CommonsBase_GNU` and `CommonsBase_Std` so the test comments can import their

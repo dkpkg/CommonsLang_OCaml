@@ -12,6 +12,14 @@
   \dk.target(abi: "Darwin_x86_64")[Mach-O 64-bit executable, flags:<NOUNDEFS|DYLDLINK|TWOLEVEL|WEAK_DEFINES|BINDS_TO_WEAK|PIE>
   ]\;
 
+## DkMLStatic
+
+On Darwin_x86_64 DkMLStatic holds the DkML.Unix compiler that DkML holds.
+
+  $ get-object CommonsLang_OCaml.DkMLStatic@4.14.3003 -s Release.Darwin_x86_64 -d ${RUNTIME}/Darwin_x86_64-DkMLStatic-4.14.3
+  \test(pass)
+  \dk.object(abi: "Release.Darwin_x86_64", value-id: "o0000000000000000000000000000000000000000000000000000")\;
+
 ## Base
 
   $ run-object CommonsLang_OCaml.Base@5.5.0 -s Release.Darwin_x86_64 -e 'bin/*' -c bin/ocamlopt -- -version

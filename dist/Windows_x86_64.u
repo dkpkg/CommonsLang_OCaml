@@ -17,6 +17,20 @@
   \dk.target(abi: "Windows_x86_64")[4.14.3+relocatable
   ]\;
 
+## DkMLStatic
+
+The Windows build of DkMLStatic links every executable against the static
+C runtime with no dynamic loader (dk.u "## DkMLStatic").
+
+  $ get-object CommonsLang_OCaml.DkMLStatic@4.14.3003 -s Release.Windows_x86_64 -d ${RUNTIME}/Windows_x86_64-DkMLStatic-4.14.3
+  \test(pass)
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "o0000000000000000000000000000000000000000000000000000")\;
+
+  $ run-object CommonsLang_OCaml.DkMLStatic@4.14.3003 -s Release.Windows_x86_64 -c bin/ocamlopt.exe -- -version
+  \test(pass)
+  \dk.target(abi: "Windows_x86_64")[4.14.3+relocatable
+  ]\;
+
 ## Base
 
   $ run-object CommonsLang_OCaml.Base@5.5.0 -s Release.Windows_x86_64 -e 'bin/*' -c bin/ocamlopt.exe -- -version
