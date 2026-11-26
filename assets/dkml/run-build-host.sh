@@ -241,8 +241,8 @@ fi
 # -WX stays usable on the OCaml 4.14 runtime sources.
 dkml_msvc_crt=${DKML_MSVC_CRT:-dynamic}
 case "$dkml_msvc_crt" in
-  dynamic) : "${CFLAGS_MSVC:=-O2 -MD /Wv:18}" ;;
-  static) : "${CFLAGS_MSVC:=-O2 -MT /Wv:18}" ;;
+  dynamic) : "${CFLAGS_MSVC:=-O2 -MD -DNDEBUG -DWIN32 -D_WINDOWS /Wv:18}" ;;
+  static) : "${CFLAGS_MSVC:=-O2 -MT -DNDEBUG -DWIN32 -D_WINDOWS /Wv:18}" ;;
   *)
     printf 'FATAL: DKML_MSVC_CRT must be dynamic or static, not "%s"\n' "$dkml_msvc_crt" >&2
     exit 1
@@ -282,6 +282,18 @@ dkml_rewrite() {
 # `ocamlopt -config`'s mkexe, mkdll and mkmaindll. Every executable that a
 # DkMLStatic ocamlopt or ocamlc -custom links gets them with no extra flags.
 dkml_static_flexlink_flags="-custom-crt${DKML_STATIC_IMAGE_BASE:+ -base $DKML_STATIC_IMAGE_BASE} -defaultlib libcmt.lib -defaultlib libvcruntime.lib -defaultlib libucrt.lib -defaultlib oldnames.lib"
+
+# FlexDLL compiles its own objects with MSVC_FLAGS=... /GS-, which turns off
+# the stack buffer checks in objects that flexlink links into every
+# executable. Both builds drop /GS- so those objects keep the /GS default.
+if [ ! -f src-ocaml/flexdll/Makefile ]; then
+  dkml_fatal "no FlexDLL Makefile in src-ocaml/flexdll"
+fi
+dkml_rewrite src-ocaml/flexdll/Makefile '
+  /^MSVC_FLAGS=/ { found = 1; sub(/ \/GS-/, "") }
+  { print }
+  END { if (!found) exit 3 }
+'
 
 if [ "$dkml_msvc_crt" = static ]; then
   if [ -z "${DKML_NOFLEXDLL_STUB:-}" ] || [ ! -f "$DKML_NOFLEXDLL_STUB" ]; then

@@ -1,6 +1,6 @@
 // Unix (Linux/macOS) host build of the relocatable DkML OCaml 4.14.3
 // compiler. Delegated to by the CommonsLang_OCaml.DkML@4.14.3003 orchestrator.
-// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml --trust-local-package CommonsBase_GNU --trust-local-package CommonsBase_Std get-object CommonsLang_OCaml.DkML.Unix@4.14.3002 -s Release.Linux_x86_64 -d target/dkml-linux -e 'bin/*'
+// Test: dk0 -I etc/dk/v --trust-local-package CommonsLang_OCaml --trust-local-package CommonsBase_GNU --trust-local-package CommonsBase_Std get-object CommonsLang_OCaml.DkML.Unix@4.14.3003 -s Release.Linux_x86_64 -d target/dkml-linux -e 'bin/*'
 {
     "$schema": "https://diskuv.com/dk/schema/dk-value-1.0.json",
     "schema_version": {
@@ -9,7 +9,7 @@
     },
     "forms": [
         {
-            "id": "CommonsLang_OCaml.DkML.Unix@4.14.3002",
+            "id": "CommonsLang_OCaml.DkML.Unix@4.14.3003",
             "precommands": {
                 "sequential": true,
                 "private": [
@@ -93,6 +93,11 @@
                         "cp",
                         "$(get-asset CommonsLang_OCaml.Apparatus.DkMLGlibcEnv@1.0.1 -p assets/dkml/glibc-compiler-env-to-ocaml-configure-env.sh -f glibc-compiler-env-to-ocaml-configure-env.sh)",
                         "s/dkmldir/vendor/dkml-compiler/env/glibc-compiler-env-to-ocaml-configure-env.sh"
+                    ],
+                    [
+                        "/bin/sh",
+                        "$(get-asset CommonsLang_OCaml.Apparatus.DkMLPatchNoNativeToplevel@1.0.24 -p assets/dkml/patch-r-c-ocaml-2-build-host-no-native-toplevel.sh -f patch-r-c-ocaml-2-build-host-no-native-toplevel.sh)",
+                        "s/src/r-c-ocaml-2-build_host.sh"
                     ],
                     [
                         "$(get-object CommonsBase_Std.Coreutils@0.8.0 -s ${SLOTNAME.Release.execution_abi} -m ./coreutils.exe -f coreutils.exe -e '*')",
@@ -545,7 +550,6 @@
                             "bin/ocamlmktop",
                             "bin/ocamlmktop.byte",
                             "bin/ocamlmktop.opt",
-                            "bin/ocamlnat",
                             "bin/ocamlobjinfo",
                             "bin/ocamlobjinfo.byte",
                             "bin/ocamlobjinfo.opt",
@@ -2984,7 +2988,6 @@
                             "bin/ocamlmktop",
                             "bin/ocamlmktop.byte",
                             "bin/ocamlmktop.opt",
-                            "bin/ocamlnat",
                             "bin/ocamlobjinfo",
                             "bin/ocamlobjinfo.byte",
                             "bin/ocamlobjinfo.opt",
@@ -7986,7 +7989,6 @@
                             "bin/ocamlmktop",
                             "bin/ocamlmktop.byte",
                             "bin/ocamlmktop.opt",
-                            "bin/ocamlnat",
                             "bin/ocamlobjinfo",
                             "bin/ocamlobjinfo.byte",
                             "bin/ocamlobjinfo.opt",
@@ -10432,7 +10434,6 @@
                             "bin/ocamlmktop",
                             "bin/ocamlmktop.byte",
                             "bin/ocamlmktop.opt",
-                            "bin/ocamlnat",
                             "bin/ocamlobjinfo",
                             "bin/ocamlobjinfo.byte",
                             "bin/ocamlobjinfo.opt",
@@ -12873,7 +12874,6 @@
                             "bin/ocamlmktop",
                             "bin/ocamlmktop.byte",
                             "bin/ocamlmktop.opt",
-                            "bin/ocamlnat",
                             "bin/ocamlobjinfo",
                             "bin/ocamlobjinfo.byte",
                             "bin/ocamlobjinfo.opt",

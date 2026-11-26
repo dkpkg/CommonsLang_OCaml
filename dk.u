@@ -270,10 +270,13 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
 ### CommonsLang_OCaml.Apparatus@1.0.24
 
   % unified.asset { name="DkMLRunBuildHost", file="assets/dkml/run-build-host.sh" }
-  \dk.asset(byteSize: "23909", checksum: (sha256: "50c7f7d6c39b1c61750ddc046d996cff361b3247eaf755c8cb0e639084c352c0"))\;
+  \dk.asset(byteSize: "24425", checksum: (sha256: "ca13a8562f509b945d1164235c2af38b73fa8a9d6ee45006370e58d48331ba94"))\;
 
   % unified.asset { name="DkMLNoFlexdllStub", file="assets/dkml/noflexdll-stub.c" }
   \dk.asset(byteSize: "1420", checksum: (sha256: "308082ca9132c9108aa8dc6399399dbc96d18ac43acdcd6f25ca59fddd7b8c5b"))\;
+
+  % unified.asset { name="DkMLPatchNoNativeToplevel", file="assets/dkml/patch-r-c-ocaml-2-build-host-no-native-toplevel.sh" }
+  \dk.asset(byteSize: "886", checksum: (sha256: "09ae131dc488b6d5c2c5d1625adb080aa887edfd2c237c76614fbc930e12b41e"))\;
 
 ## Dk.OpamLock
 
@@ -635,12 +638,19 @@ such as Windows Server Core. dk0, dk1 and mlfront-signify build with it. Its
 Linux and macOS slots hold the `DkML.Unix` objects that
 `CommonsLang_OCaml.DkML` holds.
 
+Neither DkML nor DkMLStatic ships the native toplevel `ocamlnat`:
+`assets/dkml/patch-r-c-ocaml-2-build-host-no-native-toplevel.sh` removes the
+`--enable-native-toplevel` that dkml-compiler passes to OCaml's configure. On
+Windows both build FlexDLL's objects without FlexDLL's `/GS-`, so they keep
+the compiler's stack buffer checks, and compile C with `-DNDEBUG -DWIN32
+-D_WINDOWS`.
+
 The Windows slots build the compiler with `DKML_MSVC_CRT=static` in
 `assets/dkml/run-build-host.sh`:
 
-- Every C object is compiled `/MT` (`CFLAGS_MSVC=-O2 -MT /Wv:18`): the
-  runtime libraries, the C stubs of the bundled libraries and FlexDLL's
-  objects.
+- Every C object is compiled `/MT` (`CFLAGS_MSVC=-O2 -MT -DNDEBUG -DWIN32
+  -D_WINDOWS /Wv:18`): the runtime libraries, the C stubs of the bundled
+  libraries and FlexDLL's objects.
 - `bin/flexdll_msvc64.obj` (x64) and `bin/flexdll_msvc.obj` (x86) hold the
   stub in `assets/dkml/noflexdll-stub.c`. flexlink links that object into
   every executable. Its loader functions fail with the message "dynamic

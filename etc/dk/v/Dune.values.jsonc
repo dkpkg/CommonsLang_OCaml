@@ -46,12 +46,12 @@
                 "private": [
                     "get-object CommonsLang_OCaml.Dune.Win32@3.23.4 -s Release.Windows_x86_64 -d ${SLOT.Release.Windows_x86_64}",
                     "get-object CommonsLang_OCaml.Dune.Win32@3.23.4 -s Release.Windows_x86 -d ${SLOT.Release.Windows_x86}",
-                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.3 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
-                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.3 -s Release.Linux_x86_64_musl -d ${SLOT.Release.Linux_x86_64_musl}",
-                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.3 -s Release.Linux_x86 -d ${SLOT.Release.Linux_x86}",
-                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.3 -s Release.Linux_arm64 -d ${SLOT.Release.Linux_arm64}",
-                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.3 -s Release.Darwin_x86_64 -d ${SLOT.Release.Darwin_x86_64}",
-                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.3 -s Release.Darwin_arm64 -d ${SLOT.Release.Darwin_arm64}"
+                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.4 -s Release.Linux_x86_64 -d ${SLOT.Release.Linux_x86_64}",
+                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.4 -s Release.Linux_x86_64_musl -d ${SLOT.Release.Linux_x86_64_musl}",
+                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.4 -s Release.Linux_x86 -d ${SLOT.Release.Linux_x86}",
+                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.4 -s Release.Linux_arm64 -d ${SLOT.Release.Linux_arm64}",
+                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.4 -s Release.Darwin_x86_64 -d ${SLOT.Release.Darwin_x86_64}",
+                    "get-object CommonsLang_OCaml.Dune.Unix@3.23.4 -s Release.Darwin_arm64 -d ${SLOT.Release.Darwin_arm64}"
                 ]
             },
             "outputs": {
@@ -119,10 +119,10 @@
             }
         },
         {
-            "id": "CommonsLang_OCaml.Dune.Unix@3.23.3",
+            "id": "CommonsLang_OCaml.Dune.Unix@3.23.4",
             "function": {
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Unix@4.14.3002 -s ${SLOTNAME.request} -d : -e 'bin/*' -e 'x86_64-linux-musl-cross/**')${/}bin"
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Unix@4.14.3003 -s ${SLOTNAME.request} -d : -e 'bin/*' -e 'x86_64-linux-musl-cross/**')${/}bin"
                 ],
                 "commands": [
                     [

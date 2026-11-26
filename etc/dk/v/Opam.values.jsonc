@@ -228,7 +228,7 @@
             "id": "CommonsLang_OCaml.Opam.Unix@2.5.4",
             "function": {
                 "envmods": [
-                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Unix@4.14.3002 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
+                    "<PATH=$(--path=absnative get-object CommonsLang_OCaml.DkML.Unix@4.14.3003 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin",
                     "<PATH=$(--path=absnative get-object CommonsLang_OCaml.Dune@3.23.4 -s ${SLOTNAME.request} -d : -e 'bin/*')${/}bin"
                 ],
                 "commands": [
