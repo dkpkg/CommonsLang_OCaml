@@ -270,7 +270,7 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
 ### CommonsLang_OCaml.Apparatus@1.0.24
 
   % unified.asset { name="DkMLRunBuildHost", file="assets/dkml/run-build-host.sh" }
-  \dk.asset(byteSize: "22443", checksum: (sha256: "dd998ba64b6a0e1dd578d3e6eee2f9662ef3aa7a8e1a16bb1fb77af8229643d5"))\;
+  \dk.asset(byteSize: "22933", checksum: (sha256: "b53341f93775d4b0277ae333742d26bcf2c11bac264086be5065c2301c27dbff"))\;
 
   % unified.asset { name="DkMLNoFlexdllStub", file="assets/dkml/noflexdll-stub.c" }
   \dk.asset(byteSize: "1420", checksum: (sha256: "308082ca9132c9108aa8dc6399399dbc96d18ac43acdcd6f25ca59fddd7b8c5b"))\;
@@ -669,7 +669,9 @@ DkMLStatic has no dynamic loading on Windows:
   fails with the stub's message. A `Dk.OpamBuild` package build that runs such
   a bytecode helper, for example an `ocaml pkg/pkg.ml` script that loads
   `unix`, fails under DkMLStatic.
-- DkMLStatic is configured `--disable-shared`, so `ocamlc -config` says
+- DkMLStatic switches shared libraries off (`SUPPORTS_SHARED_LIBRARIES=false`
+  and `NATDYNLINK=false` in `Makefile.config`; OCaml's configure refuses
+  `--disable-shared` on Windows), so `ocamlc -config` says
   `supports_shared_libraries: false` and the toolchain builds no
   `lib/ocaml/stublibs` DLLs and no `.cmxs` plugins.
 

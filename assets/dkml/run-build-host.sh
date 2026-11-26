@@ -307,13 +307,19 @@ if [ "$dkml_msvc_crt" = static ]; then
 
   for _dkml_mc in src-ocaml/Makefile.config.in src-ocaml/Makefile.config; do
     if [ -f "$_dkml_mc" ]; then
+      # OCaml's configure refuses --disable-shared for a native Windows host,
+      # so shared libraries are switched off here instead, in the template
+      # that configure fills in: no stub DLLs, no .cmxs, and ocamlc -config
+      # says supports_shared_libraries: false and natdynlink_supported: false.
       dkml_rewrite "$_dkml_mc" -v extra="$dkml_static_flexlink_flags" '
         /^FLEXLINK_FLAGS=/ {
-          found = 1
+          found = found + 1
           if (index($0, "-custom-crt") == 0) $0 = $0 " " extra
         }
+        /^SUPPORTS_SHARED_LIBRARIES=/ { found = found + 1; $0 = "SUPPORTS_SHARED_LIBRARIES=false" }
+        /^NATDYNLINK=/ { found = found + 1; $0 = "NATDYNLINK=false" }
         { print }
-        END { if (!found) exit 3 }
+        END { if (found != 3) exit 3 }
       '
     fi
   done
