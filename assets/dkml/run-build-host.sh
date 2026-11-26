@@ -326,6 +326,18 @@ if [ "$dkml_msvc_crt" = static ]; then
   if [ ! -f src-ocaml/Makefile.config.in ]; then
     dkml_fatal "no src-ocaml/Makefile.config.in to carry the DkMLStatic flexlink flags"
   fi
+
+  # OCaml's makefiles give most links $(FLEXLINK_ENV), which points
+  # OCAML_FLEXLINK at the in-tree flexlink. With shared libraries off, ocamlc
+  # also builds a custom runtime for the bytecode tools that are linked with a
+  # plain $(CAMLC) (ocamldebug, ocamldoc), and that link would call flexlink
+  # from PATH, where there is none. Point those links at the same in-tree
+  # flexlink that $(FLEXLINK_ENV) uses while bootstrapping.
+  if [ -z "${OCAML_FLEXLINK:-}" ]; then
+    _dkml_root=$(cd src-ocaml && pwd)
+    OCAML_FLEXLINK="$_dkml_root/boot/ocamlrun.exe $_dkml_root/boot/flexlink.byte.exe"
+    export OCAML_FLEXLINK
+  fi
 fi
 
 : "${NUMCPUS:=1}"
