@@ -307,6 +307,23 @@ dkml_rewrite src-ocaml/yacc/defs.h '
   END { if (!found) exit 3 }
 '
 
+# OCaml 4.14's runtime/major_gc.c defines its own fmin for every MSVC, from
+# before the C runtime had one (Visual Studio 2013, _MSC_VER 1800). With -O2,
+# MSVC 14.5x treats fmin as an intrinsic and refuses the definition (C2169).
+# Keep the definition for the old compilers only.
+if [ ! -f src-ocaml/runtime/major_gc.c ]; then
+  dkml_fatal "no src-ocaml/runtime/major_gc.c"
+fi
+dkml_rewrite src-ocaml/runtime/major_gc.c '
+  prev == "#ifdef _MSC_VER" && $0 ~ /^Caml_inline double fmin\(/ {
+    print "#if defined(_MSC_VER) && _MSC_VER < 1800"; found = 1; held = 0
+  }
+  held { print prev }
+  { prev = $0; held = ($0 == "#ifdef _MSC_VER") }
+  !held { print }
+  END { if (held) print prev; if (!found) exit 3 }
+'
+
 if [ "$dkml_msvc_crt" = static ]; then
   if [ -z "${DKML_NOFLEXDLL_STUB:-}" ] || [ ! -f "$DKML_NOFLEXDLL_STUB" ]; then
     dkml_fatal "DKML_MSVC_CRT=static needs DKML_NOFLEXDLL_STUB to name noflexdll-stub.c"
