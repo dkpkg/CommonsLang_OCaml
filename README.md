@@ -37,6 +37,9 @@ dynamic loading through FlexDLL and the DLL C runtime on Windows.
 executables, linked on Windows against the static C runtime with no dynamic
 loading. dk0, dk1 and mlfront-signify build with DkMLStatic.
 
+`CommonsLang_OCaml.DkML@4.14.3002` is a copy of `DkML@4.14.3003`, so that locks and
+generated drivers solved before 4.14.3003 still resolve.
+
 Local validation of the toolchain packages also expects sibling checkouts of
 `CommonsBase_GNU` and `CommonsBase_Std` so the test comments can import their
 definitions directly.
