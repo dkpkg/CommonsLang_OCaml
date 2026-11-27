@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3003 -s Release.Darwin_x86_64 -d ${RUNTIME}/Darwin_x86_64-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Darwin_x86_64", value-id: "o3r5ogvjiuyaf6gnv5dyc73gtiie6iknjcmxesu2t4u4zfrun3rba")\;
+  \dk.object(abi: "Release.Darwin_x86_64", value-id: "o3ohk3ukhbr5slqt7nozslcpvbbbdolqgssssj65fmg4d6m3xvasq")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3003 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
@@ -18,7 +18,7 @@ On Darwin_x86_64 DkMLStatic holds the DkML.Unix compiler that DkML holds.
 
   $ get-object CommonsLang_OCaml.DkMLStatic@4.14.3003 -s Release.Darwin_x86_64 -d ${RUNTIME}/Darwin_x86_64-DkMLStatic-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Darwin_x86_64", value-id: "o0000000000000000000000000000000000000000000000000000")\;
+  \dk.object(abi: "Release.Darwin_x86_64", value-id: "ozrzb4wi3ia6aem7hsvkfxjrvtqvd2km57v2dnh4couhtila2mhoq")\;
 
 ## Base
 
@@ -49,7 +49,7 @@ ladder lives in pre-2026-08 release tags and git history (see dk.u
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.28 -f ${RUNTIME}/OpamLock.Export-1.1.28.zip
   \test(pass)
-  \dk.object(abi: "Release.Darwin_arm64", value-id: "oqmmhn722l3otdvbsb5x5clsqvfoylccy3e4vxxy4r2elrgmxgdta")\;
+  \dk.object(abi: "Release.Darwin_arm64", value-id: "o73wmgqmhhx7zubdxx2rrhc5o2srzueaoif6e6yzx6aiqb3rp5ooq")\;
 
 
 ## Dk.OpamBuild

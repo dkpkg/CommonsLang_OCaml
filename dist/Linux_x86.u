@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3003 -s Release.Linux_x86 -d ${RUNTIME}/Linux_x86-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Linux_x86", value-id: "omkqv5pzgk7lifofhygszokm56op73ekpdlzne36t6m6ir5n6wsiq")\;
+  \dk.object(abi: "Release.Linux_x86", value-id: "owzv7fdo5y5nrwypo546uwtaafodcm4utwqy44sajveuj5bqpz4qa")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3003 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
@@ -18,7 +18,7 @@ On Linux_x86 DkMLStatic holds the DkML.Unix compiler that DkML holds.
 
   $ get-object CommonsLang_OCaml.DkMLStatic@4.14.3003 -s Release.Linux_x86 -d ${RUNTIME}/Linux_x86-DkMLStatic-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Linux_x86", value-id: "o0000000000000000000000000000000000000000000000000000")\;
+  \dk.object(abi: "Release.Linux_x86", value-id: "ootxnaihi2u5sd2pdbplpt5jwk4zpctn4bplgwo5vb66hy355lb3q")\;
 
 ## Dune
 
@@ -42,7 +42,7 @@ ladder lives in pre-2026-08 release tags and git history (see dk.u
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.28 -f ${RUNTIME}/OpamLock.Export-1.1.28.zip
   \test(pass)
-  \dk.object(abi: "Release.Linux_x86_64", value-id: "oyxvmkr4oc2bz4fhbzbukhzqqrvkhnqgmdg4cnptpsutm7nmwbjza")\;
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "o67wl53igg4aanhp2mk7rfz3x62dpgdqmyute2cthoxcdoxxmh32a")\;
 
 
 ## Dk.OpamBuild
