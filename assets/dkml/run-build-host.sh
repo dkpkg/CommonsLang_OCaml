@@ -239,10 +239,13 @@ fi
 # CFLAGS_MSVC only for a CMake MSVC compiler spec; this Visual Studio build
 # takes the default below. /Wv:18 keeps the MSVC 19.50 warning baseline, and
 # -WX stays usable on the OCaml 4.14 runtime sources.
+# -Oy- keeps frame pointers on x86, where -O2 would omit them: with -O2
+# alone, flexdll's load of the x86 dllunix stub DLL faults (0xC0000005).
+# -Oy- has no effect on x64.
 dkml_msvc_crt=${DKML_MSVC_CRT:-dynamic}
 case "$dkml_msvc_crt" in
-  dynamic) : "${CFLAGS_MSVC:=-O2 -MD -DNDEBUG -DWIN32 -D_WINDOWS /Wv:18}" ;;
-  static) : "${CFLAGS_MSVC:=-O2 -MT -DNDEBUG -DWIN32 -D_WINDOWS /Wv:18}" ;;
+  dynamic) : "${CFLAGS_MSVC:=-O2 -Oy- -MD -DNDEBUG -DWIN32 -D_WINDOWS /Wv:18}" ;;
+  static) : "${CFLAGS_MSVC:=-O2 -Oy- -MT -DNDEBUG -DWIN32 -D_WINDOWS /Wv:18}" ;;
   *)
     printf 'FATAL: DKML_MSVC_CRT must be dynamic or static, not "%s"\n' "$dkml_msvc_crt" >&2
     exit 1

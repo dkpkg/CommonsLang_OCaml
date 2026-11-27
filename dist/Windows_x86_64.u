@@ -4,7 +4,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3003 -s Release.Windows_x86_64 -d ${RUNTIME}/Windows_x86_64-DkML-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "oibychxz43or3pid22yy3vjf6qgtxzea4icimygmyngzgeic2ersq")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "oskwrggbmxzpfj3ktapkcvtw33s4xezx4kce6isavinkcnbv3f2ma")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3003 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt.exe
@@ -24,7 +24,7 @@ C runtime with no dynamic loader (dk.u "## DkMLStatic").
 
   $ get-object CommonsLang_OCaml.DkMLStatic@4.14.3003 -s Release.Windows_x86_64 -d ${RUNTIME}/Windows_x86_64-DkMLStatic-4.14.3
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "o0000000000000000000000000000000000000000000000000000")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "orkpzjxc4uqopgfqpdeirek522queujbb32mny2xseh5imn6osrwq")\;
 
   $ run-object CommonsLang_OCaml.DkMLStatic@4.14.3003 -s Release.Windows_x86_64 -c bin/ocamlopt.exe -- -version
   \test(pass)
@@ -71,7 +71,7 @@ ladder lives in pre-2026-08 release tags and git history (see dk.u
 
   $ run-function CommonsLang_OCaml.Dk.OpamLock.Export@1.1.28 -f ${RUNTIME}/OpamLock.Export-1.1.28.zip
   \test(pass)
-  \dk.object(abi: "Release.Windows_x86_64", value-id: "o2as46uqev4m27q7zbs7k3yb4pzs7cqfi5snf4ln5hq7otpjasq4a")\;
+  \dk.object(abi: "Release.Windows_x86_64", value-id: "oplolzvbkod4c5pv2jcbrghcat66ifj2nhjcv46kzdfjsubyuxvoa")\;
 
 
 ## Dk.OpamBuild

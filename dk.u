@@ -270,7 +270,7 @@ with); only a content BUMP of an existing asset needs a fresh `@1.0.<next>`.
 ### CommonsLang_OCaml.Apparatus@1.0.24
 
   % unified.asset { name="DkMLRunBuildHost", file="assets/dkml/run-build-host.sh" }
-  \dk.asset(byteSize: "25571", checksum: (sha256: "e9269bd1beca67f67bae46cd627733f1368698d7b7153ca2b8b5848be872b06e"))\;
+  \dk.asset(byteSize: "25755", checksum: (sha256: "c8844f2480b6b7c8bafb1e95397f73a8a8f5d846d4d856baaf848044a32018bf"))\;
 
   % unified.asset { name="DkMLNoFlexdllStub", file="assets/dkml/noflexdll-stub.c" }
   \dk.asset(byteSize: "1420", checksum: (sha256: "308082ca9132c9108aa8dc6399399dbc96d18ac43acdcd6f25ca59fddd7b8c5b"))\;
@@ -648,8 +648,8 @@ the compiler's stack buffer checks, and compile C with `-DNDEBUG -DWIN32
 The Windows slots build the compiler with `DKML_MSVC_CRT=static` in
 `assets/dkml/run-build-host.sh`:
 
-- Every C object is compiled `/MT` (`CFLAGS_MSVC=-O2 -MT -DNDEBUG -DWIN32
-  -D_WINDOWS /Wv:18`): the runtime libraries, the C stubs of the bundled
+- Every C object is compiled `/MT` (`CFLAGS_MSVC=-O2 -Oy- -MT -DNDEBUG
+  -DWIN32 -D_WINDOWS /Wv:18`): the runtime libraries, the C stubs of the bundled
   libraries and FlexDLL's objects.
 - `bin/flexdll_msvc64.obj` (x64) and `bin/flexdll_msvc.obj` (x86) hold the
   stub in `assets/dkml/noflexdll-stub.c`. flexlink links that object into
