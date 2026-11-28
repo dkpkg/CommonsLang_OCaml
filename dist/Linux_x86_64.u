@@ -8,6 +8,7 @@
 
   $ get-object CommonsLang_OCaml.DkML@4.14.3002 -s Release.Linux_x86_64 -d ${RUNTIME}/Linux_x86_64-DkML-4.14.3002
   \test(pass)
+  \dk.object(abi: "Release.Linux_x86_64", value-id: "ohcyipxvzoqz67vcyc3beh7jvxajldid3aw2a67spmctnegqc3ipa")\;
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3003 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
