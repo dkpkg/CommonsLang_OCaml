@@ -6,6 +6,9 @@
   \test(pass)
   \dk.object(abi: "Release.Windows_x86", value-id: "og7ipcbdueigzazrvpxonxa3s2kw7uhhv7woqu3sbj22iaqipfmjq")\;
 
+  $ get-object CommonsLang_OCaml.DkML@4.14.3002 -s Release.Windows_x86 -d ${RUNTIME}/Windows_x86-DkML-4.14.3002
+  \test(pass)
+
 Release.Windows_x86_64 will be used as Release.execution_abi on normal (64-bit) build + CI machines.
 
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --

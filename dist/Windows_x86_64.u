@@ -6,6 +6,9 @@
   \test(pass)
   \dk.object(abi: "Release.Windows_x86_64", value-id: "oskwrggbmxzpfj3ktapkcvtw33s4xezx4kce6isavinkcnbv3f2ma")\;
 
+  $ get-object CommonsLang_OCaml.DkML@4.14.3002 -s Release.Windows_x86_64 -d ${RUNTIME}/Windows_x86_64-DkML-4.14.3002
+  \test(pass)
+
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3003 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt.exe
   \test(pass)

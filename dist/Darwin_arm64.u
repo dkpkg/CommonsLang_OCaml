@@ -6,6 +6,9 @@
   \test(pass)
   \dk.object(abi: "Release.Darwin_arm64", value-id: "o7a3rg44wpowtfelj7qb4rpnyfqoytq5nwvk3dauorxgpamzudxaq")\;
 
+  $ get-object CommonsLang_OCaml.DkML@4.14.3002 -s Release.Darwin_arm64 -d ${RUNTIME}/Darwin_arm64-DkML-4.14.3002
+  \test(pass)
+
   $ run-object CommonsBase_FileMagic.File@7.8.50407 -s Release.execution_abi -m ./bin/file.exe -e bin/file.exe --
   >   -b $(get-object CommonsLang_OCaml.DkML@4.14.3003 -s Release.target_abi -d : -e file.exe)/bin/ocamlopt
   \test(pass)
